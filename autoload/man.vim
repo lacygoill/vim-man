@@ -2,7 +2,7 @@ let s:man_cmd = 'man 2>/dev/null'
 
 let s:man_find_arg = '-w'
 
-function! man#open_page(count, count1, mods, ...) abort
+fu! man#open_page(count, count1, mods, ...) abort
     if a:0 > 2
         call s:error('too many arguments')
         return
@@ -36,15 +36,15 @@ function! man#open_page(count, count1, mods, ...) abort
     call s:push_tag()
     let bufname = 'man://'.name.(empty(sect)?'':'('.sect.')')
     if a:mods !~# 'tab' && s:find_man()
-        noautocmd execute 'silent edit' fnameescape(bufname)
+        noautocmd exe 'sil edit' fnameescape(bufname)
     else
-        noautocmd execute 'silent' a:mods 'split' fnameescape(bufname)
+        noautocmd exe 'sil' a:mods 'split' fnameescape(bufname)
     endif
     let b:man_sect = sect
     call s:read_page(path)
-endfunction
+endfu
 
-function! man#read_page(ref) abort
+fu! man#read_page(ref) abort
     try
         let [sect, name] = man#extract_sect_and_name_ref(a:ref)
         let [b:man_sect, name, path] = s:verify_exists(sect, name)
@@ -53,29 +53,29 @@ function! man#read_page(ref) abort
         return
     endtry
     call s:read_page(path)
-endfunction
+endfu
 
-function! s:read_page(path) abort
-    setlocal modifiable
-    setlocal noreadonly
-    silent keepjumps %delete _
+fu! s:read_page(path) abort
+    setl modifiable
+    setl noreadonly
+    sil keepj %delete _
     " Force MANPAGER=cat to ensure Vim is not recursively invoked (by man-db).
     " http://comments.gmane.org/gmane.editors.vim.devel/29085
     " Respect $MANWIDTH, or default to window width.
     let cmd  = 'env MANPAGER=cat'.(empty($MANWIDTH) ? ' MANWIDTH='.winwidth(0) : '')
     let cmd .= ' '.s:man_cmd.' '.shellescape(a:path)
-    silent put =system(cmd)
+    sil put =system(cmd)
     " Remove all backspaced characters.
-    execute 'silent keeppatterns keepjumps %substitute,.\b,,e'.(&gdefault?'':'g')
+    exe 'sil keeppatterns keepj %substitute,.\b,,e'.(&gdefault?'':'g')
     while getline(1) =~# '^\s*$'
-        silent keepjumps 1delete _
+        sil keepj 1delete _
     endwhile
-    setlocal filetype=man
-endfunction
+    setl filetype=man
+endfu
 
 " attempt to extract the name and sect out of 'name(sect)'
 " otherwise just return the largest string of valid characters in ref
-function! man#extract_sect_and_name_ref(ref) abort
+fu! man#extract_sect_and_name_ref(ref) abort
     if a:ref[0] ==# '-' " try ':Man -pandoc' with this disabled.
         throw 'manpage name cannot start with ''-'''
     endif
@@ -92,9 +92,9 @@ function! man#extract_sect_and_name_ref(ref) abort
     " TODO(nhooyr) Not sure if this is portable across OSs
     " but I have not seen a single uppercase section.
     return [tolower(split(left[1], ')')[0]), left[0]]
-endfunction
+endfu
 
-function! s:get_path(sect, name) abort
+fu! s:get_path(sect, name) abort
     if empty(a:sect)
         let path = system(s:man_cmd.' '.s:man_find_arg.' '.shellescape(a:name))
         if path !~# '^\/'
@@ -108,9 +108,9 @@ function! s:get_path(sect, name) abort
     "   - 3pcap section (found on macOS)
     "   - commas between sections (for section priority)
     return system(s:man_cmd.' '.s:man_find_arg.' -s '.shellescape(a:sect).' '.shellescape(a:name))
-endfunction
+endfu
 
-function! s:verify_exists(sect, name) abort
+fu! s:verify_exists(sect, name) abort
     let path = s:get_path(a:sect, a:name)
     if path !~# '^\/'
         let path = s:get_path(get(b:, 'man_default_sects', ''), a:name)
@@ -126,28 +126,28 @@ function! s:verify_exists(sect, name) abort
     " whatever the correct capitalization is.
     let path = path[:len(path)-2]
     return s:extract_sect_and_name_path(path) + [path]
-endfunction
+endfu
 
 let s:tag_stack = []
 
-function! s:push_tag() abort
+fu! s:push_tag() abort
     let s:tag_stack += [{
                 \ 'buf':  bufnr('%'),
                 \ 'lnum': line('.'),
                 \ 'col':  col('.'),
                 \ }]
-endfunction
+endfu
 
-function! man#pop_tag() abort
+fu! man#pop_tag() abort
     if !empty(s:tag_stack)
         let tag = remove(s:tag_stack, -1)
-        execute 'silent' tag['buf'].'buffer'
+        exe 'sil' tag['buf'].'buffer'
         call cursor(tag['lnum'], tag['col'])
     endif
-endfunction
+endfu
 
 " extracts the name and sect out of 'path/name.sect'
-function! s:extract_sect_and_name_path(path) abort
+fu! s:extract_sect_and_name_path(path) abort
     let tail = fnamemodify(a:path, ':t')
     if a:path =~# '\.\%([glx]z\|bz2\|lzma\|Z\)$' " valid extensions
         let tail = fnamemodify(tail, ':r')
@@ -155,9 +155,9 @@ function! s:extract_sect_and_name_path(path) abort
     let sect = matchstr(tail, '\.\zs[^.]\+$')
     let name = matchstr(tail, '^.\+\ze\.')
     return [sect, name]
-endfunction
+endfu
 
-function! s:find_man() abort
+fu! s:find_man() abort
     if &filetype ==# 'man'
         return 1
     elseif winnr('$') ==# 1
@@ -172,19 +172,19 @@ function! s:find_man() abort
             return 0
         endif
     endwhile
-endfunction
+endfu
 
-function! s:error(msg) abort
+fu! s:error(msg) abort
     redraw
     echohl ErrorMsg
     echon 'man.vim: ' a:msg
     echohl None
-endfunction
+endfu
 
 let s:mandirs = join(split(system(s:man_cmd.' '.s:man_find_arg), ':\|\n'), ',')
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
-function! man#complete(arg_lead, cmd_line, cursor_pos) abort
+fu! man#complete(arg_lead, cmd_line, cursor_pos) abort
     let args = split(a:cmd_line)
     let l = len(args)
     if l > 3
@@ -228,9 +228,9 @@ function! man#complete(arg_lead, cmd_line, cursor_pos) abort
     endif
     " We remove duplicates incase the same manpage in different languages was found.
     return uniq(sort(map(globpath(s:mandirs,'man?/'.name.'*.'.sect.'*', 0, 1), 's:format_candidate(v:val, sect)'), 'i'))
-endfunction
+endfu
 
-function! s:format_candidate(path, sect) abort
+fu! s:format_candidate(path, sect) abort
     if a:path =~# '\.\%(pdf\|in\)$' " invalid extensions
         return
     endif
@@ -242,15 +242,15 @@ function! s:format_candidate(path, sect) abort
         " of the actual section.
         return name.'('.sect.')'
     endif
-endfunction
+endfu
 
-function! man#init_pager() abort
+fu! man#init_pager() abort
     " Remove all backspaced characters.
-    execute 'silent keeppatterns keepjumps %substitute,.\b,,e'.(&gdefault?'':'g')
+    exe 'sil keeppatterns keepj %substitute,.\b,,e'.(&gdefault?'':'g')
     if getline(1) =~# '^\s*$'
-        silent keepjumps 1delete _
+        sil keepj 1delete _
     else
-        keepjumps 1
+        keepj 1
     endif
     " This is not perfect. See `man glDrawArraysInstanced`. Since the title is
     " all caps it is impossible to tell what the original capitilization was.
@@ -260,5 +260,5 @@ function! man#init_pager() abort
     catch
         let b:man_sect = ''
     endtry
-    execute 'silent file man://'.fnameescape(ref)
-endfunction
+    exe 'sil file man://'.fnameescape(ref)
+endfu

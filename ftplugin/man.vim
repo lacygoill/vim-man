@@ -74,7 +74,7 @@ fu! s:create_toc() abort
     lwindow
 endfu
 
-nno <silent> <buffer> <leader>t    :<c-u>call <sid>create_toc()<cr>
+nno <silent> <buffer> <leader>t    :<C-U>call <SID>create_toc()<CR>
 
 
 if get(g:, 'ft_man_folding_enable', 0)
