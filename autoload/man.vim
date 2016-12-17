@@ -66,7 +66,7 @@ fu! s:read_page(path) abort
     let cmd .= ' '.s:man_cmd.' '.shellescape(a:path)
     sil put =system(cmd)
     " Remove all backspaced characters.
-    exe 'sil keeppatterns keepj %substitute,.\b,,e'.(&gdefault?'':'g')
+    exe 'sil keepp keepj %substitute,.\b,,e'.(&gdefault?'':'g')
     while getline(1) =~# '^\s*$'
         sil keepj 1delete _
     endwhile
@@ -246,7 +246,7 @@ endfu
 
 fu! man#init_pager() abort
     " Remove all backspaced characters.
-    exe 'sil keeppatterns keepj %substitute,.\b,,e'.(&gdefault?'':'g')
+    exe 'sil keepp keepj %substitute,.\b,,e'.(&gdefault?'':'g')
     if getline(1) =~# '^\s*$'
         sil keepj 1delete _
     else
