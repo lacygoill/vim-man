@@ -38,6 +38,45 @@ if !exists('g:no_plugin_maps') && !exists('g:no_man_maps')
   endif
 endif
 
+fu! s:create_toc() abort
+    let toc = []
+    for lnum in range(1, line('$'))
+        let c = match(getline(lnum), '\S\zs')
+        if c != -1 && synIDattr(synID(lnum, c, 0), 'name') =~? '\v%(heading|title)$'
+            let text = substitute(getline(lnum), '\s\+', ' ', 'g')
+            call add(toc, {'bufnr': bufnr('%'), 'lnum': lnum, 'text': text})
+        endif
+    endfor
+
+    " Why do we call `setloclist()` 2 times? "{{{
+    "
+    " To set the title of the location window, we must pass the dictionary
+    " `{'title': 'TOC' }` as a fourth argument to `setloclist()`.
+    " But when we pass a fourth argument, the list passed as a 2nd argument is
+    " ignored. No item in this list will populate the location list.
+    "
+    " So, the purpose of the first call to `setloclist()` is to populate the
+    " location list.
+    " The purpose of the second call is to set the title of the location
+    " window.
+    "
+    " In the 2nd call, the empty list and the `a` flag are not important.
+    " We could replace them with resp. any list and the `r` flag, for example.
+    " But we choose the empty list `[]` and the `a` flag, because it makes the
+    " code more readable. Indeed, since we only set the title of the window,
+    " and nothing in the list changes, it's as if we were adding/appending an
+    " empty list.
+    "
+"}}}
+
+    call setloclist(0, toc)
+    call setloclist(0, [], 'a', { 'title': 'TOC' })
+    lwindow
+endfu
+
+nno <silent> <buffer> <leader>t    :<c-u>call <sid>create_toc()<cr>
+
+
 if get(g:, 'ft_man_folding_enable', 0)
   setlocal foldenable
   setlocal foldmethod=indent

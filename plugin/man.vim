@@ -1,4 +1,5 @@
-com! -range=0 -complete=customlist,man#complete -nargs=* Man call man#open_page(v:count, v:count1, <q-mods>, <f-args>)
+com! -range=0 -complete=customlist,man#complete -nargs=* Man call
+            \ man#open_page(v:count, v:count1, <q-mods>, <f-args>)
 
 augroup man
     au!
