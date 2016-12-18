@@ -34,7 +34,7 @@ if b:man_sect =~# '^[23]'
     syntax region manSynopsis start='^\%(
                 \SYNOPSIS\|
                 \SYNTAX
-                \)$' end='^\%(\S.*\)\=\S$' keepend contains=manSectionHeading,@c,manCFuncDefinition
+                \\)$' end='^\%(\S.*\)\=\S$' keepend contains=manSectionHeading,@c,manCFuncDefinition
     highlight default link manCFuncDefinition Function
 endif
 

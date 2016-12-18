@@ -3,6 +3,150 @@ if exists('b:did_ftplugin') || &filetype !=# 'man'
 endif
 let b:did_ftplugin = 1
 
+" My original man ftplugin "{{{
+"
+" Set the name of the scratch buffer; ex:    man(1)
+" otherwise, we would have [Scratch] as a placeholder
+if empty(bufname('%'))
+    file $MAN_PN
+endif
+
+" Why the `if` condition?
+" Suppose we open a man buffer:
+"
+"         $ man bash
+"
+" The command `file $MAN_PN` names it using the value environment variable:
+"
+"         $MAN_PN    ex: bash(1)
+"
+" Then we look for a reference, and click on it.
+" A new man buffer is loaded, and the command would again try to name the new
+" buffer with the same name `$MAN_PN`.
+" It would give an error because a buffer with this name already exists.
+" Besides, there's no need to rename the subsequent buffers, somehow they're
+" automatically correctly named when opened from Vim (instead of the shell).
+
+" Options "{{{
+"
+" We can't give the value `wipe` to 'bufhidden'.
+" Indeed, after clicking on a reference in a man buffer, the original buffer
+" would be wiped out. We couldn't get back to it with `C-T`.
+
+setlocal noswapfile
+setlocal buftype=nofile
+setlocal nobuflisted
+
+" Kind of help buffer
+setlocal nomodifiable
+setlocal readonly
+
+" Formatting
+setlocal nolist
+setlocal ignorecase
+
+"}}}
+" Mappings "{{{
+
+nmap <buffer> <silent> <CR>  <C-]>
+nmap <buffer> <silent> <BS>  <C-T>
+
+nno <buffer> <silent> q    :<C-U>call myfuncs#quit()<CR>
+
+nno <buffer> <silent> o    :<C-U>call <SID>search_syntax_element(0, 'option')<CR>
+nno <buffer> <silent> O    :<C-U>call <SID>search_syntax_element(1, 'option')<CR>
+nno <buffer> <silent> r    :<C-U>call <SID>search_syntax_element(0, 'ref')<CR>
+nno <buffer> <silent> R    :<C-U>call <SID>search_syntax_element(1, 'ref')<CR>
+nno <buffer> <silent> s    :<C-U>call <SID>search_syntax_element(0, 'heading')<CR>
+nno <buffer> <silent> S    :<C-U>call <SID>search_syntax_element(1, 'heading')<CR>
+
+fu! s:syntax_under_cursor() abort
+    return synIDattr(synID(line('.'), col('.'), 1), 'name')
+endfu
+
+" FIXME:
+"
+" Make our mapping moving the cursor to the next reference in a man page more
+" robust. Currrently, it skips some references when they are separated by
+" commas or newlines. Maybe we should tell the `search()` function to look for
+" a next word OR the pattern `<\k+>(\d+)` (+ the condition that the latter has
+" the right syntax group).
+
+fu! s:search_syntax_element(backward, to_look_for) abort
+    let original_pos       = getpos('.')
+    let initial_element    = s:syntax_under_cursor()
+    let next_element       = ''
+
+    let to_look_for        = a:to_look_for == 'heading'
+                           \ ?    ['manSubHeading', 'manSectionHeading']
+                           \ :    a:to_look_for == 'option'
+                           \      ?    ['manOptionDesc', 'manLongOptionDesc']
+                           \      :    a:to_look_for == 'ref'
+                           \           ?    ['manReference']
+                           \           :    ''
+
+    let identical_sequence = 1
+    let found_sth          = 1
+
+    while found_sth && (!count(to_look_for, next_element) || identical_sequence)
+
+        " Go on searching as long as:"{{{
+        "
+        "        - we found something the last time
+        "
+        "          Because, if in the last iteration, no word was found, then
+        "          there's no word after the current cursor position any more.
+        "
+        "                            AND
+        "
+        "        - the element under the cursor is not what we are looking for
+        "
+        "                  OR
+        "
+        "          it is what we are looking for, but it's part of a sequence of
+        "          identical elements;
+        "
+        "          we don't want the cursor to move to the next word inside an
+        "          identical sequence;
+        "          we want it to move to the next word outside of it
+"}}}
+
+        let found_sth    = search('\<\k\+', 'W' . (a:backward ? 'b' : ''))
+        " let found_sth    = search((to_look_for[0] ==# 'manReference' ? '\<\k\+(\d)' : '\<\k\+'), 'W' . (a:backward ? 'b' : ''))
+        let next_element = s:syntax_under_cursor()
+
+        " Why do we create the variable `identical_sequence` and update it inside"{{{
+        " the loop?
+        " Why don't we get rid of it, and put the test:
+        "
+        "         next_element == initial_element
+        "
+        " … in the `:while` declaration?
+        " Because then, it would make sure that EACH found word is different than
+        " the initial one.
+        " But that's not what we want. We just want to make sure that between
+        " the final found word and our initial position, AT LEAST ONE found word
+        " was different than the initial one.
+"}}}
+
+        if next_element != initial_element
+            let identical_sequence = 0
+        endif
+    endwhile
+
+    " If the cursor ended on some text which is not what we were looking for
+    " (reached the very beginning / end of the buffer),
+    " move it back where it was.
+
+    if !count(to_look_for, s:syntax_under_cursor())
+        call setpos('.', original_pos)
+    endif
+endfu
+
+"}}}
+"
+"}}}
+
 let s:pager = !exists('b:man_sect')
 
 if s:pager
@@ -36,46 +180,6 @@ if s:pager
 else
     nno <silent> <buffer> <nowait> q <C-W>c
 endif
-
-" Source:
-" https://github.com/neovim/neovim/pull/4449#issuecomment-237290098
-fu! s:create_toc() abort
-    let toc = []
-    for lnum in range(1, line('$'))
-        let c = match(getline(lnum), '\S\zs')
-        if c != -1 && synIDattr(synID(lnum, c, 0), 'name') =~? '\v%(heading|title)$'
-            let text = substitute(getline(lnum), '\s\+', ' ', 'g')
-            call add(toc, {'bufnr': bufnr('%'), 'lnum': lnum, 'text': text})
-        endif
-    endfor
-
-    " Why do we call `setllist()` 2 times? "{{{
-    "
-    " To set the title of the location window, we must pass the dictionary
-    " `{'title': 'TOC' }` as a fourth argument to `setllist()`.
-    " But when we pass a fourth argument, the list passed as a 2nd argument is
-    " ignored. No item in this list will populate the location list.
-    "
-    " So, the purpose of the first call to `setllist()` is to populate the
-    " location list.
-    " The purpose of the second call is to set the title of the location
-    " window.
-    "
-    " In the 2nd call, the empty list and the `a` flag are not important.
-    " We could replace them with resp. any list and the `r` flag, for example.
-    " But we choose the empty list `[]` and the `a` flag, because it makes the
-    " code more readable. Indeed, since we only set the title of the window,
-    " and nothing in the list changes, it's as if we were adding/appending an
-    " empty list.
-    "
-    "}}}
-
-    call setllist(0, toc)
-    call setllist(0, [], 'a', { 'title': 'TOC' })
-    lwindow
-endfu
-
-nno <silent> <buffer> <leader>t    :<C-U>call <SID>create_toc()<CR>
 
 " FIXME:"{{{
 "

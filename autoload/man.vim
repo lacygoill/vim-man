@@ -1,5 +1,7 @@
 let s:man_cmd = 'man 2>/dev/null'
 
+" man#open_page "{{{
+
 fu! man#open_page(count, count1, mods, ...) abort
     if a:0 > 2
         call s:error('too many arguments')
@@ -47,9 +49,12 @@ fu! man#open_page(count, count1, mods, ...) abort
     call s:read_page(path)
 endfu
 
+"}}}
+" man#read_page "{{{
+
 fu! man#read_page(ref) abort
     try
-        let [sect, name] = man#extract_sect_and_name_ref(a:ref)
+        let [sect, name]             = man#extract_sect_and_name_ref(a:ref)
         let [b:man_sect, name, path] = s:verify_exists(sect, name)
     catch
         " call to s:error() is unnecessary
@@ -57,6 +62,9 @@ fu! man#read_page(ref) abort
     endtry
     call s:read_page(path)
 endfu
+
+"}}}
+" s:read_page "{{{
 
 fu! s:read_page(path) abort
     setl modifiable noreadonly
@@ -79,6 +87,9 @@ fu! s:read_page(path) abort
     setl filetype=man
 endfu
 
+"}}}
+" man#extract_sect_and_name_ref "{{{
+"
 " attempt to extract the name and sect out of 'name(sect)'
 " otherwise just return the largest string of valid characters in ref
 fu! man#extract_sect_and_name_ref(ref) abort
@@ -103,6 +114,9 @@ fu! man#extract_sect_and_name_ref(ref) abort
     return [tolower(split(left[1], ')')[0]), left[0]]
 endfu
 
+"}}}
+" s:get_path "{{{
+
 fu! s:get_path(sect, name) abort
 
     if empty(a:sect)
@@ -124,6 +138,9 @@ fu! s:get_path(sect, name) abort
 
     return system(s:man_cmd.' -w '.shellescape(a:sect).' '.shellescape(a:name))
 endfu
+
+"}}}
+" s:verify_exists "{{{
 
 fu! s:verify_exists(sect, name) abort
 
@@ -148,8 +165,10 @@ fu! s:verify_exists(sect, name) abort
     return s:extract_sect_and_name_path(path) + [path]
 endfu
 
-let s:tag_stack = []
+"}}}
+" s:push_tag "{{{
 
+let s:tag_stack = []
 fu! s:push_tag() abort
     let s:tag_stack += [{
                         \ 'buf':  bufnr('%'),
@@ -158,6 +177,9 @@ fu! s:push_tag() abort
                         \ }]
 endfu
 
+"}}}
+" man#pop_tag "{{{
+
 fu! man#pop_tag() abort
     if !empty(s:tag_stack)
         let tag = remove(s:tag_stack, -1)
@@ -165,6 +187,9 @@ fu! man#pop_tag() abort
         call cursor(tag['lnum'], tag['col'])
     endif
 endfu
+
+"}}}
+" s:extract_sect_and_name_path"{{{
 
 " extracts the name and sect out of 'path/name.sect'
 fu! s:extract_sect_and_name_path(path) abort
@@ -180,6 +205,9 @@ fu! s:extract_sect_and_name_path(path) abort
 
     return [sect, name]
 endfu
+
+"}}}
+" s:find_man "{{{
 
 fu! s:find_man() abort
     if &ft ==# 'man'
@@ -200,6 +228,9 @@ fu! s:find_man() abort
     endwhile
 endfu
 
+"}}}
+" s:error "{{{
+
 fu! s:error(msg) abort
     redraw
     echohl ErrorMsg
@@ -207,6 +238,8 @@ fu! s:error(msg) abort
     echohl None
 endfu
 
+"}}}
+" man#complete "{{{
 let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
@@ -282,6 +315,9 @@ fu! man#complete(lead, line, _pos) abort
     return uniq(sort(map(globpath(s:mandirs,'man?/'.name.'*.'.sect.'*', 0, 1), 's:format_candidate(v:val, sect)'), 'i'))
 endfu
 
+"}}}
+" s:format_candidate "{{{
+
 fu! s:format_candidate(path, sect) abort
     " invalid extensions
     if a:path =~# '\v\.%(pdf|in)$'
@@ -298,6 +334,9 @@ fu! s:format_candidate(path, sect) abort
         return name.'('.sect.')'
     endif
 endfu
+
+"}}}
+" man#init_pager "{{{
 
 fu! man#init_pager() abort
     " Remove all backspaced characters.
@@ -317,3 +356,5 @@ fu! man#init_pager() abort
     endtry
     exe 'sil file man://'.fnameescape(ref)
 endfu
+
+"}}}
