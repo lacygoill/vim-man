@@ -38,6 +38,8 @@ if !exists('g:no_plugin_maps') && !exists('g:no_man_maps')
   endif
 endif
 
+" Source:
+" https://github.com/neovim/neovim/pull/4449#issuecomment-237290098
 fu! s:create_toc() abort
     let toc = []
     for lnum in range(1, line('$'))
