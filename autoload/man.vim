@@ -1,13 +1,11 @@
 let s:man_cmd = 'man 2>/dev/null'
 
-let s:man_find_arg = '-w'
-
 fu! man#open_page(count, count1, mods, ...) abort
     if a:0 > 2
         call s:error('too many arguments')
         return
     elseif a:0 == 0
-        let ref = &filetype ==# 'man' ? expand('<cWORD>') : expand('<cword>')
+        let ref = &ft ==# 'man' ? expand('<cWORD>') : expand('<cword>')
         if empty(ref)
             call s:error('no identifier under cursor')
             return
@@ -21,6 +19,7 @@ fu! man#open_page(count, count1, mods, ...) abort
         " reference that will match.
         let ref = a:2.'('.a:1.')'
     endif
+
     try
         let [sect, name] = man#extract_sect_and_name_ref(ref)
         if a:count ==# a:count1
@@ -33,13 +32,17 @@ fu! man#open_page(count, count1, mods, ...) abort
         call s:error(v:exception)
         return
     endtry
+
     call s:push_tag()
-    let bufname = 'man://'.name.(empty(sect)?'':'('.sect.')')
+
+    let bufname = 'man://' . name . (empty(sect) ? '' : '('.sect.')')
+
     if a:mods !~# 'tab' && s:find_man()
-        noautocmd exe 'sil edit' fnameescape(bufname)
+        noautocmd exe 'sil edit '.fnameescape(bufname)
     else
-        noautocmd exe 'sil' a:mods 'split' fnameescape(bufname)
+        noautocmd exe 'sil '.a:mods.' split '.fnameescape(bufname)
     endif
+
     let b:man_sect = sect
     call s:read_page(path)
 endfu
@@ -57,17 +60,21 @@ endfu
 
 fu! s:read_page(path) abort
     setl modifiable noreadonly
-    sil keepj %delete _
+    sil keepj %d_
+
     " Force MANPAGER=cat to ensure Vim is not recursively invoked (by man-db).
     " http://comments.gmane.org/gmane.editors.vim.devel/29085
     " Respect $MANWIDTH, or default to window width.
+
     let cmd  = 'env MANPAGER=cat'.(empty($MANWIDTH) ? ' MANWIDTH='.winwidth(0) : '')
     let cmd .= ' '.s:man_cmd.' '.shellescape(a:path)
     sil put =system(cmd)
+
     " Remove all backspaced characters.
-    exe 'sil keepp keepj %s/.\b//ge'
+    exe "sil keepp keepj %s/.\b//ge"
+
     while getline(1) =~# '^\s*$'
-        sil keepj 1delete _
+        sil keepj 1d_
     endwhile
     setl filetype=man
 endfu
@@ -75,9 +82,11 @@ endfu
 " attempt to extract the name and sect out of 'name(sect)'
 " otherwise just return the largest string of valid characters in ref
 fu! man#extract_sect_and_name_ref(ref) abort
-    if a:ref[0] ==# '-' " try ':Man -pandoc' with this disabled.
+    " try ':Man -pandoc' with this disabled.
+    if a:ref[0] ==# '-'
         throw 'manpage name cannot start with ''-'''
     endif
+
     let ref = matchstr(a:ref, '[^()]\+([^()]\+)')
     if empty(ref)
         let name = matchstr(a:ref, '[^()]\+')
@@ -86,44 +95,56 @@ fu! man#extract_sect_and_name_ref(ref) abort
         endif
         return [get(b:, 'man_default_sects', ''), name]
     endif
+
     let left = split(ref, '(')
+
     " see ':Man 3X curses' on why tolower.
-    " TODO(nhooyr) Not sure if this is portable across OSs
-    " but I have not seen a single uppercase section.
+
     return [tolower(split(left[1], ')')[0]), left[0]]
 endfu
 
 fu! s:get_path(sect, name) abort
+
     if empty(a:sect)
-        let path = system(s:man_cmd.' '.s:man_find_arg.' '.shellescape(a:name))
+        let path = system(s:man_cmd.' -w '.shellescape(a:name))
+
         if path !~# '^\/'
             throw 'no manual entry for '.a:name
         endif
+
         return path
     endif
+
     " '-s' flag handles:
-    "   - tokens like 'printf(echo)'
-    "   - sections starting with '-'
-    "   - 3pcap section (found on macOS)
-    "   - commas between sections (for section priority)
-    return system(s:man_cmd.' '.s:man_find_arg.' -s '.shellescape(a:sect).' '.shellescape(a:name))
+    "
+    "     - tokens like 'printf(echo)'
+    "     - sections starting with '-'
+    "     - 3pcap section (found on macOS)
+    "     - commas between sections (for section priority)
+
+    return system(s:man_cmd.' -w '.shellescape(a:sect).' '.shellescape(a:name))
 endfu
 
 fu! s:verify_exists(sect, name) abort
+
     let path = s:get_path(a:sect, a:name)
     if path !~# '^\/'
         let path = s:get_path(get(b:, 'man_default_sects', ''), a:name)
+
         if path !~# '^\/'
             let path = s:get_path('', a:name)
         endif
     endif
+
     " We need to extract the section from the path because sometimes
     " the actual section of the manpage is more specific than the section
     " we provided to `man`. Try ':Man 3 App::CLI'.
     " Also on linux, it seems that the name is case insensitive. So if one does
     " ':Man PRIntf', we still want the name of the buffer to be 'printf' or
     " whatever the correct capitalization is.
+
     let path = path[:len(path)-2]
+
     return s:extract_sect_and_name_path(path) + [path]
 endfu
 
@@ -131,10 +152,10 @@ let s:tag_stack = []
 
 fu! s:push_tag() abort
     let s:tag_stack += [{
-                \ 'buf':  bufnr('%'),
-                \ 'lnum': line('.'),
-                \ 'col':  col('.'),
-                \ }]
+                        \ 'buf':  bufnr('%'),
+                        \ 'lnum': line('.'),
+                        \ 'col':  col('.'),
+                        \ }]
 endfu
 
 fu! man#pop_tag() abort
@@ -148,26 +169,32 @@ endfu
 " extracts the name and sect out of 'path/name.sect'
 fu! s:extract_sect_and_name_path(path) abort
     let tail = fnamemodify(a:path, ':t')
-    if a:path =~# '\.\%([glx]z\|bz2\|lzma\|Z\)$' " valid extensions
+
+    " valid extensions
+    if a:path =~# '\v\.%([glx]z|bz2|lzma|Z)$'
         let tail = fnamemodify(tail, ':r')
     endif
+
     let sect = matchstr(tail, '\.\zs[^.]\+$')
     let name = matchstr(tail, '^.\+\ze\.')
+
     return [sect, name]
 endfu
 
 fu! s:find_man() abort
-    if &filetype ==# 'man'
+    if &ft ==# 'man'
         return 1
     elseif winnr('$') ==# 1
         return 0
     endif
+
     let thiswin = winnr()
+
     while 1
         wincmd w
-        if &filetype ==# 'man'
+        if &ft ==# 'man'
             return 1
-        elseif thiswin ==# winnr()
+        elseif winnr() ==# thiswin
             return 0
         endif
     endwhile
@@ -180,60 +207,89 @@ fu! s:error(msg) abort
     echohl None
 endfu
 
-let s:mandirs = join(split(system(s:man_cmd.' '.s:man_find_arg), ':\|\n'), ',')
+let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
 fu! man#complete(lead, line, _pos) abort
     let args = split(a:line)
-    let l = len(args)
-    if l > 3
+    let lead = a:lead
+    let N    = len(args)
+
+    if N > 3
+
+        " There can be:
+        "
+        "     1 token (Man)
+        "     2       (Man <section number>)
+        "     3       (Man <section number> command)
+        "
+        " So, there shouldn't be more than 3 tokens.
+
         return
-    elseif l ==# 1
-        let name = ''
-        let sect = ''
-    elseif a:lead =~# '^[^()]\+([^()]*$'
-        " cursor (|) is at ':Man printf(|' or ':Man 1 printf(|'
-        " The later is is allowed because of ':Man pri<TAB>'.
-        " It will offer 'priclass.d(1m)' even though section is specified as 1.
-        let tmp = split(a:lead, '(')
+
+    elseif N ==# 1
+        let [name, sect] = ['', '']
+
+    elseif lead =~# '^[^()]\+([^()]*$'
+
+        " cursor (|) is at:
+        "
+        "     :Man printf(|
+        "     :Man 1 printf(|
+
+        let tmp  = split(lead, '(')
         let name = tmp[0]
         let sect = tolower(get(tmp, 1, ''))
+
     elseif args[1] !~# '^[^()]\+$'
-        " cursor (|) is at ':Man 3() |' or ':Man (3|' or ':Man 3() pri|'
-        " or ':Man 3() pri |'
+
+        " cursor (|) is at:
+        "
+        "     :Man 3() |
+        "     :Man (3|
+        "     :Man 3() pri|
+        "     :Man 3() pri |
+
         return
-    elseif l ==# 2
-        if empty(a:lead)
+
+    elseif N ==# 2
+        if empty(lead)
             " cursor (|) is at ':Man 1 |'
             let name = ''
             let sect = tolower(args[1])
+
         else
             " cursor (|) is at ':Man pri|'
-            if a:lead =~# '\/'
+            if lead =~# '\/'
                 " if the name is a path, complete files
-                " TODO(nhooyr) why does this complete the last one automatically
-                return glob(a:lead.'*', 0, 1)
+                return glob(lead.'*', 0, 1)
             endif
-            let name = a:lead
+            let name = lead
             let sect = ''
         endif
-    elseif a:lead !~# '^[^()]\+$'
+
+    elseif lead !~# '^[^()]\+$'
         " cursor (|) is at ':Man 3 printf |' or ':Man 3 (pr)i|'
         return
+
     else
         " cursor (|) is at ':Man 3 pri|'
-        let name = a:lead
+        let name = lead
         let sect = tolower(args[1])
     endif
+
     " We remove duplicates incase the same manpage in different languages was found.
     return uniq(sort(map(globpath(s:mandirs,'man?/'.name.'*.'.sect.'*', 0, 1), 's:format_candidate(v:val, sect)'), 'i'))
 endfu
 
 fu! s:format_candidate(path, sect) abort
-    if a:path =~# '\.\%(pdf\|in\)$' " invalid extensions
+    " invalid extensions
+    if a:path =~# '\v\.%(pdf|in)$'
         return
     endif
+
     let [sect, name] = s:extract_sect_and_name_path(a:path)
+
     if sect ==# a:sect
         return name
     elseif sect =~# a:sect.'.\+$'
@@ -245,7 +301,7 @@ endfu
 
 fu! man#init_pager() abort
     " Remove all backspaced characters.
-    exe 'sil keepp keepj %s/.\b//ge'
+    exe "sil keepp keepj %s/.\b//ge"
     if getline(1) =~# '^\s*$'
         sil keepj 1delete _
     else
