@@ -183,19 +183,19 @@ endfu
 let s:mandirs = join(split(system(s:man_cmd.' '.s:man_find_arg), ':\|\n'), ',')
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
-fu! man#complete(arg_lead, cmd_line, cursor_pos) abort
-    let args = split(a:cmd_line)
+fu! man#complete(lead, line, _pos) abort
+    let args = split(a:line)
     let l = len(args)
     if l > 3
         return
     elseif l ==# 1
         let name = ''
         let sect = ''
-    elseif a:arg_lead =~# '^[^()]\+([^()]*$'
+    elseif a:lead =~# '^[^()]\+([^()]*$'
         " cursor (|) is at ':Man printf(|' or ':Man 1 printf(|'
         " The later is is allowed because of ':Man pri<TAB>'.
         " It will offer 'priclass.d(1m)' even though section is specified as 1.
-        let tmp = split(a:arg_lead, '(')
+        let tmp = split(a:lead, '(')
         let name = tmp[0]
         let sect = tolower(get(tmp, 1, ''))
     elseif args[1] !~# '^[^()]\+$'
@@ -203,26 +203,26 @@ fu! man#complete(arg_lead, cmd_line, cursor_pos) abort
         " or ':Man 3() pri |'
         return
     elseif l ==# 2
-        if empty(a:arg_lead)
+        if empty(a:lead)
             " cursor (|) is at ':Man 1 |'
             let name = ''
             let sect = tolower(args[1])
         else
             " cursor (|) is at ':Man pri|'
-            if a:arg_lead =~# '\/'
+            if a:lead =~# '\/'
                 " if the name is a path, complete files
                 " TODO(nhooyr) why does this complete the last one automatically
-                return glob(a:arg_lead.'*', 0, 1)
+                return glob(a:lead.'*', 0, 1)
             endif
-            let name = a:arg_lead
+            let name = a:lead
             let sect = ''
         endif
-    elseif a:arg_lead !~# '^[^()]\+$'
+    elseif a:lead !~# '^[^()]\+$'
         " cursor (|) is at ':Man 3 printf |' or ':Man 3 (pr)i|'
         return
     else
         " cursor (|) is at ':Man 3 pri|'
-        let name = a:arg_lead
+        let name = a:lead
         let sect = tolower(args[1])
     endif
     " We remove duplicates incase the same manpage in different languages was found.
