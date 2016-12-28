@@ -15,10 +15,16 @@ fu! man#open_page(count, count1, mods, ...) abort
     elseif a:0 ==# 1
         let ref = a:1
     else
-        " Combine the name and sect into a manpage reference so that all
-        " verification/extraction can be kept in a single function.
-        " If a:2 is a reference as well, that is fine because it is the only
-        " reference that will match.
+
+        " We have 2 optional arguments:
+        "
+        "     a:1    3
+        "     a:2    printf
+        "
+        " We combine them to create a reference:
+        "
+        "     printf(3)
+
         let ref = a:2.'('.a:1.')'
     endif
 
@@ -234,13 +240,17 @@ endfu
 fu! s:error(msg) abort
     redraw
     echohl ErrorMsg
-    echon 'man.vim: ' a:msg
+    echon 'man.vim: '.a:msg
     echohl None
 endfu
 
 "}}}
 " man#complete "{{{
 let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
+
+" FIXME:
+" doesn't work if we prefix `:Man` with a modifier such as `:tab` or `:vert`.
+" Add support for a possible modifier.
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
 fu! man#complete(lead, line, _pos) abort

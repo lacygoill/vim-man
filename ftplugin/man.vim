@@ -53,94 +53,50 @@ nmap <buffer> <silent> <BS>  <C-T>
 
 nno <buffer> <silent> q    :<C-U>call myfuncs#quit()<CR>
 
-nno <buffer> <silent> o    :<C-U>call <SID>search_syntax_element(0, 'option')<CR>
-nno <buffer> <silent> O    :<C-U>call <SID>search_syntax_element(1, 'option')<CR>
-nno <buffer> <silent> r    :<C-U>call <SID>search_syntax_element(0, 'ref')<CR>
-nno <buffer> <silent> R    :<C-U>call <SID>search_syntax_element(1, 'ref')<CR>
-nno <buffer> <silent> s    :<C-U>call <SID>search_syntax_element(0, 'heading')<CR>
-nno <buffer> <silent> S    :<C-U>call <SID>search_syntax_element(1, 'heading')<CR>
+nno <buffer> <nowait> <silent> [h    :<C-U>call <SID>search_syntax('heading', '[h', 1)<CR>
+nno <buffer> <nowait> <silent> ]h    :<C-U>call <SID>search_syntax('heading', ']h', 0)<CR>
+nno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 1)<CR>
+nno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 0)<CR>
+nno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 1)<CR>
+nno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 0)<CR>
+nno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 1)<CR>
+nno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 0)<CR>
 
-fu! s:syntax_under_cursor() abort
-    return synIDattr(synID(line('.'), col('.'), 1), 'name')
-endfu
+xno <buffer> <nowait> <silent> [h    :<C-U>call <SID>search_syntax('heading', '[h', 1, 1)<CR>
+xno <buffer> <nowait> <silent> ]h    :<C-U>call <SID>search_syntax('heading', ']h', 0, 1)<CR>
+xno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 1, 1)<CR>
+xno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 0, 1)<CR>
+xno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 1, 1)<CR>
+xno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 0, 1)<CR>
+xno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 1, 1)<CR>
+xno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 0, 1)<CR>
 
-" FIXME:
-"
-" Make our mapping moving the cursor to the next reference in a man page more
-" robust. Currrently, it skips some references when they are separated by
-" commas or newlines. Maybe we should tell the `search()` function to look for
-" a next word OR the pattern `<\k+>(\d+)` (+ the condition that the latter has
-" the right syntax group).
+ono <buffer> <nowait> <silent> [h    :norm V[hj<CR>
+ono <buffer> <nowait> <silent> ]h    :norm V]hk<CR>
+ono <buffer> <nowait> <silent> [o    :norm v[o<CR>
+ono <buffer> <nowait> <silent> ]o    :norm v]o<CR>
+ono <buffer> <nowait> <silent> [r    :norm v[r<CR>
+ono <buffer> <nowait> <silent> ]r    :norm v]r<CR>
+ono <buffer> <nowait> <silent> [s    :norm V[sj<CR>
+ono <buffer> <nowait> <silent> ]s    :norm V]sk<CR>
 
-fu! s:search_syntax_element(backward, to_look_for) abort
-    let original_pos       = getpos('.')
-    let initial_element    = s:syntax_under_cursor()
-    let next_element       = ''
+let s:keyword2pattern = {
+                        \ 'heading'    : '^[a-z][a-z -]*[a-z]$',
+                        \ 'option'     : '^\s\+\zs\%(+\|-\)\S\+',
+                        \ 'ref'        : '\f\+([1-9][a-z]\=)',
+                        \ 'subheading' : '^\s\{3\}\zs[a-z][a-z -]*[a-z]$',
+                        \ }
 
-    let to_look_for        = a:to_look_for == 'heading'
-                           \ ?    ['manSubHeading', 'manSectionHeading']
-                           \ :    a:to_look_for == 'option'
-                           \      ?    ['manOptionDesc', 'manLongOptionDesc']
-                           \      :    a:to_look_for == 'ref'
-                           \           ?    ['manReference']
-                           \           :    ''
+fu! s:search_syntax(keyword, mapping, back, ...) abort
+    let g:motion_to_repeat = a:mapping
 
-    let identical_sequence = 1
-    let found_sth          = 1
-
-    while found_sth && (!count(to_look_for, next_element) || identical_sequence)
-
-        " Go on searching as long as:"{{{
-        "
-        "        - we found something the last time
-        "
-        "          Because, if in the last iteration, no word was found, then
-        "          there's no word after the current cursor position any more.
-        "
-        "                            AND
-        "
-        "        - the element under the cursor is not what we are looking for
-        "
-        "                  OR
-        "
-        "          it is what we are looking for, but it's part of a sequence of
-        "          identical elements;
-        "
-        "          we don't want the cursor to move to the next word inside an
-        "          identical sequence;
-        "          we want it to move to the next word outside of it
-"}}}
-
-        let found_sth    = search('\<\k\+', 'W' . (a:backward ? 'b' : ''))
-        " let found_sth    = search((to_look_for[0] ==# 'manReference' ? '\<\k\+(\d)' : '\<\k\+'), 'W' . (a:backward ? 'b' : ''))
-        let next_element = s:syntax_under_cursor()
-
-        " Why do we create the variable `identical_sequence` and update it inside"{{{
-        " the loop?
-        " Why don't we get rid of it, and put the test:
-        "
-        "         next_element == initial_element
-        "
-        " … in the `:while` declaration?
-        " Because then, it would make sure that EACH found word is different than
-        " the initial one.
-        " But that's not what we want. We just want to make sure that between
-        " the final found word and our initial position, AT LEAST ONE found word
-        " was different than the initial one.
-"}}}
-
-        if next_element != initial_element
-            let identical_sequence = 0
-        endif
-    endwhile
-
-    " If the cursor ended on some text which is not what we were looking for
-    " (reached the very beginning / end of the buffer),
-    " move it back where it was.
-
-    if !count(to_look_for, s:syntax_under_cursor())
-        call setpos('.', original_pos)
+    if a:0
+        norm! gv
     endif
+
+    norm! m'
+
+    call search(s:keyword2pattern[a:keyword], 'W'.(a:back ? 'b' : ''))
 endfu
 
 "}}}

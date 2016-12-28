@@ -1,13 +1,5 @@
 " TODO use backspaced text for better syntax highlighting.
 " see https://github.com/neovim/neovim/pull/4449#issuecomment-234696194
-"
-" Also, read this:
-" https://github.com/tweekmonster/neovim/commit/94a4b316516b92dcb8938b8b557c645abc9be79b
-" The idea is to use the location to create an actionable TOC.
-" Could be used in man pages but also in help files, and various documentation
-" files (markdown notes?).
-"
-" We could create a mapping toggling the location window…
 if exists('b:current_syntax')
     finish
 endif
