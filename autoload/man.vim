@@ -1,4 +1,5 @@
 let s:man_cmd = 'man 2>/dev/null'
+" test
 
 " man#open_page "{{{
 
