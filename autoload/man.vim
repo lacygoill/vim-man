@@ -349,6 +349,15 @@ endfu
 " man#init_pager "{{{
 
 fu! man#init_pager() abort
+
+    " Set the buffer to be modifiable, otherwise the next commands
+    " cause an error:
+    "
+    "     Error detected while processing function man#init_pager:
+    "     E21: Cannot make changes, 'modifiable' is off
+
+    setl modifiable
+
     " Remove all backspaced characters.
     exe "sil keepp keepj %s/.\b//ge"
     if getline(1) =~# '^\s*$'
