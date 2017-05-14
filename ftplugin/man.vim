@@ -131,12 +131,6 @@ nno <silent> <buffer> <C-]>      :Man<CR>
 nno <silent> <buffer> K          :Man<CR>
 nno <silent> <buffer> <C-T>      :call man#pop_tag()<CR>
 
-if s:pager
-    nno <silent> <buffer> <nowait> q :q<CR>
-else
-    nno <silent> <buffer> <nowait> q <C-W>c
-endif
-
 " FIXME:"{{{
 "
 " From: :h undo_ftplugin
