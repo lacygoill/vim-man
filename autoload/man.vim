@@ -1,5 +1,8 @@
 let s:man_cmd = 'man 2>/dev/null'
 
+" Read this (new concept of outline):
+" https://github.com/neovim/neovim/pull/5169
+
 " man#open_page "{{{
 
 fu! man#open_page(count, count1, mods, ...) abort
