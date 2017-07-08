@@ -131,6 +131,15 @@ nno <silent> <buffer> <C-]>      :Man<CR>
 nno <silent> <buffer> K          :Man<CR>
 nno <silent> <buffer> <C-T>      :call man#pop_tag()<CR>
 
+" I frequently hit `p` by accident. It raises the error:
+"
+"     E21: Cannot make changes, 'modifiable' is off
+nno <silent> <buffer> p <nop>
+
+" When I open a man page, I immediately want to be able to cycle between
+" options with `;` and `,`.
+let g:motion_to_repeat = ']o'
+
 " FIXME:"{{{
 "
 " From: :h undo_ftplugin
