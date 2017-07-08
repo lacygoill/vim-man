@@ -3,6 +3,13 @@ if exists('b:did_ftplugin') || &filetype !=# 'man'
 endif
 let b:did_ftplugin = 1
 
+" When I open a man page, I immediately want to be able to cycle between
+" options with `;` and `,`.
+let g:motion_to_repeat = ']o'
+
+" maximize the window, the 1st time we load a man page
+wincmd _
+
 " My original man ftplugin "{{{
 "
 " Set the name of the scratch buffer; ex:    man(1)
@@ -135,10 +142,6 @@ nno <silent> <buffer> <C-T>      :call man#pop_tag()<CR>
 "
 "     E21: Cannot make changes, 'modifiable' is off
 nno <silent> <buffer> p <nop>
-
-" When I open a man page, I immediately want to be able to cycle between
-" options with `;` and `,`.
-let g:motion_to_repeat = ']o'
 
 " FIXME:"{{{
 "
