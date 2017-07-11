@@ -55,10 +55,10 @@ setlocal ignorecase
 "}}}
 " Mappings "{{{
 
-nmap <buffer> <silent> <CR>  <C-]>
-nmap <buffer> <silent> <BS>  <C-T>
+nmap <buffer> <nowait> <silent> <CR>  <C-]>
+nmap <buffer> <nowait> <silent> <BS>  <C-T>
 
-nno <buffer> <silent> q    :<C-U>call myfuncs#quit()<CR>
+nno <buffer> <nowait> <silent> q    :<C-U>call myfuncs#quit()<CR>
 
 nno <buffer> <nowait> <silent> [h    :<C-U>call <SID>search_syntax('heading', '[h', 1)<CR>
 nno <buffer> <nowait> <silent> ]h    :<C-U>call <SID>search_syntax('heading', ']h', 0)<CR>
@@ -134,14 +134,14 @@ setl colorcolumn=0
 setl nolist
 setl nofoldenable
 
-nno <silent> <buffer> <C-]>      :Man<CR>
-nno <silent> <buffer> K          :Man<CR>
-nno <silent> <buffer> <C-T>      :call man#pop_tag()<CR>
+nno <buffer> <nowait> <silent> <C-]>      :Man<CR>
+nno <buffer> <nowait> <silent> K          :Man<CR>
+nno <buffer> <nowait> <silent> <C-T>      :call man#pop_tag()<CR>
 
 " I frequently hit `p` by accident. It raises the error:
 "
 "     E21: Cannot make changes, 'modifiable' is off
-nno <silent> <buffer> p <nop>
+nno <buffer> <nowait> <silent> p <nop>
 
 " FIXME:"{{{
 "
