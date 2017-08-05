@@ -10,7 +10,7 @@ let g:motion_to_repeat = ']o'
 " maximize the window, the 1st time we load a man page
 wincmd _
 
-" My original man ftplugin "{{{
+" My original man ftplugin {{{
 "
 " Set the name of the scratch buffer; ex:    man(1)
 " otherwise, we would have [Scratch] as a placeholder
@@ -34,7 +34,7 @@ endif
 " Besides, there's no need to rename the subsequent buffers, somehow they're
 " automatically correctly named when opened from Vim (instead of the shell).
 
-" Options "{{{
+" Options {{{
 "
 " We can't give the value `wipe` to 'bufhidden'.
 " Indeed, after clicking on a reference in a man buffer, the original buffer
@@ -53,7 +53,7 @@ setlocal nolist
 setlocal ignorecase
 
 "}}}
-" Mappings "{{{
+" Mappings {{{
 
 nmap <buffer> <nowait> <silent> <CR>  <C-]>
 nmap <buffer> <nowait> <silent> <BS>  <C-T>
@@ -143,7 +143,7 @@ nno <buffer> <nowait> <silent> <C-T>      :call man#pop_tag()<CR>
 "     E21: Cannot make changes, 'modifiable' is off
 nno <buffer> <nowait> <silent> p <nop>
 
-" FIXME:"{{{
+" FIXME:{{{
 "
 " From: :h undo_ftplugin
 "
