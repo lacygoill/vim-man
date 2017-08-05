@@ -3,9 +3,7 @@ let s:man_cmd = 'man 2>/dev/null'
 " Read this (new concept of outline):
 " https://github.com/neovim/neovim/pull/5169
 
-" man#open_page "{{{
-
-fu! man#open_page(count, count1, mods, ...) abort
+fu! man#open_page(count, count1, mods, ...) abort "{{{1
     if a:0 > 2
         call s:error('too many arguments')
         return
@@ -58,10 +56,7 @@ fu! man#open_page(count, count1, mods, ...) abort
     call s:read_page(path)
 endfu
 
-"}}}
-" man#read_page "{{{
-
-fu! man#read_page(ref) abort
+fu! man#read_page(ref) abort "{{{1
     try
         let [sect, name]             = man#extract_sect_and_name_ref(a:ref)
         let [b:man_sect, name, path] = s:verify_exists(sect, name)
@@ -72,10 +67,7 @@ fu! man#read_page(ref) abort
     call s:read_page(path)
 endfu
 
-"}}}
-" s:read_page "{{{
-
-fu! s:read_page(path) abort
+fu! s:read_page(path) abort "{{{1
     setl modifiable noreadonly
     sil keepj %d_
 
@@ -96,12 +88,10 @@ fu! s:read_page(path) abort
     setl filetype=man
 endfu
 
-"}}}
-" man#extract_sect_and_name_ref "{{{
-"
+fu! man#extract_sect_and_name_ref(ref) abort "{{{1
 " attempt to extract the name and sect out of 'name(sect)'
 " otherwise just return the largest string of valid characters in ref
-fu! man#extract_sect_and_name_ref(ref) abort
+
     " try ':Man -pandoc' with this disabled.
     if a:ref[0] ==# '-'
         throw 'manpage name cannot start with ''-'''
@@ -123,10 +113,7 @@ fu! man#extract_sect_and_name_ref(ref) abort
     return [tolower(split(left[1], ')')[0]), left[0]]
 endfu
 
-"}}}
-" s:get_path "{{{
-
-fu! s:get_path(sect, name) abort
+fu! s:get_path(sect, name) abort "{{{1
 
     if empty(a:sect)
         let path = system(s:man_cmd.' -w '.shellescape(a:name))
@@ -148,10 +135,7 @@ fu! s:get_path(sect, name) abort
     return system(s:man_cmd.' -w '.shellescape(a:sect).' '.shellescape(a:name))
 endfu
 
-"}}}
-" s:verify_exists "{{{
-
-fu! s:verify_exists(sect, name) abort
+fu! s:verify_exists(sect, name) abort "{{{1
 
     let path = s:get_path(a:sect, a:name)
     if path !~# '^\/'
@@ -174,8 +158,7 @@ fu! s:verify_exists(sect, name) abort
     return s:extract_sect_and_name_path(path) + [path]
 endfu
 
-"}}}
-" s:push_tag "{{{
+" push_tag {{{1
 
 let s:tag_stack = []
 fu! s:push_tag() abort
@@ -186,10 +169,7 @@ fu! s:push_tag() abort
                         \ }]
 endfu
 
-"}}}
-" man#pop_tag "{{{
-
-fu! man#pop_tag() abort
+fu! man#pop_tag() abort "{{{1
     if !empty(s:tag_stack)
         let tag = remove(s:tag_stack, -1)
         exe 'sil' tag['buf'].'buffer'
@@ -197,11 +177,9 @@ fu! man#pop_tag() abort
     endif
 endfu
 
-"}}}
-" s:extract_sect_and_name_path"{{{
-
+fu! s:extract_sect_and_name_path(path) abort "{{{1
 " extracts the name and sect out of 'path/name.sect'
-fu! s:extract_sect_and_name_path(path) abort
+
     let tail = fnamemodify(a:path, ':t')
 
     " valid extensions
@@ -215,10 +193,7 @@ fu! s:extract_sect_and_name_path(path) abort
     return [sect, name]
 endfu
 
-"}}}
-" s:find_man "{{{
-
-fu! s:find_man() abort
+fu! s:find_man() abort "{{{1
     if &ft ==# 'man'
         return 1
     elseif winnr('$') ==# 1
@@ -237,18 +212,14 @@ fu! s:find_man() abort
     endwhile
 endfu
 
-"}}}
-" s:error "{{{
-
-fu! s:error(msg) abort
+fu! s:error(msg) abort "{{{1
     redraw
     echohl ErrorMsg
     echon 'man.vim: '.a:msg
     echohl None
 endfu
 
-"}}}
-" man#complete "{{{
+" complete {{{1
 let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
 
 " FIXME:
@@ -328,10 +299,7 @@ fu! man#complete(lead, line, _pos) abort
     return uniq(sort(map(globpath(s:mandirs,'man?/'.name.'*.'.sect.'*', 0, 1), 's:format_candidate(v:val, sect)'), 'i'))
 endfu
 
-"}}}
-" s:format_candidate "{{{
-
-fu! s:format_candidate(path, sect) abort
+fu! s:format_candidate(path, sect) abort "{{{1
     " invalid extensions
     if a:path =~# '\v\.%(pdf|in)$'
         return
@@ -348,10 +316,7 @@ fu! s:format_candidate(path, sect) abort
     endif
 endfu
 
-"}}}
-" man#init_pager "{{{
-
-fu! man#init_pager() abort
+fu! man#init_pager() abort 
 
     " Set the buffer to be modifiable, otherwise the next commands
     " cause an error:
@@ -378,5 +343,3 @@ fu! man#init_pager() abort
     endtry
     exe 'sil file man://'.fnameescape(ref)
 endfu
-
-"}}}
