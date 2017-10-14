@@ -3,7 +3,7 @@ if exists('b:did_ftplugin') || &filetype !=# 'man'
 endif
 let b:did_ftplugin = 1
 
-" When I open a man page, I immediately want to be able to cycle between
+" When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
 let g:motion_to_repeat = ']o'
 
@@ -60,8 +60,8 @@ nmap <buffer> <nowait> <silent> <BS>  <C-T>
 
 nno <buffer> <nowait> <silent> q    :<C-U>call myfuncs#quit()<CR>
 
-nno <buffer> <nowait> <silent> [h    :<C-U>call <SID>search_syntax('heading', '[h', 1)<CR>
-nno <buffer> <nowait> <silent> ]h    :<C-U>call <SID>search_syntax('heading', ']h', 0)<CR>
+nno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 1)<CR>
+nno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 0)<CR>
 nno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 1)<CR>
 nno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 0)<CR>
 nno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 1)<CR>
@@ -69,8 +69,8 @@ nno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 
 nno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 1)<CR>
 nno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 0)<CR>
 
-xno <buffer> <nowait> <silent> [h    :<C-U>call <SID>search_syntax('heading', '[h', 1, 1)<CR>
-xno <buffer> <nowait> <silent> ]h    :<C-U>call <SID>search_syntax('heading', ']h', 0, 1)<CR>
+xno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 1, 1)<CR>
+xno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 0, 1)<CR>
 xno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 1, 1)<CR>
 xno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 0, 1)<CR>
 xno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 1, 1)<CR>
@@ -78,8 +78,8 @@ xno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 
 xno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 1, 1)<CR>
 xno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 0, 1)<CR>
 
-ono <buffer> <nowait> <silent> [h    :norm V[hj<CR>
-ono <buffer> <nowait> <silent> ]h    :norm V]hk<CR>
+ono <buffer> <nowait> <silent> [H    :norm V[Hj<CR>
+ono <buffer> <nowait> <silent> ]H    :norm V]Hk<CR>
 ono <buffer> <nowait> <silent> [o    :norm v[o<CR>
 ono <buffer> <nowait> <silent> ]o    :norm v]o<CR>
 ono <buffer> <nowait> <silent> [r    :norm v[r<CR>
