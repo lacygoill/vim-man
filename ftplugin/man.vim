@@ -60,23 +60,23 @@ nmap <buffer> <nowait> <silent> <BS>  <C-T>
 
 nno <buffer> <nowait> <silent> q    :<C-U>call myfuncs#quit()<CR>
 
-nno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 1)<CR>
-nno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 0)<CR>
-nno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 1)<CR>
-nno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 0)<CR>
-nno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 1)<CR>
-nno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 0)<CR>
-nno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 1)<CR>
-nno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 0)<CR>
+nno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 0)<CR>
+nno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 1)<CR>
+nno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 0)<CR>
+nno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 1)<CR>
+nno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 0)<CR>
+nno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 1)<CR>
+nno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 0)<CR>
+nno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 1)<CR>
 
-xno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 1, 1)<CR>
-xno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 0, 1)<CR>
-xno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 1, 1)<CR>
-xno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 0, 1)<CR>
-xno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 1, 1)<CR>
-xno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 0, 1)<CR>
-xno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 1, 1)<CR>
-xno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 0, 1)<CR>
+xno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 0, 1)<CR>
+xno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 1, 1)<CR>
+xno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 0, 1)<CR>
+xno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 1, 1)<CR>
+xno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 0, 1)<CR>
+xno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 1, 1)<CR>
+xno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 0, 1)<CR>
+xno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 1, 1)<CR>
 
 ono <buffer> <nowait> <silent> [H    :norm V[Hj<CR>
 ono <buffer> <nowait> <silent> ]H    :norm V]Hk<CR>
@@ -94,7 +94,7 @@ let s:keyword2pattern = {
                         \ 'subheading' : '^\s\{3\}\zs[a-z][a-z -]*[a-z]$',
                         \ }
 
-fu! s:search_syntax(keyword, mapping, back, ...) abort
+fu! s:search_syntax(keyword, mapping, fwd, ...) abort
     let g:motion_to_repeat = a:mapping
 
     if a:0
@@ -103,7 +103,7 @@ fu! s:search_syntax(keyword, mapping, back, ...) abort
 
     norm! m'
 
-    call search(s:keyword2pattern[a:keyword], 'W'.(a:back ? 'b' : ''))
+    call search(s:keyword2pattern[a:keyword], 'W'.(a:fwd ? '' : 'b'))
 endfu
 
 "}}}
