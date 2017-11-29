@@ -227,9 +227,9 @@ let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
 " Add support for a possible modifier.
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
-fu! man#complete(lead, line, _pos) abort
+fu! man#complete(arglead, line, _pos) abort
     let args = split(a:line)
-    let lead = a:lead
+    let lead = a:arglead
     let N    = len(args)
 
     if N > 3
@@ -254,7 +254,7 @@ fu! man#complete(lead, line, _pos) abort
         "     :Man printf(|
         "     :Man 1 printf(|
 
-        let tmp  = split(lead, '(')
+        let tmp  = split(arglead, '(')
         let name = tmp[0]
         let sect = tolower(get(tmp, 1, ''))
 
@@ -270,7 +270,7 @@ fu! man#complete(lead, line, _pos) abort
         return
 
     elseif N ==# 2
-        if empty(lead)
+        if empty(arglead)
             " cursor (|) is at ':Man 1 |'
             let name = ''
             let sect = tolower(args[1])
@@ -279,7 +279,7 @@ fu! man#complete(lead, line, _pos) abort
             " cursor (|) is at ':Man pri|'
             if lead =~# '\/'
                 " if the name is a path, complete files
-                return glob(lead.'*', 0, 1)
+                return glob(arglead.'*', 0, 1)
             endif
             let name = lead
             let sect = ''
