@@ -227,8 +227,8 @@ let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
 " Add support for a possible modifier.
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
-fu! man#complete(arglead, line, _pos) abort
-    let args = split(a:line)
+fu! man#complete(arglead, cmdline, _p) abort
+    let args = split(a:cmdline)
     let lead = a:arglead
     let N    = len(args)
 
