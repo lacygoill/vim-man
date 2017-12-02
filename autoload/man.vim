@@ -228,9 +228,9 @@ let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
 fu! man#complete(arglead, cmdline, _p) abort
-    let args = split(a:cmdline)
-    let lead = a:arglead
-    let N    = len(args)
+    let args    = split(a:cmdline)
+    let arglead = a:arglead
+    let N       = len(args)
 
     if N > 3
 
@@ -247,7 +247,7 @@ fu! man#complete(arglead, cmdline, _p) abort
     elseif N ==# 1
         let [name, sect] = ['', '']
 
-    elseif lead =~# '^[^()]\+([^()]*$'
+    elseif arglead =~# '^[^()]\+([^()]*$'
 
         " cursor (|) is at:
         "
@@ -277,21 +277,21 @@ fu! man#complete(arglead, cmdline, _p) abort
 
         else
             " cursor (|) is at ':Man pri|'
-            if lead =~# '\/'
+            if arglead =~# '\/'
                 " if the name is a path, complete files
                 return glob(arglead.'*', 0, 1)
             endif
-            let name = lead
+            let name = arglead
             let sect = ''
         endif
 
-    elseif lead !~# '^[^()]\+$'
+    elseif arglead !~# '^[^()]\+$'
         " cursor (|) is at ':Man 3 printf |' or ':Man 3 (pr)i|'
         return
 
     else
         " cursor (|) is at ':Man 3 pri|'
-        let name = lead
+        let name = arglead
         let sect = tolower(args[1])
     endif
 
