@@ -297,7 +297,7 @@ fu! man#complete(arglead, cmdline, _p) abort
 
     " We remove duplicates incase the same manpage in different languages was found.
     return uniq(sort(map(globpath(s:mandirs,'man?/'.name.'*.'.sect.'*', 0, 1),
-    \                    { k,v -> s:format_candidate(v, sect) }
+    \                    { i,v -> s:format_candidate(v, sect) }
     \                   ),
     \                'i')
     \          )
