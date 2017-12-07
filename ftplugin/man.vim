@@ -55,37 +55,37 @@ setlocal ignorecase
 "}}}
 " Mappings {{{
 
-nmap <buffer> <nowait> <silent> <CR>  <C-]>
-nmap <buffer> <nowait> <silent> <BS>  <C-T>
+nmap  <buffer><nowait><silent>  <cr>  <c-]>
+nmap  <buffer><nowait><silent>  <bs>  <c-t>
 
-nno <buffer> <nowait> <silent> q    :<C-U>exe my_lib#quit()<CR>
+nno  <buffer><nowait><silent>  q  :<c-u>exe my_lib#quit()<cr>
 
-nno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 0)<CR>
-nno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 1)<CR>
-nno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 0)<CR>
-nno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 1)<CR>
-nno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 0)<CR>
-nno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 1)<CR>
-nno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 0)<CR>
-nno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 1)<CR>
+nno  <buffer><nowait><silent>  [H  :<c-u>call <sid>search_syntax('heading', '[H', 0)<cr>
+nno  <buffer><nowait><silent>  ]H  :<c-u>call <sid>search_syntax('heading', ']H', 1)<cr>
+nno  <buffer><nowait><silent>  [o  :<c-u>call <sid>search_syntax('option', '[o', 0)<cr>
+nno  <buffer><nowait><silent>  ]o  :<c-u>call <sid>search_syntax('option', ']o', 1)<cr>
+nno  <buffer><nowait><silent>  [r  :<c-u>call <sid>search_syntax('ref', '[r', 0)<cr>
+nno  <buffer><nowait><silent>  ]r  :<c-u>call <sid>search_syntax('ref', ']r', 1)<cr>
+nno  <buffer><nowait><silent>  [s  :<c-u>call <sid>search_syntax('subheading', '[s', 0)<cr>
+nno  <buffer><nowait><silent>  ]s  :<c-u>call <sid>search_syntax('subheading', ']s', 1)<cr>
 
-xno <buffer> <nowait> <silent> [H    :<C-U>call <SID>search_syntax('heading', '[H', 0, 1)<CR>
-xno <buffer> <nowait> <silent> ]H    :<C-U>call <SID>search_syntax('heading', ']H', 1, 1)<CR>
-xno <buffer> <nowait> <silent> [o    :<C-U>call <SID>search_syntax('option', '[o', 0, 1)<CR>
-xno <buffer> <nowait> <silent> ]o    :<C-U>call <SID>search_syntax('option', ']o', 1, 1)<CR>
-xno <buffer> <nowait> <silent> [r    :<C-U>call <SID>search_syntax('ref', '[r', 0, 1)<CR>
-xno <buffer> <nowait> <silent> ]r    :<C-U>call <SID>search_syntax('ref', ']r', 1, 1)<CR>
-xno <buffer> <nowait> <silent> [s    :<C-U>call <SID>search_syntax('subheading', '[s', 0, 1)<CR>
-xno <buffer> <nowait> <silent> ]s    :<C-U>call <SID>search_syntax('subheading', ']s', 1, 1)<CR>
+xno  <buffer><nowait><silent>  [H  :<c-u>call <sid>search_syntax('heading', '[H', 0, 1)<cr>
+xno  <buffer><nowait><silent>  ]H  :<c-u>call <sid>search_syntax('heading', ']H', 1, 1)<cr>
+xno  <buffer><nowait><silent>  [o  :<c-u>call <sid>search_syntax('option', '[o', 0, 1)<cr>
+xno  <buffer><nowait><silent>  ]o  :<c-u>call <sid>search_syntax('option', ']o', 1, 1)<cr>
+xno  <buffer><nowait><silent>  [r  :<c-u>call <sid>search_syntax('ref', '[r', 0, 1)<cr>
+xno  <buffer><nowait><silent>  ]r  :<c-u>call <sid>search_syntax('ref', ']r', 1, 1)<cr>
+xno  <buffer><nowait><silent>  [s  :<c-u>call <sid>search_syntax('subheading', '[s', 0, 1)<cr>
+xno  <buffer><nowait><silent>  ]s  :<c-u>call <sid>search_syntax('subheading', ']s', 1, 1)<cr>
 
-ono <buffer> <nowait> <silent> [H    :norm V[Hj<CR>
-ono <buffer> <nowait> <silent> ]H    :norm V]Hk<CR>
-ono <buffer> <nowait> <silent> [o    :norm v[o<CR>
-ono <buffer> <nowait> <silent> ]o    :norm v]o<CR>
-ono <buffer> <nowait> <silent> [r    :norm v[r<CR>
-ono <buffer> <nowait> <silent> ]r    :norm v]r<CR>
-ono <buffer> <nowait> <silent> [s    :norm V[sj<CR>
-ono <buffer> <nowait> <silent> ]s    :norm V]sk<CR>
+ono  <buffer><nowait><silent>  [H  :norm V[Hj<cr>
+ono  <buffer><nowait><silent>  ]H  :norm V]Hk<cr>
+ono  <buffer><nowait><silent>  [o  :norm v[o<cr>
+ono  <buffer><nowait><silent>  ]o  :norm v]o<cr>
+ono  <buffer><nowait><silent>  [r  :norm v[r<cr>
+ono  <buffer><nowait><silent>  ]r  :norm v]r<cr>
+ono  <buffer><nowait><silent>  [s  :norm V[sj<cr>
+ono  <buffer><nowait><silent>  ]s  :norm V]sk<cr>
 
 let s:keyword2pattern = {
                         \ 'heading'    : '^[a-z][a-z -]*[a-z]$',
@@ -134,14 +134,14 @@ setl colorcolumn=0
 setl nolist
 setl nofoldenable
 
-nno <buffer> <nowait> <silent> <C-]>      :Man<CR>
-nno <buffer> <nowait> <silent> K          :Man<CR>
-nno <buffer> <nowait> <silent> <C-T>      :call man#pop_tag()<CR>
+nno  <buffer><nowait><silent>  <c-]>  :Man<cr>
+nno  <buffer><nowait><silent>  K      :Man<cr>
+nno  <buffer><nowait><silent>  <c-t>  :call man#pop_tag()<cr>
 
 " I frequently hit `p` by accident. It raises the error:
 "
 "     E21: Cannot make changes, 'modifiable' is off
-nno <buffer> <nowait> <silent> p <nop>
+nno  <buffer><nowait><silent>  p  <nop>
 
 " FIXME:{{{
 "
