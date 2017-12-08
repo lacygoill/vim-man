@@ -58,7 +58,7 @@ setlocal ignorecase
 nmap  <buffer><nowait><silent>  <cr>  <c-]>
 nmap  <buffer><nowait><silent>  <bs>  <c-t>
 
-nno  <buffer><nowait><silent>  q  :<c-u>exe my_lib#quit()<cr>
+nno  <buffer><nowait><silent>  q  :<c-u>call my_lib#quit()<cr>
 
 nno  <buffer><nowait><silent>  [H  :<c-u>call <sid>search_syntax('heading', '[H', 0)<cr>
 nno  <buffer><nowait><silent>  ]H  :<c-u>call <sid>search_syntax('heading', ']H', 1)<cr>
