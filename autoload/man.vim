@@ -1,8 +1,3 @@
-if exists('g:autoloaded_man')
-    finish
-endif
-let g:autoloaded_man = 1
-
 let s:man_cmd = 'man 2>/dev/null'
 
 " Read this (new concept of outline):
