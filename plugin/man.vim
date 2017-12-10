@@ -1,3 +1,8 @@
+if exists('g:loaded_man')
+    finish
+endif
+let g:loaded_man = 1
+
 com! -range=0 -complete=customlist,man#complete -nargs=* Man call
             \ man#open_page(v:count, v:count1, <q-mods>, <f-args>)
 
