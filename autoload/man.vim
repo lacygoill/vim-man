@@ -320,8 +320,7 @@ fu! s:format_candidate(path, sect) abort "{{{1
     endif
 endfu
 
-fu! man#init_pager() abort 
-
+fu! man#init_pager() abort "{{{1
     " Set the buffer to be modifiable, otherwise the next commands
     " cause an error:
     "
