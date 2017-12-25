@@ -132,40 +132,6 @@ nno  <buffer><nowait><silent>  <c-t>  :call man#pop_tag()<cr>
 "     E21: Cannot make changes, 'modifiable' is off
 nno  <buffer><nowait><silent>  p  <nop>
 
-" FIXME:{{{
-"
-" From: :h undo_ftplugin
-"
-"     When the user does ":setfiletype xyz" the effect of the previous filetype
-"     should be undone.  Set the b:undo_ftplugin variable to the commands that will
-"     undo the settings in your filetype plugin.  Example: >
-"
-"         let b:undo_ftplugin = "setl fo< com< tw< commentstring<"
-"             \ . "| unlet b:match_ignorecase b:match_words b:match_skip"
-"
-"     Using ":setl" with "<" after the option name resets the option to its
-"     global value.  That is mostly the best way to reset the option value.
-"
-"     This does require removing the "C" flag from 'cpoptions' to allow line
-"     continuation, as mentioned above |use-cpo-save|.
-"
-"     For undoing the effect of an indent script, the b:undo_indent variable should
-"     be set accordingly.
-"
-" Also, from `:lh undo_ftplugin`:
-"
-"     The line to set b:undo_ftplugin is for when the filetype is set to another
-"     value.  In that case you will want to undo your preferences.  The
-"     b:undo_ftplugin variable is exed as a command. Watch out for characters
-"     with a special meaning inside a string, such as a backslash.
-"
-" We should do this for all our filetype plugins.
-"
-" Why is `b:undo_ftplugin` set to an empty string here?
-" If we put nothing inside, then why bother defining the variable?
-"
-" }}}
-
 " Teardown {{{1
 
 let b:undo_ftplugin =         get(b:, 'undo_ftplugin', '')
