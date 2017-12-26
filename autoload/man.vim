@@ -47,9 +47,9 @@ fu! man#open_page(count, count1, mods, ...) abort "{{{1
     let bufname = 'man://' . name . (empty(sect) ? '' : '('.sect.')')
 
     if a:mods !~# 'tab' && s:find_man()
-        noautocmd exe 'sil edit '.fnameescape(bufname)
+        exe 'sil edit '.fnameescape(bufname)
     else
-        noautocmd exe 'sil '.a:mods.' split '.fnameescape(bufname)
+        exe 'sil '.a:mods.' split '.fnameescape(bufname)
     endif
 
     let b:man_sect = sect
