@@ -105,7 +105,7 @@ let s:keyword2pattern = {
 \                         'subheading' : '^\s\{3\}\zs[a-z][a-z -]*[a-z]$',
 \                       }
 
-fu! s:search_syntax(keyword, mapping, fwd, ...) abort
+fu! s:search_syntax(keyword, mapping, is_fwd, ...) abort
     let g:motion_to_repeat = a:mapping
 
     if a:0
@@ -114,7 +114,7 @@ fu! s:search_syntax(keyword, mapping, fwd, ...) abort
 
     norm! m'
 
-    call search(s:keyword2pattern[a:keyword], 'W'.(a:fwd ? '' : 'b'))
+    call search(s:keyword2pattern[a:keyword], 'W'.(a:is_fwd ? '' : 'b'))
 endfu
 
 let s:pager = !exists('b:man_sect')
