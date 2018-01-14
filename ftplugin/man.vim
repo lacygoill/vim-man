@@ -98,8 +98,6 @@ noremap  <buffer><expr><nowait><silent>  ]O  man#bracket_rhs('option', 1)
 noremap  <buffer><expr><nowait><silent>  [r  man#bracket_rhs('reference', 0)
 noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
-noremap  <buffer><silent>  <plug>(man-bracket-motion)  :<c-u>call man#bracket_motion()<cr>
-
 if has_key(get(g:, 'plugs', {}), 'vim-lg-lib')
     call lg#motion#main#make_repeatable({
     \        'mode': '',

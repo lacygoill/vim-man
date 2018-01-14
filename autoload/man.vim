@@ -12,64 +12,26 @@ let s:keyword2pattern = {
 \                         'reference'  : '\f\+([1-9][a-z]\=)',
 \                       }
 
+" TODO:
 " Read this (new concept of outline):
 " https://github.com/neovim/neovim/pull/5169
 
-fu! man#bracket_motion() abort "{{{1
-    let args = split(input(''), '\zs')
-
-    let is_fwd = args[0] ==# "\u2001" ? 1 : 0
-
-    let mode = get({
-    \                "\u2001": 'n',
-    \                "\u2002": 'x',
-    \                "\u2003": 'o',
-    \              }, args[1], '')
-
-    let kwd = get({
-    \               "\u2001": 'heading',
-    \               "\u2002": 'subheading',
-    \               "\u2003": 'option',
-    \               "\u2004": 'reference',
-    \             }, args[2], '')
-
-    if empty(mode) || empty(kwd)
-        return
-    endif
-
-    if mode ==# 'x'
+fu! man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
+    if index(['v', 'V', "\<c-v>"], a:mode) >= 0
         norm! gv
     endif
 
-    norm! m'
+    if a:mode ==# 'n'
+        norm! m'
+    endif
 
-    call search(s:keyword2pattern[kwd], 'W'.(is_fwd ? '' : 'b'))
+    call search(s:keyword2pattern[a:kwd], 'W'.(a:is_fwd ? '' : 'b'))
 endfu
 
 fu! man#bracket_rhs(kwd, is_fwd) abort "{{{1
     let mode = mode(1)
-
-    let seq = "\<plug>(man-bracket-motion)"
-
-    let seq .= (a:is_fwd ? "\u2001" : "\u2000")
-    \
-    \         .get({ 'n':      "\u2001",
-    \                'v':      "\u2002",
-    \                'V':      "\u2002",
-    \                "\<c-v>": "\u2002",
-    \                'no':     "\u2003" }, mode, 'invalid')
-    \
-    \         .get({ 'heading':    "\u2001",
-    \                'subheading': "\u2002",
-    \                'option':     "\u2003",
-    \                'reference':  "\u2004", }, a:kwd, 'invalid')
-    \
-    \         ."\<cr>"
-
-    if seq !~# 'invalid.\?\r'
-        call feedkeys(seq, 'i')
-    endif
-    return ''
+    return printf(":\<c-u>call man#bracket_motion(%s,%d,%s)\<cr>",
+    \             string(a:kwd), a:is_fwd, string(mode))
 endfu
 
 fu! man#open_page(count, count1, mods, ...) abort "{{{1
