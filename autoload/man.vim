@@ -22,8 +22,8 @@ fu! man#bracket_motion() abort "{{{1
 
     let mode = get({
     \                "\u2001": 'n',
-    \                "\u2002": 'v',
-    \                "\u2003": 'no',
+    \                "\u2002": 'x',
+    \                "\u2003": 'o',
     \              }, args[1], '')
 
     let kwd = get({
@@ -37,7 +37,7 @@ fu! man#bracket_motion() abort "{{{1
         return
     endif
 
-    if mode ==# 'v'
+    if mode ==# 'x'
         norm! gv
     endif
 
