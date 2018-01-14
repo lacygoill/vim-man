@@ -23,7 +23,7 @@ fu! man#bracket_motion() abort "{{{1
     let mode = get({
     \                "\u2001": 'n',
     \                "\u2002": 'v',
-    \                "\u2003": 'o',
+    \                "\u2003": 'no',
     \              }, args[1], '')
 
     let kwd = get({
@@ -57,7 +57,7 @@ fu! man#bracket_rhs(kwd, is_fwd) abort "{{{1
     \                'v':      "\u2002",
     \                'V':      "\u2002",
     \                "\<c-v>": "\u2002",
-    \                'o':      "\u2003" }, mode, 'invalid')
+    \                'no':     "\u2003" }, mode, 'invalid')
     \
     \         .get({ 'heading':    "\u2001",
     \                'subheading': "\u2002",
