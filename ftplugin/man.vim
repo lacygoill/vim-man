@@ -66,10 +66,18 @@ setl ignorecase
 "}}}
 " Mappings {{{
 
+" I frequently hit `p` by accident. It raises the error:
+"
+"     E21: Cannot make changes, 'modifiable' is off
+nno  <buffer><nowait><silent>  p  <nop>
+nno  <buffer><nowait><silent>  q  :<c-u>call lg#window#quit()<cr>
+
 nmap  <buffer><nowait><silent>  <cr>  <c-]>
 nmap  <buffer><nowait><silent>  <bs>  <c-t>
 
-nno  <buffer><nowait><silent>  q  :<c-u>call lg#window#quit()<cr>
+nno  <buffer><nowait><silent>  <c-]>  :Man<cr>
+nno  <buffer><nowait><silent>  K      :Man<cr>
+nno  <buffer><nowait><silent>  <c-t>  :call man#pop_tag()<cr>
 
 
 noremap  <buffer><expr><nowait><silent>  [h  man#bracket_rhs('heading', 0)
@@ -107,21 +115,13 @@ catch
     unsilent call lg#catch_error()
 endtry
 
+" init {{{1
 
 let s:pager = !exists('b:man_sect')
 
 if s:pager
     call man#init_pager()
 endif
-
-nno  <buffer><nowait><silent>  <c-]>  :Man<cr>
-nno  <buffer><nowait><silent>  K      :Man<cr>
-nno  <buffer><nowait><silent>  <c-t>  :call man#pop_tag()<cr>
-
-" I frequently hit `p` by accident. It raises the error:
-"
-"     E21: Cannot make changes, 'modifiable' is off
-nno  <buffer><nowait><silent>  p  <nop>
 
 " Teardown {{{1
 
