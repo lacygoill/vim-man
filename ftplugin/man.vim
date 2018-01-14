@@ -100,7 +100,7 @@ noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
 noremap  <buffer><silent>  <plug>(man-bracket-motion)  :<c-u>call man#bracket_motion()<cr>
 
-try
+if has_key(get(g:, 'plugs', {}), 'vim-lg-lib')
     call lg#motion#main#make_repeatable({
     \        'mode': '',
     \        'buffer': 1,
@@ -111,9 +111,7 @@ try
     \                     { 'bwd': '[r',      'fwd': ']r',      'axis': 1, },
     \                   ]
     \ })
-catch
-    unsilent call lg#catch_error()
-endtry
+endif
 
 " init {{{1
 
