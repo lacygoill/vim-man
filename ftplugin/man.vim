@@ -80,14 +80,14 @@ nno  <buffer><nowait><silent>  K      :Man<cr>
 nno  <buffer><nowait><silent>  <c-t>  :call man#pop_tag()<cr>
 
 
-noremap  <buffer><expr><nowait><silent>  [h  man#bracket_rhs('heading', 0)
-noremap  <buffer><expr><nowait><silent>  ]h  man#bracket_rhs('heading', 1)
+noremap  <buffer><expr><nowait><silent>  [H  man#bracket_rhs('heading', 0)
+noremap  <buffer><expr><nowait><silent>  ]H  man#bracket_rhs('heading', 1)
 
 noremap  <buffer><expr><nowait><silent>  [<c-h>  man#bracket_rhs('subheading', 0)
 noremap  <buffer><expr><nowait><silent>  ]<c-h>  man#bracket_rhs('subheading', 1)
 "                                          │
-"                                          └ can't use `H`:
-"                                                it would conflict with `]H` (next path)
+"                                          └ can't use `h`:
+"                                                it would conflict with `]h` (next path)
 
 noremap  <buffer><expr><nowait><silent>  [O  man#bracket_rhs('option', 0)
 noremap  <buffer><expr><nowait><silent>  ]O  man#bracket_rhs('option', 1)
@@ -105,7 +105,7 @@ try
     \        'mode': '',
     \        'buffer': 1,
     \        'motions': [
-    \                     { 'bwd': '[h',      'fwd': ']h',      'axis': 1, },
+    \                     { 'bwd': '[H',      'fwd': ']H',      'axis': 1, },
     \                     { 'bwd': '[<c-h>',  'fwd': ']<c-h>',  'axis': 1, },
     \                     { 'bwd': '[O',      'fwd': ']O',      'axis': 1, },
     \                     { 'bwd': '[r',      'fwd': ']r',      'axis': 1, },
@@ -154,8 +154,8 @@ let b:undo_ftplugin =         get(b:, 'undo_ftplugin', '')
 \                        | exe 'unmap <buffer> <c-t>'
 \                        | exe 'unmap <buffer> p'
 \                        | exe 'unmap <buffer> q'
-\                        | exe 'unmap <buffer> [h'
-\                        | exe 'unmap <buffer> ]h'
+\                        | exe 'unmap <buffer> [H'
+\                        | exe 'unmap <buffer> ]H'
 \                        | exe 'unmap <buffer> [<c-h>'
 \                        | exe 'unmap <buffer> ]<c-h>'
 \                        | exe 'unmap <buffer> [O'
