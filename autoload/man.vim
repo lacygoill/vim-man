@@ -5,8 +5,72 @@ let g:autoloaded_man = 1
 
 let s:man_cmd = 'man 2>/dev/null'
 
+let s:keyword2pattern = {
+\                         'heading'    : '^[a-z][a-z -]*[a-z]$',
+\                         'subheading' : '^\s\{3\}\zs[a-z][a-z -]*[a-z]$',
+\                         'option'     : '^\s\+\zs\%(+\|-\)\S\+',
+\                         'reference'  : '\f\+([1-9][a-z]\=)',
+\                       }
+
 " Read this (new concept of outline):
 " https://github.com/neovim/neovim/pull/5169
+
+fu! man#bracket_motion() abort "{{{1
+    let args = split(input(''), '\zs')
+
+    let is_fwd = args[0] ==# "\u2001" ? 1 : 0
+
+    let mode = get({
+    \                "\u2001": 'n',
+    \                "\u2002": 'v',
+    \                "\u2003": 'o',
+    \              }, args[1], '')
+
+    let kwd = get({
+    \               "\u2001": 'heading',
+    \               "\u2002": 'subheading',
+    \               "\u2003": 'option',
+    \               "\u2004": 'reference',
+    \             }, args[2], '')
+
+    if empty(mode) || empty(kwd)
+        return
+    endif
+
+    if mode ==# 'v'
+        norm! gv
+    endif
+
+    norm! m'
+
+    call search(s:keyword2pattern[kwd], 'W'.(is_fwd ? '' : 'b'))
+endfu
+
+fu! man#bracket_rhs(kwd, is_fwd) abort "{{{1
+    let mode = mode(1)
+
+    let seq = "\<plug>(man-bracket-motion)"
+
+    let seq .= (a:is_fwd ? "\u2001" : "\u2000")
+    \
+    \         .get({ 'n':      "\u2001",
+    \                'v':      "\u2002",
+    \                'V':      "\u2002",
+    \                "\<c-v>": "\u2002",
+    \                'o':      "\u2003" }, mode, 'invalid')
+    \
+    \         .get({ 'heading':    "\u2001",
+    \                'subheading': "\u2002",
+    \                'option':     "\u2003",
+    \                'reference':  "\u2004", }, a:kwd, 'invalid')
+    \
+    \         ."\<cr>"
+
+    if seq !~# 'invalid.\?\r'
+        call feedkeys(seq, 'i')
+    endif
+    return ''
+endfu
 
 fu! man#open_page(count, count1, mods, ...) abort "{{{1
     if a:0 > 2

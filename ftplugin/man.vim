@@ -5,7 +5,7 @@ let b:did_ftplugin = 1
 
 " When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
-let g:motion_to_repeat = ']s'
+let g:motion_to_repeat = ']O'
 
 " maximize the window, the 1st time we load a man page
 wincmd _
@@ -71,51 +71,42 @@ nmap  <buffer><nowait><silent>  <bs>  <c-t>
 
 nno  <buffer><nowait><silent>  q  :<c-u>call lg#window#quit()<cr>
 
-nno  <buffer><nowait><silent>  [H  :<c-u>call <sid>search_syntax('heading', '[H', 0)<cr>
-nno  <buffer><nowait><silent>  ]H  :<c-u>call <sid>search_syntax('heading', ']H', 1)<cr>
-nno  <buffer><nowait><silent>  [s  :<c-u>call <sid>search_syntax('option', '[s', 0)<cr>
-nno  <buffer><nowait><silent>  ]s  :<c-u>call <sid>search_syntax('option', ']s', 1)<cr>
-nno  <buffer><nowait><silent>  [r  :<c-u>call <sid>search_syntax('ref', '[r', 0)<cr>
-nno  <buffer><nowait><silent>  ]r  :<c-u>call <sid>search_syntax('ref', ']r', 1)<cr>
-nno  <buffer><nowait><silent>  [S  :<c-u>call <sid>search_syntax('subheading', '[S', 0)<cr>
-nno  <buffer><nowait><silent>  ]S  :<c-u>call <sid>search_syntax('subheading', ']S', 1)<cr>
 
-xno  <buffer><nowait><silent>  [H  :<c-u>call <sid>search_syntax('heading', '[H', 0, 1)<cr>
-xno  <buffer><nowait><silent>  ]H  :<c-u>call <sid>search_syntax('heading', ']H', 1, 1)<cr>
-xno  <buffer><nowait><silent>  [s  :<c-u>call <sid>search_syntax('option', '[s', 0, 1)<cr>
-xno  <buffer><nowait><silent>  ]s  :<c-u>call <sid>search_syntax('option', ']s', 1, 1)<cr>
-xno  <buffer><nowait><silent>  [r  :<c-u>call <sid>search_syntax('ref', '[r', 0, 1)<cr>
-xno  <buffer><nowait><silent>  ]r  :<c-u>call <sid>search_syntax('ref', ']r', 1, 1)<cr>
-xno  <buffer><nowait><silent>  [S  :<c-u>call <sid>search_syntax('subheading', '[S', 0, 1)<cr>
-xno  <buffer><nowait><silent>  ]S  :<c-u>call <sid>search_syntax('subheading', ']S', 1, 1)<cr>
+noremap  <buffer><expr><nowait><silent>  [h  man#bracket_rhs('heading', 0)
+noremap  <buffer><expr><nowait><silent>  ]h  man#bracket_rhs('heading', 1)
 
-ono  <buffer><nowait><silent>  [H  :norm V[Hj<cr>
-ono  <buffer><nowait><silent>  ]H  :norm V]Hk<cr>
-ono  <buffer><nowait><silent>  [s  :norm v[s<cr>
-ono  <buffer><nowait><silent>  ]s  :norm v]s<cr>
-ono  <buffer><nowait><silent>  [r  :norm v[r<cr>
-ono  <buffer><nowait><silent>  ]r  :norm v]r<cr>
-ono  <buffer><nowait><silent>  [S  :norm V[Sj<cr>
-ono  <buffer><nowait><silent>  ]S  :norm V]Sk<cr>
+noremap  <buffer><expr><nowait><silent>  [<c-h>  man#bracket_rhs('subheading', 0)
+noremap  <buffer><expr><nowait><silent>  ]<c-h>  man#bracket_rhs('subheading', 1)
+"                                          │
+"                                          └ can't use `H`:
+"                                                it would conflict with `]H` (next path)
 
-let s:keyword2pattern = {
-\                         'heading'    : '^[a-z][a-z -]*[a-z]$',
-\                         'option'     : '^\s\+\zs\%(+\|-\)\S\+',
-\                         'ref'        : '\f\+([1-9][a-z]\=)',
-\                         'subheading' : '^\s\{3\}\zs[a-z][a-z -]*[a-z]$',
-\                       }
+noremap  <buffer><expr><nowait><silent>  [O  man#bracket_rhs('option', 0)
+noremap  <buffer><expr><nowait><silent>  ]O  man#bracket_rhs('option', 1)
+"                                         │
+"                                         └  can't use `o`:
+"                                                it would prevent us from typing `[oP`
 
-fu! s:search_syntax(keyword, mapping, is_fwd, ...) abort
-    let g:motion_to_repeat = a:mapping
+noremap  <buffer><expr><nowait><silent>  [r  man#bracket_rhs('reference', 0)
+noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
-    if a:0
-        norm! gv
-    endif
+noremap  <buffer><silent>  <plug>(man-bracket-motion)  :<c-u>call man#bracket_motion()<cr>
 
-    norm! m'
+try
+    call lg#motion#main#make_repeatable({
+    \        'mode': '',
+    \        'buffer': 1,
+    \        'motions': [
+    \                     { 'bwd': '[h',      'fwd': ']h',      'axis': 1, },
+    \                     { 'bwd': '[<c-h>',  'fwd': ']<c-h>',  'axis': 1, },
+    \                     { 'bwd': '[O',      'fwd': ']O',      'axis': 1, },
+    \                     { 'bwd': '[r',      'fwd': ']r',      'axis': 1, },
+    \                   ]
+    \ })
+catch
+    unsilent call lg#catch_error()
+endtry
 
-    call search(s:keyword2pattern[a:keyword], 'W'.(a:is_fwd ? '' : 'b'))
-endfu
 
 let s:pager = !exists('b:man_sect')
 
@@ -156,35 +147,19 @@ let b:undo_ftplugin =         get(b:, 'undo_ftplugin', '')
 \                        | setl softtabstop<
 \                        | setl tabstop<
 \                        | unlet! b:man_sect
-\                        | exe 'nunmap <buffer> <c-]>'
-\                        | exe 'nunmap <buffer> <cr>'
-\                        | exe 'nunmap <buffer> <bs>'
-\                        | exe 'nunmap <buffer> K'
-\                        | exe 'nunmap <buffer> <c-t>'
-\                        | exe 'nunmap <buffer> p'
-\                        | exe 'nunmap <buffer> q'
-\                        | exe 'nunmap <buffer> [H'
-\                        | exe 'nunmap <buffer> ]H'
-\                        | exe 'nunmap <buffer> [s'
-\                        | exe 'nunmap <buffer> ]s'
-\                        | exe 'nunmap <buffer> [r'
-\                        | exe 'nunmap <buffer> ]r'
-\                        | exe 'nunmap <buffer> [S'
-\                        | exe 'nunmap <buffer> ]S'
-\                        | exe 'xunmap <buffer> [H'
-\                        | exe 'xunmap <buffer> ]H'
-\                        | exe 'xunmap <buffer> [s'
-\                        | exe 'xunmap <buffer> ]s'
-\                        | exe 'xunmap <buffer> [r'
-\                        | exe 'xunmap <buffer> ]r'
-\                        | exe 'xunmap <buffer> [S'
-\                        | exe 'xunmap <buffer> ]S'
-\                        | exe 'ounmap <buffer> [H'
-\                        | exe 'ounmap <buffer> ]H'
-\                        | exe 'ounmap <buffer> [s'
-\                        | exe 'ounmap <buffer> ]s'
-\                        | exe 'ounmap <buffer> [r'
-\                        | exe 'ounmap <buffer> ]r'
-\                        | exe 'ounmap <buffer> [S'
-\                        | exe 'ounmap <buffer> ]S'
+\                        | exe 'unmap <buffer> <c-]>'
+\                        | exe 'unmap <buffer> <cr>'
+\                        | exe 'unmap <buffer> <bs>'
+\                        | exe 'unmap <buffer> K'
+\                        | exe 'unmap <buffer> <c-t>'
+\                        | exe 'unmap <buffer> p'
+\                        | exe 'unmap <buffer> q'
+\                        | exe 'unmap <buffer> [h'
+\                        | exe 'unmap <buffer> ]h'
+\                        | exe 'unmap <buffer> [<c-h>'
+\                        | exe 'unmap <buffer> ]<c-h>'
+\                        | exe 'unmap <buffer> [O'
+\                        | exe 'unmap <buffer> ]O'
+\                        | exe 'unmap <buffer> [r'
+\                        | exe 'unmap <buffer> ]r'
 \                      "
