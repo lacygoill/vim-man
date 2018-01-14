@@ -17,12 +17,10 @@ let s:keyword2pattern = {
 " https://github.com/neovim/neovim/pull/5169
 
 fu! man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
-    if index(['v', 'V', "\<c-v>"], a:mode) >= 0
-        norm! gv
-    endif
-
     if a:mode ==# 'n'
         norm! m'
+    elseif index(['v', 'V', "\<c-v>"], a:mode) >= 0
+        norm! gv
     endif
 
     call search(s:keyword2pattern[a:kwd], 'W'.(a:is_fwd ? '' : 'b'))
