@@ -102,7 +102,7 @@ if has_key(get(g:, 'plugs', {}), 'vim-lg-lib')
     call lg#motion#main#make_repeatable({
     \        'mode':    '',
     \        'buffer':  1,
-    \        'from':    expand('<sfile>:p'),
+    \        'from':    expand('<sfile>:p').':'.expand('<slnum>'),
     \        'motions': [
     \                     { 'bwd': '[H',      'fwd': ']H',      'axis': 1, },
     \                     { 'bwd': '[<c-h>',  'fwd': ']<c-h>',  'axis': 1, },
