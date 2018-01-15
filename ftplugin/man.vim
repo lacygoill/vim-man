@@ -100,8 +100,9 @@ noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
 if has_key(get(g:, 'plugs', {}), 'vim-lg-lib')
     call lg#motion#main#make_repeatable({
-    \        'mode': '',
-    \        'buffer': 1,
+    \        'mode':    '',
+    \        'buffer':  1,
+    \        'from':    expand('<sfile>:p'),
     \        'motions': [
     \                     { 'bwd': '[H',      'fwd': ']H',      'axis': 1, },
     \                     { 'bwd': '[<c-h>',  'fwd': ']<c-h>',  'axis': 1, },
