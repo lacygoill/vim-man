@@ -5,7 +5,7 @@ let b:did_ftplugin = 1
 
 " When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
-let g:motion_to_repeat = ']O'
+sil! call lg#motion#repeatable#main#set_last_used(']O', 1)
 
 " maximize the window, the 1st time we load a man page
 wincmd _
