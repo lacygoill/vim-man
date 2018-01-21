@@ -5,7 +5,7 @@ let b:did_ftplugin = 1
 
 " When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
-sil! call lg#motion#repeatable#main#set_last_used(']O', 1)
+sil! call lg#motion#repeatable#main#set_last_used(']O', [',', ';'])
 
 " maximize the window, the 1st time we load a man page
 wincmd _
@@ -102,12 +102,13 @@ if has_key(get(g:, 'plugs', {}), 'vim-lg-lib') && !exists('b:repeatable_motions'
     call lg#motion#repeatable#main#make_repeatable({
     \        'mode':    '',
     \        'buffer':  1,
+    \        'axis':  [',', ';'],
     \        'from':    expand('<sfile>:p').':'.expand('<slnum>'),
     \        'motions': [
-    \                     { 'bwd': '[H',      'fwd': ']H',      'axis': 1, },
-    \                     { 'bwd': '[<c-h>',  'fwd': ']<c-h>',  'axis': 1, },
-    \                     { 'bwd': '[O',      'fwd': ']O',      'axis': 1, },
-    \                     { 'bwd': '[r',      'fwd': ']r',      'axis': 1, },
+    \                     { 'bwd': '[H',      'fwd': ']H',     },
+    \                     { 'bwd': '[<c-h>',  'fwd': ']<c-h>', },
+    \                     { 'bwd': '[O',      'fwd': ']O',     },
+    \                     { 'bwd': '[r',      'fwd': ']r',     },
     \                   ]
     \ })
 endif
