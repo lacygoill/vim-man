@@ -5,7 +5,7 @@ let b:did_ftplugin = 1
 
 " When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
-sil! call lg#motion#repeatable#main#set_last_used(']O', {'bwd': ',', 'fwd': ';'})
+sil! call lg#motion#repeatable#make#set_last_used(']O', {'bwd': ',', 'fwd': ';'})
 
 " maximize the window, the 1st time we load a man page
 wincmd _
@@ -99,7 +99,7 @@ noremap  <buffer><expr><nowait><silent>  [r  man#bracket_rhs('reference', 0)
 noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
 if has_key(get(g:, 'plugs', {}), 'vim-lg-lib') && !exists('b:repeatable_motions')
-    call lg#motion#repeatable#main#make({
+    call lg#motion#repeatable#make#all({
     \        'mode':   '',
     \        'buffer': 1,
     \        'axis':   {'bwd': ',', 'fwd': ';'},
