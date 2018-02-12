@@ -1,4 +1,4 @@
-if exists('b:did_ftplugin') || &filetype !=# 'man'
+if exists('b:did_ftplugin') || &ft isnot# 'man'
     finish
 endif
 let b:did_ftplugin = 1
