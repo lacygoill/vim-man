@@ -17,7 +17,7 @@ let s:keyword2pattern = {
 " https://github.com/neovim/neovim/pull/5169
 
 fu! man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
-    if a:mode ==# 'n'
+    if a:mode is# 'n'
         norm! m'
     elseif index(['v', 'V', "\<c-v>"], a:mode) >= 0
         norm! gv
@@ -37,7 +37,7 @@ fu! man#open_page(count, count1, mods, ...) abort "{{{1
         call s:error('too many arguments')
         return
     elseif a:0 == 0
-        let ref = &ft ==# 'man' ? expand('<cWORD>') : expand('<cword>')
+        let ref = &ft is# 'man' ? expand('<cWORD>') : expand('<cword>')
         if empty(ref)
             call s:error('no identifier under cursor')
             return
@@ -122,7 +122,7 @@ fu! man#extract_sect_and_name_ref(ref) abort "{{{1
 " otherwise just return the largest string of valid characters in ref
 
     " try ':Man -pandoc' with this disabled.
-    if a:ref[0] ==# '-'
+    if a:ref[0] is# '-'
         throw 'manpage name cannot start with ''-'''
     endif
 
@@ -223,7 +223,7 @@ fu! s:extract_sect_and_name_path(path) abort "{{{1
 endfu
 
 fu! s:find_man() abort "{{{1
-    if &ft ==# 'man'
+    if &ft is# 'man'
         return 1
     elseif winnr('$') ==# 1
         return 0
@@ -233,7 +233,7 @@ fu! s:find_man() abort "{{{1
 
     while 1
         wincmd w
-        if &ft ==# 'man'
+        if &ft is# 'man'
             return 1
         elseif winnr() ==# thiswin
             return 0
@@ -338,7 +338,7 @@ fu! s:format_candidate(path, sect) abort "{{{1
 
     let [sect, name] = s:extract_sect_and_name_path(a:path)
 
-    if sect ==# a:sect
+    if sect is# a:sect
         return name
     elseif sect =~# a:sect.'.\+$'
         " We include the section if the user provided section is a prefix
