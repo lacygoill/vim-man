@@ -3,14 +3,14 @@ if exists('g:autoloaded_man')
 endif
 let g:autoloaded_man = 1
 
-let s:man_cmd = 'man 2>/dev/null'
+let s:MAN_CMD = 'man 2>/dev/null'
 
-let s:keyword2pattern = {
-\                         'heading'    : '^[a-z][a-z -]*[a-z]$',
-\                         'subheading' : '^\s\{3\}\zs[a-z][a-z -]*[a-z]$',
-\                         'option'     : '^\s\+\zs\%(+\|-\)\S\+',
-\                         'reference'  : '\f\+([1-9][a-z]\=)',
-\                       }
+let s:kwd2pat = {
+\                 'heading'    : '^[a-z][a-z -]*[a-z]$',
+\                 'subheading' : '^\s\{3\}\zs[a-z][a-z -]*[a-z]$',
+\                 'option'     : '^\s\+\zs\%(+\|-\)\S\+',
+\                 'reference'  : '\f\+([1-9][a-z]\=)',
+\               }
 
 " TODO:
 " Read this (new concept of outline):
@@ -23,7 +23,7 @@ fu! man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
         norm! gv
     endif
 
-    call search(s:keyword2pattern[a:kwd], 'W'.(a:is_fwd ? '' : 'b'))
+    call search(s:kwd2pat[a:kwd], 'W'.(a:is_fwd ? '' : 'b'))
 endfu
 
 fu! man#bracket_rhs(kwd, is_fwd) abort "{{{1
@@ -105,7 +105,7 @@ fu! s:read_page(path) abort "{{{1
     " Respect $MANWIDTH, or default to window width.
 
     let cmd  = 'env MANPAGER=cat'.(empty($MANWIDTH) ? ' MANWIDTH='.winwidth(0) : '')
-    let cmd .= ' '.s:man_cmd.' '.shellescape(a:path)
+    let cmd .= ' '.s:MAN_CMD.' '.shellescape(a:path)
     sil put =system(cmd)
 
     " Remove all backspaced characters.
@@ -145,7 +145,7 @@ endfu
 fu! s:get_path(sect, name) abort "{{{1
 
     if empty(a:sect)
-        let path = system(s:man_cmd.' -w '.shellescape(a:name))
+        let path = system(s:MAN_CMD.' -w '.shellescape(a:name))
 
         if path !~# '^\/'
             throw 'no manual entry for '.a:name
@@ -161,7 +161,7 @@ fu! s:get_path(sect, name) abort "{{{1
     "     - 3pcap section (found on macOS)
     "     - commas between sections (for section priority)
 
-    return system(s:man_cmd.' -w '.shellescape(a:sect).' '.shellescape(a:name))
+    return system(s:MAN_CMD.' -w '.shellescape(a:sect).' '.shellescape(a:name))
 endfu
 
 fu! s:verify_exists(sect, name) abort "{{{1
@@ -249,7 +249,7 @@ fu! s:error(msg) abort "{{{1
 endfu
 
 " complete {{{1
-let s:mandirs = join(split(system(s:man_cmd.' -w'), ':\|\n'), ',')
+let s:MANDIRS = join(split(system(s:MAN_CMD.' -w'), ':\|\n'), ',')
 
 " FIXME:
 " doesn't work if we prefix `:Man` with a modifier such as `:tab` or `:vert`.
@@ -325,7 +325,7 @@ fu! man#complete(arglead, cmdline, _p) abort
     endif
 
     " We remove duplicates incase the same manpage in different languages was found.
-    return uniq(sort(map(globpath(s:mandirs,'man?/'.name.'*.'.sect.'*', 0, 1),
+    return uniq(sort(map(globpath(s:MANDIRS,'man?/'.name.'*.'.sect.'*', 0, 1),
     \                    { i,v -> s:format_candidate(v, sect) }
     \                   ), 'i'))
 endfu
