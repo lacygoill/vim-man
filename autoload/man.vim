@@ -36,13 +36,13 @@ fu! man#open_page(count, count1, mods, ...) abort "{{{1
     if a:0 > 2
         call s:error('too many arguments')
         return
-    elseif a:0 ==# 0
+    elseif a:0 == 0
         let ref = &ft is# 'man' ? expand('<cWORD>') : expand('<cword>')
         if empty(ref)
             call s:error('no identifier under cursor')
             return
         endif
-    elseif a:0 ==# 1
+    elseif a:0 == 1
         let ref = a:1
     else
 
@@ -60,7 +60,7 @@ fu! man#open_page(count, count1, mods, ...) abort "{{{1
 
     try
         let [sect, name] = man#extract_sect_and_name_ref(ref)
-        if a:count ==# a:count1
+        if a:count == a:count1
             " v:count defaults to 0 which is a valid section, and v:count1 defaults to
             " 1, also a valid section. If they are equal, count explicitly set.
             let sect = string(a:count)
@@ -225,7 +225,7 @@ endfu
 fu! s:find_man() abort "{{{1
     if &ft is# 'man'
         return 1
-    elseif winnr('$') ==# 1
+    elseif winnr('$') == 1
         return 0
     endif
 
@@ -235,7 +235,7 @@ fu! s:find_man() abort "{{{1
         wincmd w
         if &ft is# 'man'
             return 1
-        elseif winnr() ==# thiswin
+        elseif winnr() == thiswin
             return 0
         endif
     endwhile
@@ -273,7 +273,7 @@ fu! man#complete(arglead, cmdline, _p) abort
 
         return
 
-    elseif N ==# 1
+    elseif N == 1
         let [name, sect] = ['', '']
 
     elseif arglead =~# '^[^()]\+([^()]*$'
@@ -298,7 +298,7 @@ fu! man#complete(arglead, cmdline, _p) abort
 
         return
 
-    elseif N ==# 2
+    elseif N == 2
         if empty(arglead)
             " cursor (|) is at ':Man 1 |'
             let name = ''
