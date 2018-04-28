@@ -325,7 +325,7 @@ fu! man#complete(arglead, cmdline, _p) abort
     endif
 
     " We remove duplicates incase the same manpage in different languages was found.
-    return uniq(sort(map(globpath(s:MANDIRS,'man?/'.name.'*.'.sect.'*', 0, 1),
+    return uniq(sort(map(globpath(s:MANDIRS,'man?/'.name.'*.'.sect.'*', 1, 1),
     \                    { i,v -> s:format_candidate(v, sect) }
     \                   ), 'i'))
 endfu
