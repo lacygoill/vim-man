@@ -100,17 +100,16 @@ noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
 if has_key(get(g:, 'plugs', {}), 'vim-lg-lib')
     call lg#motion#repeatable#make#all({
-    \        'mode':   '',
-    \        'buffer': 1,
-    \        'axis':   {'bwd': ',', 'fwd': ';'},
-    \        'from':   expand('<sfile>:p').':'.expand('<slnum>'),
-    \        'motions': [
-    \                     { 'bwd': '[H',      'fwd': ']H',     },
-    \                     { 'bwd': '[<c-h>',  'fwd': ']<c-h>', },
-    \                     { 'bwd': '[O',      'fwd': ']O',     },
-    \                     { 'bwd': '[r',      'fwd': ']r',     },
-    \                   ]
-    \ })
+        \ 'mode': '',
+        \ 'buffer': 1,
+        \ 'axis': {'bwd': ',', 'fwd': ';'},
+        \ 'from': expand('<sfile>:p').':'.expand('<slnum>'),
+        \ 'motions': [
+        \     {'bwd': '[H',     'fwd': ']H'},
+        \     {'bwd': '[<c-h>', 'fwd': ']<c-h>'},
+        \     {'bwd': '[O',     'fwd': ']O'},
+        \     {'bwd': '[r',     'fwd': ']r'},
+        \ ]})
 endif
 
 " init {{{1
