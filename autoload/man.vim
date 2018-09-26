@@ -106,7 +106,7 @@ fu! s:read_page(path) abort "{{{1
 
     let cmd  = 'env MANPAGER=cat'.(empty($MANWIDTH) ? ' MANWIDTH='.winwidth(0) : '')
     let cmd .= ' '.s:MAN_CMD.' '.shellescape(a:path)
-    sil put =system(cmd)
+    call setline(1, systemlist(cmd))
 
     " Remove all backspaced characters.
     exe "sil keepp keepj %s/.\b//ge"
