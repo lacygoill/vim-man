@@ -1,7 +1,6 @@
 if exists('b:did_ftplugin') || &ft isnot# 'man'
     finish
 endif
-let b:did_ftplugin = 1
 
 " When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
@@ -119,6 +118,10 @@ let s:pager = !exists('b:man_sect')
 if s:pager
     call man#init_pager()
 endif
+
+" Variables {{{1
+
+let b:did_ftplugin = 1
 
 " Teardown {{{1
 
