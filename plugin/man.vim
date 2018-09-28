@@ -21,13 +21,42 @@ let g:loaded_man = 1
 "
 " MWE:
 "
+"         :com!  Test  echo v:count
+"         :nno  K  :<c-u>Test<cr>
+"         123K
+"             → 123
+"
+"                ┌ you need this attribute
+"                │ because 'kp' will send the word under the cursor
+"                │ as an argument to `:Test`
+"                │
+"         :com! -nargs=*  Test  echo v:count
 "         :set kp=:Test
-"         :com! -nargs=1  Test  echo v:count
 "         123K
 "             → 123
 "}}}
-" What's the purpose of `-range=0`?
-
+" What's the purpose of `-range=0`?{{{
+"
+" I don't know.
+" To me, it seems unnecessary.
+"
+" Here the rationale given by the commit author:
+"
+"     But 'keywordprg' still calls ':Man' with a count prefixed.
+"     So it must still accept a count in the line number position, ...
+"
+" Source:
+"     https://github.com/neovim/neovim/pull/5203
+"
+" I don't understand why he says that:
+"
+"         :com! -count=1 -nargs=*  Test  echo <q-args>
+"         :set kp=:Test
+"         K on the word “hello”
+"             → hello
+"               ^
+"               no count is sent as a prefix
+"}}}
 com! -range=0 -complete=customlist,man#complete -nargs=* Man call
             \ man#open_page(v:count, v:count1, <q-mods>, <f-args>)
 
@@ -35,3 +64,4 @@ augroup man
     au!
     au BufReadCmd man://* call man#read_page(matchstr(expand('<amatch>'), 'man://\zs.*'))
 augroup END
+
