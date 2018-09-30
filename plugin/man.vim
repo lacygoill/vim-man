@@ -3,6 +3,11 @@ if exists('g:loaded_man')
 endif
 let g:loaded_man = 1
 
+" Why `<f-args>`?{{{
+"
+" `man#open_page()` must act differently depending on the number of arguments it
+" received.
+"}}}
 " We can't access `v:count` from an Ex command!  So why referring to it in the rhs?{{{
 "
 " Don't forget that we can execute an Ex command from a mapping.
