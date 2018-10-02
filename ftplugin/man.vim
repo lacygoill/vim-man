@@ -97,7 +97,7 @@ noremap  <buffer><expr><nowait><silent>  ]O  man#bracket_rhs('option', 1)
 noremap  <buffer><expr><nowait><silent>  [r  man#bracket_rhs('reference', 0)
 noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
-if has_key(get(g:, 'plugs', {}), 'vim-lg-lib')
+if match(&rtp, 'vim-lg-lib') >= 0
     call lg#motion#repeatable#make#all({
         \ 'mode': '',
         \ 'buffer': 1,
