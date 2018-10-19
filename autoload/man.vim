@@ -106,7 +106,7 @@ fu! s:read_page(path) abort "{{{1
 
     let cmd  = 'env MANPAGER=cat'.(empty($MANWIDTH) ? ' MANWIDTH='.winwidth(0) : '')
     let cmd .= ' '.s:MAN_CMD.' '.shellescape(a:path)
-    call setline(1, systemlist(cmd))
+    sil call setline(1, systemlist(cmd))
 
     " Remove all backspaced characters.
     exe "sil keepp keepj %s/.\b//ge"
@@ -145,7 +145,7 @@ endfu
 fu! s:get_path(sect, name) abort "{{{1
 
     if empty(a:sect)
-        let path = system(s:MAN_CMD.' -w '.shellescape(a:name))
+        sil let path = system(s:MAN_CMD.' -w '.shellescape(a:name))
 
         if path !~# '^\/'
             throw 'no manual entry for '.a:name
@@ -161,7 +161,7 @@ fu! s:get_path(sect, name) abort "{{{1
     "     - 3pcap section (found on macOS)
     "     - commas between sections (for section priority)
 
-    return system(s:MAN_CMD.' -w '.shellescape(a:sect).' '.shellescape(a:name))
+    sil return system(s:MAN_CMD.' -w '.shellescape(a:sect).' '.shellescape(a:name))
 endfu
 
 fu! s:verify_exists(sect, name) abort "{{{1
@@ -249,7 +249,7 @@ fu! s:error(msg) abort "{{{1
 endfu
 
 " complete {{{1
-let s:MANDIRS = join(split(system(s:MAN_CMD.' -w'), ':\|\n'), ',')
+sil let s:MANDIRS = join(split(system(s:MAN_CMD.' -w'), ':\|\n'), ',')
 
 " FIXME:
 " doesn't work if we prefix `:Man` with a modifier such as `:tab` or `:vert`.
