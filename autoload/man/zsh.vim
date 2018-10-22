@@ -1,6 +1,7 @@
 fu! man#zsh#main(kwd) abort "{{{1
-    sil let s:pages = map(systemlist('man -s1 -Kw '.a:kwd.' | grep zsh'),
-        \ {i,v -> matchstr(v, '.*/\zs.\{-}\ze\.')})
+    sil let s:pages = systemlist('man -s1 -Kw '.a:kwd.' | grep zsh')
+    call map(s:pages, {i,v -> matchstr(v, '.*/\zs.\{-}\ze\.')})
+    call filter(s:pages, {i,v -> v !~# '\m\C^No manual entry for' && v isnot# ''})
     if len(s:pages) ==# 0
         return
     endif
