@@ -78,7 +78,6 @@ nno  <buffer><nowait><silent>  <c-]>  :Man<cr>
 nno  <buffer><nowait><silent>  K      :Man<cr>
 nno  <buffer><nowait><silent>  <c-t>  :call man#pop_tag()<cr>
 
-
 noremap  <buffer><expr><nowait><silent>  [H  man#bracket_rhs('heading', 0)
 noremap  <buffer><expr><nowait><silent>  ]H  man#bracket_rhs('heading', 1)
 
@@ -94,6 +93,9 @@ noremap  <buffer><expr><nowait><silent>  ]O  man#bracket_rhs('option', 1)
 "                                         └  can't use `o`:
 "                                                it would prevent us from typing `[oP`
 
+nno  <buffer><nowait><silent>  ]p  :<c-u>call man#zsh#move_in_pages('fwd')<cr>
+nno  <buffer><nowait><silent>  [p  :<c-u>call man#zsh#move_in_pages('bwd')<cr>
+
 noremap  <buffer><expr><nowait><silent>  [r  man#bracket_rhs('reference', 0)
 noremap  <buffer><expr><nowait><silent>  ]r  man#bracket_rhs('reference', 1)
 
@@ -107,6 +109,7 @@ if stridx(&rtp, 'vim-lg-lib') >= 0
         \     {'bwd': '[H',     'fwd': ']H'},
         \     {'bwd': '[<c-h>', 'fwd': ']<c-h>'},
         \     {'bwd': '[O',     'fwd': ']O'},
+        \     {'bwd': '[p',     'fwd': ']p'},
         \     {'bwd': '[r',     'fwd': ']r'},
         \ ]})
 endif
@@ -160,6 +163,8 @@ let b:undo_ftplugin =         get(b:, 'undo_ftplugin', '')
 \                        | exe 'unmap <buffer> ]<c-h>'
 \                        | exe 'unmap <buffer> [O'
 \                        | exe 'unmap <buffer> ]O'
+\                        | exe 'unmap <buffer> [p'
+\                        | exe 'unmap <buffer> ]p'
 \                        | exe 'unmap <buffer> [r'
 \                        | exe 'unmap <buffer> ]r'
 \                      "

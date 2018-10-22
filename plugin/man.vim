@@ -3,6 +3,15 @@ if exists('g:loaded_man')
 endif
 let g:loaded_man = 1
 
+
+" Purpose:{{{
+"
+" Search a keyword in all man pages.
+" Open the first matching page.
+" Cycle through the other ones by pressing `]p`, and `[p`.
+"}}}
+com! -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
+
 " Why `<f-args>`?{{{
 "
 " `man#open_page()` must act differently depending on the number of arguments it
