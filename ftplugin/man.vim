@@ -65,6 +65,9 @@ setl ignorecase
 "}}}
 " Mappings {{{
 
+" I often look for the name of a (sub)section.
+nno  <buffer><nowait>  /  /^\s*
+
 " I frequently hit `p` by accident. It raises the error:
 "
 "     E21: Cannot make changes, 'modifiable' is off
@@ -150,21 +153,22 @@ let b:undo_ftplugin =         get(b:, 'undo_ftplugin', '')
 \                        | setl softtabstop<
 \                        | setl tabstop<
 \                        | unlet! b:man_sect
-\                        | exe 'unmap <buffer> <c-]>'
-\                        | exe 'unmap <buffer> <cr>'
-\                        | exe 'unmap <buffer> <bs>'
-\                        | exe 'unmap <buffer> K'
-\                        | exe 'unmap <buffer> <c-t>'
-\                        | exe 'unmap <buffer> p'
-\                        | exe 'unmap <buffer> q'
-\                        | exe 'unmap <buffer> [H'
-\                        | exe 'unmap <buffer> ]H'
-\                        | exe 'unmap <buffer> [<c-h>'
-\                        | exe 'unmap <buffer> ]<c-h>'
-\                        | exe 'unmap <buffer> [O'
-\                        | exe 'unmap <buffer> ]O'
-\                        | exe 'unmap <buffer> [p'
-\                        | exe 'unmap <buffer> ]p'
-\                        | exe 'unmap <buffer> [r'
-\                        | exe 'unmap <buffer> ]r'
+\                        | exe 'nunmap <buffer> /'
+\                        | exe 'nunmap <buffer> <c-]>'
+\                        | exe 'nunmap <buffer> <cr>'
+\                        | exe 'nunmap <buffer> <bs>'
+\                        | exe 'nunmap <buffer> K'
+\                        | exe 'nunmap <buffer> <c-t>'
+\                        | exe 'nunmap <buffer> p'
+\                        | exe 'nunmap <buffer> q'
+\                        | exe 'nunmap <buffer> [H'
+\                        | exe 'nunmap <buffer> ]H'
+\                        | exe 'nunmap <buffer> [<c-h>'
+\                        | exe 'nunmap <buffer> ]<c-h>'
+\                        | exe 'nunmap <buffer> [O'
+\                        | exe 'nunmap <buffer> ]O'
+\                        | exe 'nunmap <buffer> [p'
+\                        | exe 'nunmap <buffer> ]p'
+\                        | exe 'nunmap <buffer> [r'
+\                        | exe 'nunmap <buffer> ]r'
 \                      "
