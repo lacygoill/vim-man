@@ -66,7 +66,12 @@ setl ignorecase
 " Mappings {{{
 
 " I often look for the name of a (sub)section.
-nno  <buffer><nowait>  /  /^\s*
+" Why the timer?{{{
+"
+" Without a timer, when we visually select some text then press `*` we get E486,
+" because our mapping prefixes the pattern with `^\s*`.
+"}}}
+nno  <buffer><nowait><expr>  /  '/'.timer_start(0, {-> mode() is# 'c' ? feedkeys('^\s*') : 0})[-1]
 
 " I frequently hit `p` by accident. It raises the error:
 "
