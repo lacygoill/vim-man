@@ -66,12 +66,7 @@ setl ignorecase
 " Mappings {{{
 
 " I often look for the name of a (sub)section.
-" Why the timer?{{{
-"
-" Without a timer, when we visually select some text then press `*` we get E486,
-" because our mapping prefixes the pattern with `^\s*`.
-"}}}
-nno  <buffer><nowait><expr>  /  '/'.timer_start(0, {-> mode() is# 'c' ? feedkeys('^\s*') : 0})[-1]
+nno  <buffer><nowait>  g/  /^\s*
 
 " I frequently hit `p` by accident. It raises the error:
 "
@@ -142,7 +137,7 @@ let b:undo_ftplugin = get(b:, 'undo_ftplugin', '')
     \ setl bh< bt< cc< fdc< ic< nobl< noet< nofen< nolist< noma< nomod< nonu< nornu< noswf< ro< sw< sts< ts<
     \|unlet! b:man_sect
     \
-    \|nunmap <buffer> /
+    \|nunmap <buffer> g/
     \|nunmap <buffer> <c-]>
     \|nunmap <buffer> <cr>
     \|nunmap <buffer> <bs>
