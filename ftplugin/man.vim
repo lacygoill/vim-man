@@ -134,26 +134,26 @@ let b:did_ftplugin = 1
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', '')
     \ . (empty(get(b:, 'undo_ftplugin', '')) ? '' : '|')
     \ . "
-    \ setl bh< bt< cc< fdc< ic< nobl< noet< nofen< nolist< noma< nomod< nonu< nornu< noswf< ro< sw< sts< ts<
-    \|unlet! b:man_sect
+    \   setl bh< bt< cc< fdc< ic< nobl< noet< nofen< nolist< noma< nomod< nonu< nornu< noswf< ro< sw< sts< ts<
+    \ | unlet! b:man_sect
     \
-    \|nunmap <buffer> g/
-    \|nunmap <buffer> <c-]>
-    \|nunmap <buffer> <cr>
-    \|nunmap <buffer> <bs>
-    \|nunmap <buffer> K
-    \|nunmap <buffer> <c-t>
-    \|nunmap <buffer> p
-    \|nunmap <buffer> q
-    \|nunmap <buffer> [H
-    \|nunmap <buffer> ]H
-    \|nunmap <buffer> [<c-h>
-    \|nunmap <buffer> ]<c-h>
-    \|nunmap <buffer> [O
-    \|nunmap <buffer> ]O
-    \|nunmap <buffer> [p
-    \|nunmap <buffer> ]p
-    \|nunmap <buffer> [r
-    \|nunmap <buffer> ]r
-    \"
+    \ | exe 'nunmap <buffer> g/'
+    \ | exe 'nunmap <buffer> <c-]>'
+    \ | exe 'nunmap <buffer> <cr>'
+    \ | exe 'nunmap <buffer> <bs>'
+    \ | exe 'nunmap <buffer> K'
+    \ | exe 'nunmap <buffer> <c-t>'
+    \ | exe 'nunmap <buffer> p'
+    \ | exe 'nunmap <buffer> q'
+    \ | exe 'nunmap <buffer> [H'
+    \ | exe 'nunmap <buffer> ]H'
+    \ | exe 'nunmap <buffer> [<c-h>'
+    \ | exe 'nunmap <buffer> ]<c-h>'
+    \ | exe 'nunmap <buffer> [O'
+    \ | exe 'nunmap <buffer> ]O'
+    \ | exe 'nunmap <buffer> [p'
+    \ | exe 'nunmap <buffer> ]p'
+    \ | exe 'nunmap <buffer> [r'
+    \ | exe 'nunmap <buffer> ]r'
+    \ "
 
