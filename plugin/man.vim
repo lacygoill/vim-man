@@ -38,7 +38,7 @@ com! -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "         :com!  Test  echo v:count
 "         :nno  K  :<c-u>Test<cr>
 "         123K
-"             → 123
+"         123~
 "
 "                ┌ you need this attribute
 "                │ because 'kp' will send the word under the cursor
@@ -47,7 +47,7 @@ com! -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "         :com! -nargs=*  Test  echo v:count
 "         :set kp=:Test
 "         123K
-"             → 123
+"         123~
 "}}}
 " What's the purpose of `-range=0`?{{{
 "
@@ -67,9 +67,9 @@ com! -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "         :com! -count=1 -nargs=*  Test  echo <q-args>
 "         :set kp=:Test
 "         K on the word “hello”
-"             → hello
-"               ^
-"               no count is sent as a prefix
+"         hello~
+"         ^
+"         no count is sent as a prefix~
 "}}}
 com! -bar -range=0 -complete=customlist,man#complete -nargs=*  Man
     \ call man#open_page(v:count, v:count1, <q-mods>, <f-args>)
