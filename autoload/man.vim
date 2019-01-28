@@ -16,6 +16,19 @@ let s:kwd2pat = {
 " Read this (new concept of outline):
 " https://github.com/neovim/neovim/pull/5169
 
+" Folding {{{1
+fu! man#fde() abort "{{{2
+    if indent(v:lnum) == 0 && getline(v:lnum) =~# '\S'
+        let lvl = '>1'
+    elseif indent(v:lnum) == 3
+        let lvl = '>2'
+    else
+        let lvl = '='
+    endif
+    return lvl
+endfu
+" }}}1
+
 fu! man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
     if a:mode is# 'n'
         norm! m'

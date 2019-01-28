@@ -2,8 +2,6 @@ if exists('b:did_ftplugin') || &ft isnot# 'man'
     finish
 endif
 
-" TODO: Lines in man pages are too long.
-
 " When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
 sil! call lg#motion#repeatable#make#set_last_used(']O', {'bwd': ',', 'fwd': ';'})
@@ -64,6 +62,10 @@ setl readonly
 setl nolist
 setl ignorecase
 
+" Folding
+setl fdm=expr
+setl fde=man#fde()
+setl fdt=fold#fdt#get()
 "}}}
 " Mappings {{{
 
@@ -136,7 +138,7 @@ let b:did_ftplugin = 1
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', '')
     \ . (empty(get(b:, 'undo_ftplugin', '')) ? '' : '|')
     \ . "
-    \   setl bh< bt< cc< fdc< ic< nobl< noet< nofen< nolist< noma< nomod< nonu< nornu< noswf< ro< sw< sts< ts<
+    \   setl bh< bl< bt< cc< et< fdc< fde< fdm< fdt< fen< ic< list< ma< mod< nu< rnu< ro< sts< sw< swf< ts<
     \ | unlet! b:man_sect
     \
     \ | exe 'nunmap <buffer> g/'
