@@ -2,6 +2,8 @@ if exists('b:did_ftplugin') || &ft isnot# 'man'
     finish
 endif
 
+" TODO: Lines in man pages are too long.
+
 " When I open a man page, I immediately want to be able to cycle through
 " options with `;` and `,`.
 sil! call lg#motion#repeatable#make#set_last_used(']O', {'bwd': ',', 'fwd': ';'})

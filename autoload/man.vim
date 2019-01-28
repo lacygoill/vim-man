@@ -374,7 +374,7 @@ fu! man#init_pager() abort "{{{1
     exe 'sil! file man://'.fnameescape(ref)
     "       │
     "       └ FIXME: :Man bash
-    "                 SPC + o (open TOC menu)
+    "                 -c (open TOC menu)
     "                 Vim(file):E788: Not allowed to edit another buffer now
     "
     "                 The issue comes from ~/.vim/plugged/vim-man/syntax/man.vim:
