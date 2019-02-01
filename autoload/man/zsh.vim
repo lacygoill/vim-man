@@ -17,6 +17,6 @@ fu! man#zsh#move_in_pages(dir) abort "{{{1
     exe 'Man '.s:pages[s:pos]
     " Our filetype plugin sets `]O` as the default motion to repeat when we load
     " a man buffer. Here, we prefer `]p`.
-    sil! call lg#motion#repeatable#make#set_last_used(']p', {'bwd': ',', 'fwd': ';'})
+    sil! call lg#motion#repeatable#make#set_last_used(']p')
 endfu
 
