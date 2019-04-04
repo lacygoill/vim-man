@@ -79,3 +79,18 @@ augroup man
     au BufReadCmd man://* call man#read_page(matchstr(expand('<amatch>'), 'man://\zs.*'))
 augroup END
 
+" When we  open a  manpage, `$MAN_PN`  is set  with the name  of the  page (ex:
+" man(1)); we can test its value to know  if Vim has been launched to read a man
+" page.
+if !empty($MAN_PN)
+    augroup manpage
+        au!
+        " Why do we use an autocmd, instead of just `setl man` directly?{{{
+        "
+        " Because it would be too soon, the buffer wouldn't be loaded yet.
+        " We have to wait for the standard input to have been read completely.
+        "}}}
+        au StdinReadPost * setl ft=man
+    augroup END
+endif
+
