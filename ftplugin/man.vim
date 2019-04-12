@@ -130,10 +130,9 @@ let b:did_ftplugin = 1
 
 " Teardown {{{1
 
-let b:undo_ftplugin = get(b:, 'undo_ftplugin', '')
-    \ . (empty(get(b:, 'undo_ftplugin', '')) ? '' : '|')
+let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'exe')
     \ . "
-    \   setl bh< bl< bt< cc< et< fdc< fde< fdm< fdt< fen< ic< list< ma< mod< nu< rnu< ro< sts< sw< swf< ts<
+    \ | setl bh< bl< bt< cc< et< fdc< fde< fdm< fdt< fen< ic< list< ma< mod< nu< rnu< ro< sts< sw< swf< ts<
     \ | unlet! b:man_sect
     \
     \ | exe 'nunmap <buffer> g/'
