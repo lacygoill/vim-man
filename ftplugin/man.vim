@@ -72,7 +72,7 @@ nno  <buffer><nowait>  g/  /^\s*
 "
 "     E21: Cannot make changes, 'modifiable' is off
 nno  <buffer><nowait><silent>  p  <nop>
-nno  <buffer><nowait><silent>  q  :<c-u>call lg#window#quit()<cr>
+nno  <buffer><nowait><silent>  q  :<c-u>norm 1<space>q<cr>
 
 nmap  <buffer><nowait><silent>  <cr>  <c-]>
 nmap  <buffer><nowait><silent>  <bs>  <c-t>
