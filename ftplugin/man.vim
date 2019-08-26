@@ -14,11 +14,11 @@ endif
 " Why the `if` condition?
 " Suppose we open a man buffer:
 "
-"         $ man bash
+"     $ man bash
 "
 " The command `file $MAN_PN` names it using the value environment variable:
 "
-"         $MAN_PN    ex: bash(1)
+"     $MAN_PN    ex: bash(1)
 "
 " Then we look for a reference, and click on it.
 " A new man buffer is loaded, and the command would again try to name the new
