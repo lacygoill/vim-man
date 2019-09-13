@@ -3,6 +3,26 @@ if exists('g:loaded_man')
 endif
 let g:loaded_man = 1
 
+" TODO: Get rid of error message displayed when using the Nvim man plugin:{{{
+"
+"     $ man git-credential-cache
+"     man.vim: command error (7) man -w git-credential-cac: No manual entry for git-credential-cac~
+"
+" Notice how the man page name has been truncated (`he` is missing at the end).
+" It's already truncated when this autocmd is run:
+"
+"     /usr/local/share/nvim/runtime/plugin/man.vim:14
+"
+" The issue is due to `man(1)` which truncates the name of the file.
+"
+"     $ MANPAGER='vim -R +":set ft=man" -' man git-credential-cache
+"     :echo bufname('%')
+"     man://git-credential-cac(1)~
+"                             ^
+"                             `he` is missing
+"
+" https://unix.stackexchange.com/q/541556/289772
+"}}}
 
 " Purpose:{{{
 "
