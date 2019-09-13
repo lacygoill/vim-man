@@ -14,7 +14,7 @@ endif
 " Why the `if` condition?
 " Suppose we open a man buffer:
 "
-"     $ man bash
+"     man bash
 "
 " The command `file $MAN_PN` names it using the value environment variable:
 "
