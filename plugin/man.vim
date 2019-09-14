@@ -3,25 +3,41 @@ if exists('g:loaded_man')
 endif
 let g:loaded_man = 1
 
-" TODO: Get rid of error message displayed when using the Nvim man plugin:{{{
+" TODO: When you'll re-implement the Nvim man plugin, make sure to use `$MAN_PN` to get the name of the man page.{{{
 "
-"     $ man git-credential-cache
-"     man.vim: command error (7) man -w git-credential-cac: No manual entry for git-credential-cac~
+" Atm, in `/usr/local/share/nvim/runtime/autoload/man.vim`:
 "
-" Notice how the man page name has been truncated (`he` is missing at the end).
-" It's already truncated when this autocmd is run:
+"     " Guess the ref from the heading (which is usually uppercase, so we cannot
+"     " know the correct casing, cf. `man glDrawArraysInstanced`).
+"     let ref = substitute(matchstr(getline(1), '^[^)]\+)'), ' ', '_', 'g')
 "
-"     /usr/local/share/nvim/runtime/plugin/man.vim:14
+" On Linux, one can get the same info via `$MAN_PN`.
+" Using this variable is more reliable then reading the heading in the man page.
+" For example, in the man page for `git-credential-cache(1)`, the heading is:
 "
-" The issue is due to `man(1)` which truncates the name of the file.
+"     GIT-CREDENTIAL-CAC(1)             Git Manual             GIT-CREDENTIAL-CAC(1)
+"                       ^
+"                       ✘
 "
-"     $ MANPAGER='vim -R +":set ft=man" -' man git-credential-cache
-"     :echo bufname('%')
-"     man://git-credential-cac(1)~
+" Notice how the name is truncated; `HE` is missing.
+" This is just because the author of the man page truncated the name of the command:
+"
+"     $ zcat /usr/share/man/man1/git-credential-cache.1.gz | sed -n '10p'
+"     .TH "GIT\-CREDENTIAL\-CAC" "1" "08/17/2019" "Git 2\&.23\&.0" "Git Manual"~
 "                             ^
-"                             `he` is missing
+"                             ✘
 "
-" https://unix.stackexchange.com/q/541556/289772
+" Besides, if you  try to guess the name  of the man page from  the heading, you
+" lose  the original  case, because  the heading  is usually  all in  uppercase,
+" regardless of the original case used in the command name.
+"
+" When you'll re-implement the Nvim man plugin, make sure to fix that:
+"
+"     " remove this
+"     let ref = substitute(matchstr(getline(1), '^[^)]\+)'), ' ', '_', 'g')
+"
+"     " add this
+"     let ref = $MAN_PN
 "}}}
 
 " Purpose:{{{
