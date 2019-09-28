@@ -169,10 +169,10 @@ fu! s:get_path(sect, name) abort "{{{1
 
     " '-s' flag handles:
     "
-    "     - tokens like 'printf(echo)'
-    "     - sections starting with '-'
-    "     - 3pcap section (found on macOS)
-    "     - commas between sections (for section priority)
+    "    - tokens like 'printf(echo)'
+    "    - sections starting with '-'
+    "    - 3pcap section (found on macOS)
+    "    - commas between sections (for section priority)
 
     sil return system(s:MAN_CMD.' -w '.shellescape(a:sect).' '.shellescape(a:name))
 endfu
