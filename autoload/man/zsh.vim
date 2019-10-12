@@ -1,4 +1,4 @@
-fu! man#zsh#main(kwd) abort "{{{1
+fu man#zsh#main(kwd) abort "{{{1
     sil let s:pages = systemlist('man -s1 -Kw '.a:kwd.' | grep zsh')
     call map(s:pages, {_,v -> matchstr(v, '.*/\zs.\{-}\ze\.')})
     call filter(s:pages, {_,v -> v !~# '\m\C^No manual entry for' && v isnot# ''})
@@ -9,7 +9,7 @@ fu! man#zsh#main(kwd) abort "{{{1
     exe 'Man '.s:pages[0]
 endfu
 
-fu! man#zsh#move_in_pages(dir) abort "{{{1
+fu man#zsh#move_in_pages(dir) abort "{{{1
     if len(s:pages) == 0
         return
     endif

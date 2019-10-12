@@ -17,7 +17,7 @@ let s:kwd2pat = {
 " https://github.com/neovim/neovim/pull/5169
 
 " Folding {{{1
-fu! man#fde() abort "{{{2
+fu man#fde() abort "{{{2
     if indent(v:lnum) == 0 && getline(v:lnum) =~# '\S'
         let lvl = '>1'
     elseif indent(v:lnum) == 3
@@ -29,7 +29,7 @@ fu! man#fde() abort "{{{2
 endfu
 " }}}1
 
-fu! man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
+fu man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
     if a:mode is# 'n'
         norm! m'
     elseif index(['v', 'V', "\<c-v>"], a:mode) >= 0
@@ -39,13 +39,13 @@ fu! man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
     call search(s:kwd2pat[a:kwd], 'W'.(a:is_fwd ? '' : 'b'))
 endfu
 
-fu! man#bracket_rhs(kwd, is_fwd) abort "{{{1
+fu man#bracket_rhs(kwd, is_fwd) abort "{{{1
     let mode = mode(1)
     return printf(":\<c-u>call man#bracket_motion(%s,%d,%s)\<cr>",
     \             string(a:kwd), a:is_fwd, string(mode))
 endfu
 
-fu! man#open_page(count, count1, mods, ...) abort "{{{1
+fu man#open_page(count, count1, mods, ...) abort "{{{1
     if a:0 > 2
         call s:error('too many arguments')
         return
@@ -98,7 +98,7 @@ fu! man#open_page(count, count1, mods, ...) abort "{{{1
     call s:read_page(path)
 endfu
 
-fu! man#read_page(ref) abort "{{{1
+fu man#read_page(ref) abort "{{{1
     try
         let [sect, name]             = man#extract_sect_and_name_ref(a:ref)
         let [b:man_sect, name, path] = s:verify_exists(sect, name)
@@ -109,7 +109,7 @@ fu! man#read_page(ref) abort "{{{1
     call s:read_page(path)
 endfu
 
-fu! s:read_page(path) abort "{{{1
+fu s:read_page(path) abort "{{{1
     setl modifiable noreadonly
     sil keepj %d_
 
@@ -130,7 +130,7 @@ fu! s:read_page(path) abort "{{{1
     setl filetype=man
 endfu
 
-fu! man#extract_sect_and_name_ref(ref) abort "{{{1
+fu man#extract_sect_and_name_ref(ref) abort "{{{1
 " attempt to extract the name and sect out of 'name(sect)'
 " otherwise just return the largest string of valid characters in ref
 
@@ -155,7 +155,7 @@ fu! man#extract_sect_and_name_ref(ref) abort "{{{1
     return [tolower(split(left[1], ')')[0]), left[0]]
 endfu
 
-fu! s:get_path(sect, name) abort "{{{1
+fu s:get_path(sect, name) abort "{{{1
 
     if empty(a:sect)
         sil let path = system(s:MAN_CMD.' -w '.shellescape(a:name))
@@ -177,7 +177,7 @@ fu! s:get_path(sect, name) abort "{{{1
     sil return system(s:MAN_CMD.' -w '.shellescape(a:sect).' '.shellescape(a:name))
 endfu
 
-fu! s:verify_exists(sect, name) abort "{{{1
+fu s:verify_exists(sect, name) abort "{{{1
 
     let path = s:get_path(a:sect, a:name)
     if path !~# '^\/'
@@ -203,7 +203,7 @@ endfu
 " push_tag {{{1
 
 let s:tag_stack = []
-fu! s:push_tag() abort
+fu s:push_tag() abort
     let s:tag_stack += [{
                         \ 'buf':  bufnr('%'),
                         \ 'lnum': line('.'),
@@ -211,7 +211,7 @@ fu! s:push_tag() abort
                         \ }]
 endfu
 
-fu! man#pop_tag() abort "{{{1
+fu man#pop_tag() abort "{{{1
     if !empty(s:tag_stack)
         let tag = remove(s:tag_stack, -1)
         exe 'sil' tag['buf'].'buffer'
@@ -219,7 +219,7 @@ fu! man#pop_tag() abort "{{{1
     endif
 endfu
 
-fu! s:extract_sect_and_name_path(path) abort "{{{1
+fu s:extract_sect_and_name_path(path) abort "{{{1
 " extracts the name and sect out of 'path/name.sect'
 
     let tail = fnamemodify(a:path, ':t')
@@ -235,7 +235,7 @@ fu! s:extract_sect_and_name_path(path) abort "{{{1
     return [sect, name]
 endfu
 
-fu! s:find_man() abort "{{{1
+fu s:find_man() abort "{{{1
     if &ft is# 'man'
         return 1
     elseif winnr('$') == 1
@@ -254,7 +254,7 @@ fu! s:find_man() abort "{{{1
     endwhile
 endfu
 
-fu! s:error(msg) abort "{{{1
+fu s:error(msg) abort "{{{1
     redraw
     echohl ErrorMsg
     echon 'man.vim: '.a:msg
@@ -269,7 +269,7 @@ sil let s:MANDIRS = join(split(system(s:MAN_CMD.' -w'), ':\|\n'), ',')
 " Add support for a possible modifier.
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
-fu! man#complete(arglead, cmdline, _pos) abort
+fu man#complete(arglead, cmdline, _pos) abort
     let args    = split(a:cmdline)
     let arglead = a:arglead
     let N       = len(args)
@@ -343,7 +343,7 @@ fu! man#complete(arglead, cmdline, _pos) abort
     \                   ), 'i'))
 endfu
 
-fu! s:format_candidate(path, sect) abort "{{{1
+fu s:format_candidate(path, sect) abort "{{{1
     " invalid extensions
     if a:path =~# '\v\.%(pdf|in)$'
         return
@@ -360,7 +360,7 @@ fu! s:format_candidate(path, sect) abort "{{{1
     endif
 endfu
 
-fu! man#init_pager() abort "{{{1
+fu man#init_pager() abort "{{{1
     " Set the buffer to be modifiable, otherwise the next commands
     " cause an error:
     "

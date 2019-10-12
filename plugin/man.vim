@@ -46,7 +46,7 @@ let g:loaded_man = 1
 " Open the first matching page.
 " Cycle through the other ones by pressing `]p`, and `[p`.
 "}}}
-com! -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
+com -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 
 " Why `<f-args>`?{{{
 "
@@ -71,16 +71,16 @@ com! -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "
 " MWE:
 "
-"         :com!  Test  echo v:count
+"         :com  Test  echo v:count
 "         :nno  K  :<c-u>Test<cr>
 "         123K
 "         123~
 "
-"                ┌ you need this attribute
-"                │ because 'kp' will send the word under the cursor
-"                │ as an argument to `:Test`
-"                │
-"         :com! -nargs=*  Test  echo v:count
+"               ┌ you need this attribute
+"               │ because 'kp' will send the word under the cursor
+"               │ as an argument to `:Test`
+"               │
+"         :com -nargs=*  Test  echo v:count
 "         :set kp=:Test
 "         123K
 "         123~
@@ -100,14 +100,14 @@ com! -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "
 " I don't understand why he says that:
 "
-"         :com! -count=1 -nargs=*  Test  echo <q-args>
+"         :com -count=1 -nargs=*  Test  echo <q-args>
 "         :set kp=:Test
 "         K on the word “hello”
 "         hello~
 "         ^
 "         no count is sent as a prefix~
 "}}}
-com! -bar -range=0 -complete=customlist,man#complete -nargs=*  Man
+com -bar -range=0 -complete=customlist,man#complete -nargs=*  Man
     \ call man#open_page(v:count, v:count1, <q-mods>, <f-args>)
 
 augroup man

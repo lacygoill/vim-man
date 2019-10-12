@@ -116,7 +116,7 @@ if stridx(&rtp, 'vim-lg-lib') >= 0
         \ ]})
 endif
 
-" init {{{1
+" Init {{{1
 
 let s:pager = !exists('b:man_sect')
 
