@@ -71,8 +71,8 @@ com -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "
 " MWE:
 "
-"         :com  Test  echo v:count
-"         :nno  K  :<c-u>Test<cr>
+"         :com Test echo v:count
+"         :nno K  :<c-u>Test<cr>
 "         123K
 "         123~
 "

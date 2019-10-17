@@ -36,7 +36,7 @@ fu man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
         norm! gv
     endif
 
-    call search(s:kwd2pat[a:kwd], 'W'.(a:is_fwd ? '' : 'b'))
+    call search(s:kwd2pat[a:kwd], a:is_fwd ? '' : 'b')
 endfu
 
 fu man#bracket_rhs(kwd, is_fwd) abort "{{{1
@@ -269,7 +269,7 @@ sil let s:MANDIRS = join(split(system(s:MAN_CMD.' -w'), ':\|\n'), ',')
 " Add support for a possible modifier.
 
 " see man#extract_sect_and_name_ref on why tolower(sect)
-fu man#complete(arglead, cmdline, _pos) abort
+fu man#complete(arglead, cmdline, _p) abort
     let args    = split(a:cmdline)
     let arglead = a:arglead
     let N       = len(args)
