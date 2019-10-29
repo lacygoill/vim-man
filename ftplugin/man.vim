@@ -131,27 +131,5 @@ let b:did_ftplugin = 1
 " Teardown {{{1
 
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'exe')
-    \ ..'
-    \ | setl bh< bl< bt< cc< et< fdc< fde< fdm< fdt< fen< ic< list< ma< mod< nu< rnu< ro< sts< sw< swf< ts<
-    \ | unlet! b:man_sect
-    \
-    \ | exe "nunmap <buffer> g/"
-    \ | exe "nunmap <buffer> <c-]>"
-    \ | exe "nunmap <buffer> <cr>"
-    \ | exe "nunmap <buffer> <bs>"
-    \ | exe "nunmap <buffer> K"
-    \ | exe "nunmap <buffer> <c-t>"
-    \ | exe "nunmap <buffer> p"
-    \ | exe "nunmap <buffer> q"
-    \ | exe "nunmap <buffer> [H"
-    \ | exe "nunmap <buffer> ]H"
-    \ | exe "nunmap <buffer> [<c-h>"
-    \ | exe "nunmap <buffer> ]<c-h>"
-    \ | exe "nunmap <buffer> [O"
-    \ | exe "nunmap <buffer> ]O"
-    \ | exe "nunmap <buffer> [p"
-    \ | exe "nunmap <buffer> ]p"
-    \ | exe "nunmap <buffer> [r"
-    \ | exe "nunmap <buffer> ]r"
-    \ '
+    \ ..'| call man#undo_ftplugin()'
 

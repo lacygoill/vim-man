@@ -396,3 +396,28 @@ fu man#init_pager() abort "{{{1
     "                         call man#init_pager()
     "                     endif
 endfu
+
+fu man#undo_ftplugin() abort "{{{1
+    setl bh< bl< bt< cc< et< fdc< fde< fdm< fdt< fen< ic< list< ma< mod< nu< rnu< ro< sts< sw< swf< ts<
+    unlet! b:man_sect
+
+    nunmap <buffer> g/
+    nunmap <buffer> <c-]>
+    nunmap <buffer> <cr>
+    nunmap <buffer> <bs>
+    nunmap <buffer> K
+    nunmap <buffer> <c-t>
+    nunmap <buffer> p
+    nunmap <buffer> q
+    nunmap <buffer> [H
+    nunmap <buffer> ]H
+    nunmap <buffer> [<c-h>
+    nunmap <buffer> ]<c-h>
+    nunmap <buffer> [O
+    nunmap <buffer> ]O
+    nunmap <buffer> [p
+    nunmap <buffer> ]p
+    nunmap <buffer> [r
+    nunmap <buffer> ]r
+endfu
+
