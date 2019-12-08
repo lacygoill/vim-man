@@ -68,7 +68,7 @@ fu man#open_page(count, count1, mods, ...) abort "{{{1
         "
         "     printf(3)
 
-        let ref = a:2.'('.a:1.')'
+        let ref = a:2..'('..a:1..')'
     endif
 
     try
@@ -86,12 +86,12 @@ fu man#open_page(count, count1, mods, ...) abort "{{{1
 
     call s:push_tag()
 
-    let bufname = 'man://' . name . (empty(sect) ? '' : '('.sect.')')
+    let bufname = 'man://'..name..(empty(sect) ? '' : '('..sect..')')
 
     if a:mods !~# 'tab' && s:find_man()
-        exe 'sil edit '.fnameescape(bufname)
+        exe 'sil edit '..fnameescape(bufname)
     else
-        exe 'sil '.a:mods.' split '.fnameescape(bufname)
+        exe 'sil '..a:mods..' split '..fnameescape(bufname)
     endif
 
     let b:man_sect = sect
@@ -117,8 +117,8 @@ fu s:read_page(path) abort "{{{1
     " http://comments.gmane.org/gmane.editors.vim.devel/29085
     " Respect $MANWIDTH, or default to window width.
 
-    let cmd  = 'env MANPAGER=cat'.(empty($MANWIDTH) ? ' MANWIDTH='.winwidth(0) : '')
-    let cmd ..= ' '.s:MAN_CMD.' '.shellescape(a:path)
+    let cmd  = 'env MANPAGER=cat'..(empty($MANWIDTH) ? ' MANWIDTH='..winwidth(0) : '')
+    let cmd ..= ' '..s:MAN_CMD..' '..shellescape(a:path)
     sil call setline(1, systemlist(cmd))
 
     " Remove all backspaced characters.
@@ -158,10 +158,10 @@ endfu
 fu s:get_path(sect, name) abort "{{{1
 
     if empty(a:sect)
-        sil let path = system(s:MAN_CMD.' -w '.shellescape(a:name))
+        sil let path = system(s:MAN_CMD..' -w '..shellescape(a:name))
 
         if path !~# '^\/'
-            throw 'no manual entry for '.a:name
+            throw 'no manual entry for '..a:name
         endif
 
         return path
@@ -174,7 +174,7 @@ fu s:get_path(sect, name) abort "{{{1
     "    - 3pcap section (found on macOS)
     "    - commas between sections (for section priority)
 
-    sil return system(s:MAN_CMD.' -w '.shellescape(a:sect).' '.shellescape(a:name))
+    sil return system(s:MAN_CMD..' -w '..shellescape(a:sect)..' '..shellescape(a:name))
 endfu
 
 fu s:verify_exists(sect, name) abort "{{{1
@@ -214,7 +214,7 @@ endfu
 fu man#pop_tag() abort "{{{1
     if !empty(s:tag_stack)
         let tag = remove(s:tag_stack, -1)
-        exe 'sil' tag['buf'].'buffer'
+        exe 'sil' tag['buf']..'buffer'
         call cursor(tag['lnum'], tag['col'])
     endif
 endfu
@@ -257,12 +257,12 @@ endfu
 fu s:error(msg) abort "{{{1
     redraw
     echohl ErrorMsg
-    echon 'man.vim: '.a:msg
+    echon 'man.vim: '..a:msg
     echohl None
 endfu
 
 " complete {{{1
-sil let s:MANDIRS = join(split(system(s:MAN_CMD.' -w'), ':\|\n'), ',')
+sil let s:MANDIRS = join(split(system(s:MAN_CMD..' -w'), ':\|\n'), ',')
 
 " FIXME:
 " doesn't work if we prefix `:Man` with a modifier such as `:tab` or `:vert`.
@@ -321,7 +321,7 @@ fu man#complete(arglead, cmdline, _p) abort
             " cursor (|) is at ':Man pri|'
             if arglead =~# '\/'
                 " if the name is a path, complete files
-                return glob(arglead.'*', 0, 1)
+                return glob(arglead..'*', 0, 1)
             endif
             let name = arglead
             let sect = ''
@@ -338,7 +338,7 @@ fu man#complete(arglead, cmdline, _p) abort
     endif
 
     " We remove duplicates incase the same manpage in different languages was found.
-    return uniq(sort(map(globpath(s:MANDIRS,'man?/'.name.'*.'.sect.'*', 1, 1),
+    return uniq(sort(map(globpath(s:MANDIRS,'man?/'..name..'*.'..sect..'*', 1, 1),
     \                    {_,v -> s:format_candidate(v, sect)}
     \                   ), 'i'))
 endfu
@@ -353,10 +353,10 @@ fu s:format_candidate(path, sect) abort "{{{1
 
     if sect is# a:sect
         return name
-    elseif sect =~# a:sect.'.\+$'
+    elseif sect =~# a:sect..'.\+$'
         " We include the section if the user provided section is a prefix
         " of the actual section.
-        return name.'('.sect.')'
+        return name..'('..sect..')'
     endif
 endfu
 
@@ -384,7 +384,7 @@ fu man#init_pager() abort "{{{1
     catch
         let b:man_sect = ''
     endtry
-    exe 'sil! file man://'.fnameescape(ref)
+    exe 'sil! file man://'..fnameescape(ref)
     "       │
     "       └ FIXME: :Man bash
     "                 -c (open TOC menu)
