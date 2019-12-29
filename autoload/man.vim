@@ -225,7 +225,7 @@ fu s:extract_sect_and_name_path(path) abort "{{{1
     let tail = fnamemodify(a:path, ':t')
 
     " valid extensions
-    if a:path =~# '\v\.%([glx]z|bz2|lzma|Z)$'
+    if a:path =~# '\.\%([glx]z\|bz2\|lzma\|Z\)$'
         let tail = fnamemodify(tail, ':r')
     endif
 
@@ -345,7 +345,7 @@ endfu
 
 fu s:format_candidate(path, sect) abort "{{{1
     " invalid extensions
-    if a:path =~# '\v\.%(pdf|in)$'
+    if a:path =~# '\.\%(pdf\|in\)$'
         return
     endif
 
@@ -370,7 +370,7 @@ fu man#init_pager() abort "{{{1
     setl modifiable
 
     " Remove all backspaced characters.
-    exe "sil keepp keepj %s/.\b//ge"
+    sil keepp keepj %s/.\%x08//ge
     if getline(1) =~# '^\s*$'
         sil keepj 1delete _
     else
@@ -384,17 +384,19 @@ fu man#init_pager() abort "{{{1
     catch
         let b:man_sect = ''
     endtry
-    exe 'sil! file man://'..fnameescape(ref)
-    "       │
-    "       └ FIXME: :Man bash
-    "                 -c (open TOC menu)
-    "                 Vim(file):E788: Not allowed to edit another buffer now
+    sil! exe 'file man://'..fnameescape(ref)
+    "  │
+    "  └ FIXME:
     "
-    "                 The issue comes from ~/.vim/plugged/vim-man/syntax/man.vim:
+    "     :Man bash
+    "     " press `-c` (to open TOC menu)
+    "     Vim(file):E788: Not allowed to edit another buffer now~
     "
-    "                     if !exists('b:man_sect')
-    "                         call man#init_pager()
-    "                     endif
+    " The issue comes from `~/.vim/plugged/vim-man/syntax/man.vim`:
+    "
+    "     if !exists('b:man_sect')
+    "         call man#init_pager()
+    "     endif
 endfu
 
 fu man#undo_ftplugin() abort "{{{1
