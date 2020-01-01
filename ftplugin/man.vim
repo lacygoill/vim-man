@@ -77,9 +77,9 @@ nmap <buffer><nowait><silent> q <plug>(my_quit)
 nmap <buffer><nowait><silent> <cr> <c-]>
 nmap <buffer><nowait><silent> <bs> <c-t>
 
-nno <buffer><nowait><silent> <c-]> :Man<cr>
-nno <buffer><nowait><silent> K     :Man<cr>
-nno <buffer><nowait><silent> <c-t> :call man#pop_tag()<cr>
+nno <buffer><nowait><silent> <c-]> :<c-u>Man<cr>
+nno <buffer><nowait><silent> K     :<c-u>Man<cr>
+nno <buffer><nowait><silent> <c-t> :<c-u>call man#pop_tag()<cr>
 
 noremap <buffer><expr><nowait><silent> [H man#bracket_rhs('heading', 0)
 noremap <buffer><expr><nowait><silent> ]H man#bracket_rhs('heading', 1)
