@@ -15,8 +15,5 @@ fu man#zsh#move_in_pages(dir) abort "{{{1
     endif
     let s:pos = (s:pos + (a:dir is# 'fwd' ? 1 : -1)) % len(s:pages)
     exe 'Man '..s:pages[s:pos]
-    " Our filetype plugin sets `]O` as the default motion to repeat when we load
-    " a man buffer. Here, we prefer `]p`.
-    sil! call lg#motion#repeatable#make#set_last_used(']p')
 endfu
 
