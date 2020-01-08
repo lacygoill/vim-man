@@ -32,7 +32,7 @@ endfu
 fu man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
     if a:mode is# 'n'
         norm! m'
-    elseif index(['v', 'V', "\<c-v>"], a:mode) >= 0
+    elseif a:mode =~# "[vV\<c-v>]"
         norm! gv
     endif
 
