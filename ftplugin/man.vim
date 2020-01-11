@@ -102,19 +102,17 @@ nno <buffer><nowait><silent> [p :<c-u>call man#zsh#move_in_pages('bwd')<cr>
 noremap <buffer><expr><nowait><silent> [r man#bracket_rhs('reference', 0)
 noremap <buffer><expr><nowait><silent> ]r man#bracket_rhs('reference', 1)
 
-if stridx(&rtp, 'vim-lg-lib') >= 0
-    call lg#motion#repeatable#make#all({
-        \ 'mode': '',
-        \ 'buffer': 1,
-        \ 'from': expand('<sfile>:p').':'.expand('<slnum>'),
-        \ 'motions': [
-        \     {'bwd': '[H',     'fwd': ']H'},
-        \     {'bwd': '[<c-h>', 'fwd': ']<c-h>'},
-        \     {'bwd': '[O',     'fwd': ']O'},
-        \     {'bwd': '[p',     'fwd': ']p'},
-        \     {'bwd': '[r',     'fwd': ']r'},
-        \ ]})
-endif
+sil! call lg#motion#repeatable#make#all({
+    \ 'mode': '',
+    \ 'buffer': 1,
+    \ 'from': expand('<sfile>:p').':'.expand('<slnum>'),
+    \ 'motions': [
+    \     {'bwd': '[H',     'fwd': ']H'},
+    \     {'bwd': '[<c-h>', 'fwd': ']<c-h>'},
+    \     {'bwd': '[O',     'fwd': ']O'},
+    \     {'bwd': '[p',     'fwd': ']p'},
+    \     {'bwd': '[r',     'fwd': ']r'},
+    \ ]})
 
 " Init {{{1
 
