@@ -74,7 +74,7 @@ fu man#open_page(count, count1, mods, ...) abort "{{{1
     try
         let [sect, name] = man#extract_sect_and_name_ref(ref)
         if a:count == a:count1
-            " v:count defaults to 0 which is a valid section, and v:count1 defaults to
+            " `v:count` defaults to 0 which is a valid section, and `v:count1` defaults to
             " 1, also a valid section. If they are equal, count explicitly set.
             let sect = string(a:count)
         endif
