@@ -32,7 +32,7 @@ endfu
 fu man#bracket_motion(kwd, is_fwd, mode) abort "{{{1
     if a:mode is# 'n'
         norm! m'
-    elseif a:mode =~# "[vV\<c-v>]"
+    elseif a:mode =~# "^[vV\<c-v>]$"
         norm! gv
     endif
 
@@ -42,7 +42,7 @@ endfu
 fu man#bracket_rhs(kwd, is_fwd) abort "{{{1
     let mode = mode(1)
     return printf(":\<c-u>call man#bracket_motion(%s,%d,%s)\<cr>",
-    \             string(a:kwd), a:is_fwd, string(mode))
+        \ string(a:kwd), a:is_fwd, string(mode))
 endfu
 
 fu man#open_page(count, count1, mods, ...) abort "{{{1
