@@ -102,7 +102,7 @@ nno <buffer><nowait><silent> [p :<c-u>call man#zsh#move_in_pages('bwd')<cr>
 noremap <buffer><expr><nowait><silent> [r man#bracket_rhs('reference', 0)
 noremap <buffer><expr><nowait><silent> ]r man#bracket_rhs('reference', 1)
 
-sil! call lg#motion#repeatable#make#all({
+sil! call repmap#make#all({
     \ 'mode': '',
     \ 'buffer': 1,
     \ 'from': expand('<sfile>:p').':'.expand('<slnum>'),
