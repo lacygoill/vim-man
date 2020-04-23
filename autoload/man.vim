@@ -195,7 +195,7 @@ fu s:verify_exists(sect, name) abort "{{{1
     " ':Man PRIntf', we still want the name of the buffer to be 'printf' or
     " whatever the correct capitalization is.
 
-    let path = path[:len(path)-2]
+    let path = path[:strlen(path)-2]
 
     return s:extract_sect_and_name_path(path) + [path]
 endfu
