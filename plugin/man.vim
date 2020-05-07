@@ -92,8 +92,8 @@ com -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "
 " Here is the rationale given by the commit author:
 "
-" > But 'keywordprg' still calls ':Man' with a count prefixed.
-" > So it must still accept a count in the line number position, ...
+" >     But 'keywordprg' still calls ':Man' with a count prefixed.
+" >     So it must still accept a count in the line number position, ...
 "
 " Source: https://github.com/neovim/neovim/pull/5203
 "
