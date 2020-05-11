@@ -109,8 +109,7 @@ com -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 com -bar -range=0 -complete=customlist,man#complete -nargs=* Man
     \ call man#open_page(v:count, v:count1, <q-mods>, <f-args>)
 
-augroup man
-    au!
+augroup man | au!
     au BufReadCmd man://* call man#read_page(matchstr(expand('<amatch>'), 'man://\zs.*'))
 augroup END
 
@@ -118,8 +117,7 @@ augroup END
 " man(1)); we can test its value to know  if Vim has been launched to read a man
 " page.
 if !empty($MAN_PN)
-    augroup manpage
-        au!
+    augroup manpage | au!
         " Why do we use an autocmd, instead of just `setl man` directly?{{{
         "
         " Because it would be too soon, the buffer wouldn't be loaded yet.
