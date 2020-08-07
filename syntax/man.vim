@@ -31,6 +31,6 @@ if b:man_sect =~# '^[23]'
 endif
 
 " Prevent everything else from matching the last line
-exe 'syntax match manFooter display "^\%'.line('$').'l.*$"'
+exe 'syntax match manFooter display "^\%' .. line('$') .. 'l.*$"'
 
 let b:current_syntax = 'man'

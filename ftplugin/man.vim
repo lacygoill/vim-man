@@ -7,7 +7,7 @@ wincmd _
 
 " Set the name of the scratch buffer; ex:    man(1)
 " otherwise, we would have [Scratch] as a placeholder
-if empty(bufname('%'))
+if bufname('%')->empty()
     file $MAN_PN
 endif
 
@@ -30,8 +30,8 @@ endif
 " Options {{{
 "
 " We can't give the value `wipe` to 'bufhidden'.
-" Indeed, after clicking on a reference in a man buffer, the original buffer
-" would be wiped out. We couldn't get back to it with `C-T`.
+" Indeed, after  clicking on a  reference in a  man buffer, the  original buffer
+" would be wiped out.  We couldn't get back to it with `C-T`.
 
 setl buftype=nofile
 setl noswapfile
@@ -68,7 +68,7 @@ setl fdt=fold#fdt#get()
 " I often look for the name of a (sub)section.
 nno <buffer><nowait> g/  /^\s*
 
-" I frequently hit `p` by accident. It raises the error:
+" I frequently hit `p` by accident.  It raises the error:
 "
 "     E21: Cannot make changes, 'modifiable' is off
 nno  <buffer><nowait><silent> p <nop>
@@ -78,7 +78,7 @@ nmap <buffer><nowait><silent> <cr> <c-]>
 nmap <buffer><nowait><silent> <bs> <c-t>
 
 nno <buffer><nowait><silent> <c-]> :<c-u>Man<cr>
-nno <buffer><nowait><silent> K     :<c-u>Man<cr>
+nno <buffer><nowait><silent> K :<c-u>Man<cr>
 nno <buffer><nowait><silent> <c-t> :<c-u>call man#pop_tag()<cr>
 
 noremap <buffer><expr><nowait><silent> [H man#bracket_rhs('heading', 0)
@@ -105,18 +105,18 @@ noremap <buffer><expr><nowait><silent> ]r man#bracket_rhs('reference', 1)
 sil! call repmap#make#repeatable({
     \ 'mode': '',
     \ 'buffer': 1,
-    \ 'from': expand('<sfile>:p')..':'..expand('<slnum>'),
+    \ 'from': expand('<sfile>:p') .. ':' .. expand('<slnum>'),
     \ 'motions': [
     \     {'bwd': '[H',     'fwd': ']H'},
     \     {'bwd': '[<c-h>', 'fwd': ']<c-h>'},
-    \     {'bwd': '[O',     'fwd': ']O'},
-    \     {'bwd': '[r',     'fwd': ']r'},
+    \     {'bwd': '[O', 'fwd': ']O'},
+    \     {'bwd': '[r', 'fwd': ']r'},
     \ ]})
 
 sil! call repmap#make#repeatable({
     \ 'mode': 'n',
     \ 'buffer': 1,
-    \ 'from': expand('<sfile>:p')..':'..expand('<slnum>'),
+    \ 'from': expand('<sfile>:p') .. ':' .. expand('<slnum>'),
     \ 'motions': [
     \     {'bwd': '[p', 'fwd': ']p'},
     \ ]})
@@ -136,5 +136,5 @@ let b:did_ftplugin = 1
 " Teardown {{{1
 
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'exe')
-    \ ..'| call man#undo_ftplugin()'
+    \ .. '| call man#undo_ftplugin()'
 

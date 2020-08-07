@@ -9,7 +9,7 @@ let g:loaded_man = 1
 "
 "     " Guess the ref from the heading (which is usually uppercase, so we cannot
 "     " know the correct casing, cf. `man glDrawArraysInstanced`).
-"     let ref = substitute(matchstr(getline(1), '^[^)]\+)'), ' ', '_', 'g')
+"     let ref = getline(1)->matchstr('^[^)]\+)')->substitute(' ', '_', 'g')
 "
 " On Linux, one can get the same info via `$MAN_PN`.
 " Using this variable is more reliable then reading the heading in the man page.
@@ -34,7 +34,7 @@ let g:loaded_man = 1
 " When you'll re-implement the Nvim man plugin, make sure to fix that:
 "
 "     " remove this
-"     let ref = substitute(matchstr(getline(1), '^[^)]\+)'), ' ', '_', 'g')
+"     let ref = getline(1)->matchstr('^[^)]\+)')->substitute(' ', '_', 'g')
 "
 "     " add this
 "     let ref = $MAN_PN
@@ -110,7 +110,7 @@ com -bar -range=0 -complete=customlist,man#complete -nargs=* Man
     \ call man#open_page(v:count, v:count1, <q-mods>, <f-args>)
 
 augroup man | au!
-    au BufReadCmd man://* call man#read_page(matchstr(expand('<amatch>'), 'man://\zs.*'))
+    au BufReadCmd man://* call expand('<amatch>')->matchstr('man://\zs.*')->man#read_page()
 augroup END
 
 " When we  open a  manpage, `$MAN_PN`  is set  with the name  of the  page (ex:
