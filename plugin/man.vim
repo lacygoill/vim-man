@@ -92,8 +92,8 @@ com -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "
 " Here is the rationale given by the commit author:
 "
-" >     But 'keywordprg' still calls ':Man' with a count prefixed.
-" >     So it must still accept a count in the line number position, ...
+"    > But 'keywordprg' still calls ':Man' with a count prefixed.
+"    > So it must still accept a count in the line number position, ...
 "
 " Source: https://github.com/neovim/neovim/pull/5203
 "
@@ -106,7 +106,7 @@ com -bar -nargs=1 ManZsh  call man#zsh#main(<q-args>)
 "     ^
 "     no count is sent as a prefix~
 "}}}
-com -bar -range=0 -complete=customlist,man#complete -nargs=* Man
+com -bar -range=0 -nargs=* -complete=customlist,man#complete Man
     \ call man#open_page(v:count, v:count1, <q-mods>, <f-args>)
 
 augroup man | au!

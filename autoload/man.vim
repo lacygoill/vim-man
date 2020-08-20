@@ -153,7 +153,7 @@ fu man#extract_sect_and_name_ref(ref) abort "{{{1
 
     " see ':Man 3X curses' on why tolower.
 
-    return [split(left[1], ')')->tolower([0]), left[0]]
+    return [split(left[1], ')')[0]->tolower(), left[0]]
 endfu
 
 fu s:get_path(sect, name) abort "{{{1
@@ -196,7 +196,7 @@ fu s:verify_exists(sect, name) abort "{{{1
     " ':Man PRIntf',  we still  want the name  of the buffer  to be  'printf' or
     " whatever the correct capitalization is.
 
-    let path = path[:strlen(path) - 2]
+    let path = path[:-2]
 
     return s:extract_sect_and_name_path(path) + [path]
 endfu
@@ -402,7 +402,7 @@ fu man#init_pager() abort "{{{1
 endfu
 
 fu man#undo_ftplugin() abort "{{{1
-    setl bh< bl< bt< cc< et< fdc< fde< fdm< fdt< fen< ic< list< ma< mod< nu< rnu< ro< sts< sw< swf< ts<
+    set bh< bl< bt< cc< et< fdc< fde< fdm< fdt< fen< ic< list< ma< mod< nu< rnu< ro< sts< sw< swf< ts<
     unlet! b:man_sect
 
     nunmap <buffer> g/
