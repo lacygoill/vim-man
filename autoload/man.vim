@@ -182,7 +182,7 @@ fu s:verify_exists(sect, name) abort "{{{1
 
     let path = s:get_path(a:sect, a:name)
     if path !~# '^\/'
-        let path = s:get_path(get(b:, 'man_default_sects', ''), a:name)
+        let path = get(b:, 'man_default_sects', '')->s:get_path(a:name)
 
         if path !~# '^\/'
             let path = s:get_path('', a:name)
