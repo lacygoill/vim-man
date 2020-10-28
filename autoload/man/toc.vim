@@ -3,6 +3,10 @@ vim9script
 # TODO: Consolidate all `b:` variables into a single one big dictionary.
 # Wait for Vim9 to support `var dict.key = value`.
 
+# TODO: Extract this script into a separate plugin.
+# Rationale: It's no  longer specific  to man.   It can work  in other  types of
+# buffers now (help, markdown, terminal).
+
 # Init {{{1
 
 import InTerminalBuffer from 'lg.vim'
@@ -330,6 +334,9 @@ def Filter(id: number, key: string): bool #{{{2
                 CacheTocHelp()
             endif
         endif
+        # TODO: If the contents of the TOC does not change (happens sometimes in
+        # Vim help  files), continue increasing/decreasing until  it changes, or
+        # it's no longer possible to increase/decrease.
         popup_settext(id, b:_toc[string(b:_toc_foldlevel)])
         SetTitle(id)
 

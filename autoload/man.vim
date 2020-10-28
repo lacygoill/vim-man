@@ -244,6 +244,13 @@ def man#init_pager() #{{{2
 
     &l:modifiable = og_modifiable
 enddef
+
+def man#JumpToRef(fwd = true) #{{{2
+    # regex used by the `manReference` syntax group
+    var pat = '[^()[:space:]]\+([0-9nx][a-z]*)'
+    var flags = fwd ? 'W' : 'bW'
+    search(pat, flags)
+enddef
 #}}}1
 # Core {{{1
 # Main {{{2
