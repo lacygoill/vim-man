@@ -23,9 +23,9 @@ setl tagfunc=man#goto_tag
 " TODO: Install  a  mapping which  would  manually  or automatically  display  a
 " preview of the manpage reference under the cursor (use `p` for the lhs).
 nno <buffer><expr><nowait><silent> q reg_recording() != '' ? 'q' : ':<c-u>q<cr>'
-nno <buffer><nowait><silent> <cr> <c-]>
-nno <buffer><nowait><silent> ) :<c-u>call man#JumpToRef()<cr>
-nno <buffer><nowait><silent> ( :<c-u>call man#JumpToRef(v:false)<cr>
+nno <buffer><nowait> <cr> <c-]>
+nno <buffer><nowait> ) <cmd>call man#JumpToRef()<cr>
+nno <buffer><nowait> ( <cmd>call man#JumpToRef(v:false)<cr>
 
 setl foldenable
 setl foldmethod=expr

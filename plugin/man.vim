@@ -3,7 +3,7 @@ if exists('g:loaded_man')
 endif
 let g:loaded_man = 1
 
-nno <silent> <space>o :<c-u>call man#toc#show()<cr>
+nno <space>o <cmd>call man#toc#show()<cr>
 
 " `:Man foo` doesn't work!{{{
 "

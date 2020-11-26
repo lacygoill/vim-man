@@ -57,7 +57,7 @@ def man#toc#show() #{{{2
     # IOW, we abuse the feature which lets us use text properties in a popup.
     #}}}
     var id = b:_toc[string(b:_toc_foldlevel)]
-        ->popup_menu(#{
+        ->popup_menu({
             line: 2,
             col: &columns,
             pos: 'topright',
@@ -91,7 +91,7 @@ def CacheTocMan() #{{{2
     # This can only be perceived in big man pages like ffmpeg-all.
     #}}}
     var lines = getline(2, line('$') - 1)
-        ->map({i, v -> #{lnum: i + 2, text: v}})
+        ->map({i, v -> {lnum: i + 2, text: v}})
 
     if b:_toc_foldlevel == 0
         b:_toc['0'] = filter(lines, {_, v -> v.text =~ '^\S'})
@@ -102,7 +102,7 @@ enddef
 
 def CacheTocMarkdown() #{{{2
     var lines = getline(1, '$')
-        ->map({i, v -> #{lnum: i + 1, text: v}})
+        ->map({i, v -> {lnum: i + 1, text: v}})
 
     var lastlnum = line('$')
     # prepend a marker (`C-a`) in front of lines underlined with `---`
@@ -110,7 +110,7 @@ def CacheTocMarkdown() #{{{2
         i < lastlnum - 1
         && lines[i + 1].text =~ '^-\+$'
         && v.text =~ '\S'
-        ? extend(v, #{text: "\x01" .. v.text})
+        ? extend(v, {text: "\x01" .. v.text})
         : v
         })
 
@@ -126,7 +126,7 @@ def CacheTocMarkdown() #{{{2
             })
         # remove noise (`###`), and indent
         ->map({_, v -> extend(v,
-            #{text: substitute(v.text, '^#\+\s*\|^\%x01',
+            {text: substitute(v.text, '^#\+\s*\|^\%x01',
                 {m -> repeat('   ', m[0] =~ '^\%x01' ? 1 : count(m[0], '#') - 1)},
                 '')}
             )})
@@ -134,7 +134,7 @@ enddef
 
 def CacheTocHelp() #{{{2
     var lines = getline(1, '$')
-        ->map({i, v -> #{lnum: i + 1, text: v}})
+        ->map({i, v -> {lnum: i + 1, text: v}})
 
     # append a marker on underlined sub-headers
     #
@@ -145,7 +145,7 @@ def CacheTocHelp() #{{{2
         # there must be a tag at the end
         && v.text =~ '\*$'
         && lines[i + 1].text =~ '^-\+$'
-        ? extend(v, #{text: v.text .. "\x01"})
+        ? extend(v, {text: v.text .. "\x01"})
         : v
         })
 
@@ -165,14 +165,14 @@ def CacheTocHelp() #{{{2
     map(lines, {_, v -> v.text =~ SUBHEADER1
         .. '\|' .. SUBHEADER2
         .. '\|' .. HEADLINE
-        ? extend(v, #{text: '   ' .. v.text})
+        ? extend(v, {text: '   ' .. v.text})
         : v.text =~ '\~$'
-        ? extend(v, #{text: '      ' .. v.text})
+        ? extend(v, {text: '      ' .. v.text})
         : v
         })
     # remove noise
     map(lines, {_, v -> extend(v,
-        #{text: substitute(v.text, '\t.*\|[~\x01]$', '', '')}
+        {text: substitute(v.text, '\t.*\|[~\x01]$', '', '')}
         )})
     b:_toc[b:_toc_foldlevel] = lines
 enddef
@@ -183,7 +183,7 @@ def CacheTocTerminal() #{{{2
 # command executed so far as an entry.
 
     b:_toc[b:_toc_foldlevel] = getline(1, '$')
-        ->map({i, v -> #{lnum: i + 1, text: v}})
+        ->map({i, v -> {lnum: i + 1, text: v}})
         ->filter({_, v -> v.text =~ '^٪'})
 enddef
 
@@ -197,7 +197,7 @@ def SetTitle(id: number) #{{{2
     if &ft == ''
         newtitle = substitute(newtitle, ' (\d\+)$', '', '')
     endif
-    popup_setoptions(id, #{title: newtitle})
+    popup_setoptions(id, {title: newtitle})
 enddef
 
 def JumpToRelevantLine(id: number) #{{{2
@@ -278,13 +278,13 @@ def Highlight(id: number) #{{{2
         # if that number is  the one of the current buffer  (here, the one where
         # the 'syntax' option has just been set, triggering the Syntax event).
         #}}}
-        matchadd('manSectionHeading', '^\S.*', 10, -1, #{window: id})
-        matchadd('manSubHeading', '^\s\{3}\S.*', 10, -1, #{window: id})
+        matchadd('manSectionHeading', '^\S.*', 10, -1, {window: id})
+        matchadd('manSubHeading', '^\s\{3}\S.*', 10, -1, {window: id})
     elseif &ft == 'help'
-        matchadd('helpHeadline', '^\S.*', 10, -1, #{window: id})
-        matchadd('helpHeader', '^   \S.*', 10, -1, #{window: id})
+        matchadd('helpHeadline', '^\S.*', 10, -1, {window: id})
+        matchadd('helpHeader', '^   \S.*', 10, -1, {window: id})
     elseif &ft == 'markdown'
-        matchadd('markdownHeader', '.*', 10, -1, #{window: id})
+        matchadd('markdownHeader', '.*', 10, -1, {window: id})
     endif
 enddef
 

@@ -191,7 +191,7 @@ def man#goto_tag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
 
     for path in paths
         var n = Extract_sect_and_name_path(path)[1]
-        structured += [#{name: n, path: path}]
+        structured += [{name: n, path: path}]
     endfor
 
     if &cscopetag
@@ -199,7 +199,7 @@ def man#goto_tag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
         structured = structured[:0]
     endif
 
-    return map(structured, {_, entry -> #{
+    return map(structured, {_, entry -> {
         name: entry.name,
         filename: 'man://' .. entry.path,
         cmd: 'keepj norm! 1G'
@@ -223,7 +223,7 @@ def man#init_pager() #{{{2
     setl modifiable
 
     if getline(1) =~ '^\s*$'
-        :sil keepj 1d _
+        sil keepj :1d _
     endif
     Highlight_on_cursormoved()
     OpenFolds()
@@ -383,15 +383,15 @@ def Put_page(page: string) #{{{3
     setl modifiable noreadonly noswapfile
     # `git-ls-files(1)` is all one keyword/tag-target
     setl iskeyword+=(,)
-    :sil keepj %d _
+    sil keepj :%d _
     page->split('\n')->setline(1)
     while getline(1) =~ '^\s*$'
-        :sil keepj 1d _
+        sil keepj :1d _
     endwhile
     # XXX: nroff justifies text by filling it with whitespace.  That interacts
     # badly with our use of `$MANWIDTH=999`.  Hack around this by using a fixed
     # size for those whitespace regions.
-    :sil! keepp keepj %s/\s\{199,}/\=repeat(' ', 10)/g
+    sil! keepp keepj :%s/\s\{199,}/\=repeat(' ', 10)/g
     :1
     Highlight_on_cursormoved()
     OpenFolds()
@@ -400,15 +400,17 @@ enddef
 
 def Job_start(cmd: list<string>): string #{{{3
 # Run a shell command asynchronously; timeout after 30 seconds.
-    var opts = #{
+    var opts = {
         stdout: '',
         stderr: '',
         exit_status: 0,
         }
 
-    var job = job_start(cmd, #{
+    var job = job_start(cmd, {
         out_cb: function(Job_handler, [opts, 'stdout']),
         err_cb: function(Job_handler, [opts, 'stderr']),
+        # TODO: Should we use `close_cb` instead?
+        # https://vi.stackexchange.com/questions/27963/why-would-job-starts-close-cb-sometimes-not-be-called
         exit_cb: function(Job_handler, [opts, 'exit']),
         mode: 'raw',
         noblock: true,
@@ -535,7 +537,7 @@ def Job_handler(opts: dict<any>, event: string, _: any, data: any) #{{{3
     if event == 'stdout' || event == 'stderr'
         opts[event] = opts[event] .. data
     else
-        extend(opts, #{exit_status: data})
+        extend(opts, {exit_status: data})
     endif
 enddef
 #}}}2
@@ -573,7 +575,7 @@ def Highlight_window() #{{{3
     endfor
 
     for args in b:_hls
-        prop_add(args[1] + 1, args[2] + 1, #{
+        prop_add(args[1] + 1, args[2] + 1, {
             length: args[3] - args[2],
             type: args[0]
             })
@@ -603,7 +605,7 @@ def Highlight_line(line: string, linenr: number): string #{{{3
         var i = 0
         for hl in hls
             if hl.attr == attr_ && hl.end == -1
-                extend(hl, #{end: byte})
+                extend(hl, {end: byte})
                 hls[i] = hl
             endif
             i += 1
@@ -636,7 +638,7 @@ def Highlight_line(line: string, linenr: number): string #{{{3
         endif
 
         if continue_hl
-            hls += [#{attr: attr, start: byte, end: -1}]
+            hls += [{attr: attr, start: byte, end: -1}]
         else
             if attr == NONE
                 for a_ in items(hl_groups)
@@ -707,9 +709,9 @@ def Highlight_line(line: string, linenr: number): string #{{{3
             if !empty(last_hl)
                 && last_hl.attr == attr
                 && last_hl.end == byte
-                extend(last_hl, #{end: byte + strlen(char)})
+                extend(last_hl, {end: byte + strlen(char)})
             else
-                hls += [#{attr: attr, start: byte, end: byte + strlen(char)}]
+                hls += [{attr: attr, start: byte, end: byte + strlen(char)}]
             endif
 
             overstrike = false
@@ -725,9 +727,9 @@ def Highlight_line(line: string, linenr: number): string #{{{3
             var sgr = matchstr(prev_char, '^\[\zs[\d032-\d063]*\zem$')
             # Ignore escape sequences with : characters, as specified by ITU's T.416
             # Open Document Architecture and interchange format.
-            if sgr && stridx(sgr, ':') == -1
+            if !empty(sgr) && stridx(sgr, ':') == -1
                 var match: string
-                while sgr && strlen(sgr) > 0
+                while !empty(sgr) && strlen(sgr) > 0
                     # Match against SGR parameters, which may be separated by `;`
                     var matchlist = matchlist(sgr, '^\(\d*\);\=\(.*\)')
                     match = matchlist[1]
@@ -795,7 +797,7 @@ def Highlight_on_cursormoved() #{{{3
     # escape  sequences, which  we  will  use to  determine  where  to put  text
     # properties.
     #}}}
-    :sil keepj keepp %s/.\b//ge
+    sil keepj keepp :%s/.\b//ge
     b:_seen = repeat([false], line('$'))
     augroup highlight_manpage
         au! * <buffer>
