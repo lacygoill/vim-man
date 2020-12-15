@@ -6,7 +6,7 @@ let b:did_ftplugin = 1
 let s:pager = !exists('b:man_sect')
 
 if s:pager
-    call man#init_pager()
+    call man#initPager()
 endif
 
 setl noswapfile buftype=nofile bufhidden=hide
@@ -18,7 +18,7 @@ setl iskeyword+=-
 setl nonumber norelativenumber
 setl foldcolumn=0 colorcolumn=0 nolist nofoldenable
 
-setl tagfunc=man#goto_tag
+setl tagfunc=man#gotoTag
 
 " TODO: Install  a  mapping which  would  manually  or automatically  display  a
 " preview of the manpage reference under the cursor (use `p` for the lhs).

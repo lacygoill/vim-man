@@ -58,19 +58,19 @@ def man#shellcmd(ref: string) #{{{2
     var name: string
     var page: string
     try
-        [sect, name] = Extract_sect_and_name_ref(ref)
-        var path = Verify_exists(sect, name)
-        [sect, name] = Extract_sect_and_name_path(path)
-        page = Get_page(path)
+        [sect, name] = ExtractSectAndNameRef(ref)
+        var path = VerifyExists(sect, name)
+        [sect, name] = ExtractSectAndNamePath(path)
+        page = GetPage(path)
     catch
         Error(v:exception)
         return
     endtry
     b:man_sect = sect
-    Put_page(page)
+    PutPage(page)
 enddef
 
-def man#excmd(count: number, count1: number, mods: string, ...fargs: list<string>) #{{{2
+def man#excmd(count: number, mods: string, ...fargs: list<string>) #{{{2
     var ref: string
     if len(fargs) > 2
         Error('too many arguments')
@@ -93,14 +93,12 @@ def man#excmd(count: number, count1: number, mods: string, ...fargs: list<string
     var sect: string
     var name: string
     try
-        [sect, name] = Extract_sect_and_name_ref(ref)
-        if count == count1
-            # `v:count` defaults to 0 which is a valid section, and `v:count1` defaults to
-            # 1, also a valid section.  If they are equal, count explicitly set.
+        [sect, name] = ExtractSectAndNameRef(ref)
+        if count > 0
             sect = string(count)
         endif
-        var path = Verify_exists(sect, name)
-        [sect, name] = Extract_sect_and_name_path(path)
+        var path = VerifyExists(sect, name)
+        [sect, name] = ExtractSectAndNamePath(path)
     catch
         Error(v:exception)
         return
@@ -109,9 +107,9 @@ def man#excmd(count: number, count1: number, mods: string, ...fargs: list<string
     var buf = bufnr('%')
     var save_tfu = &l:tagfunc
     try
-        setl tagfunc=man#goto_tag
+        setl tagfunc=man#gotoTag
         var target = name .. '(' .. sect .. ')'
-        if mods !~ 'tab' && Find_man()
+        if mods !~ 'tab' && FindMan()
             execute 'silent keepalt tag ' .. target
         else
             execute 'silent keepalt ' .. mods .. ' stag ' .. target
@@ -181,17 +179,20 @@ def man#complete(arg_lead: string, cmd_line: string, _p: any): list<string> #{{{
     return Complete(sect, sect, name)
 enddef
 
-def man#goto_tag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
+def man#gotoTag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
     var sect: string
     var name: string
-    [sect, name] = Extract_sect_and_name_ref(pattern)
+    [sect, name] = ExtractSectAndNameRef(pattern)
 
-    var paths = Get_paths(sect, name, true)
+    var paths = GetPaths(sect, name, true)
     var structured: list<dict<string>>
 
     for path in paths
-        var n = Extract_sect_and_name_path(path)[1]
-        structured += [{name: n, path: path}]
+        [sect, name] = ExtractSectAndNamePath(path)
+        structured += [{
+            name: name,
+            title: name .. '(' .. sect .. ')'
+            }]
     endfor
 
     if &cscopetag
@@ -201,7 +202,7 @@ def man#goto_tag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
 
     return map(structured, {_, entry -> {
         name: entry.name,
-        filename: 'man://' .. entry.path,
+        filename: 'man://' .. entry.title,
         cmd: 'keepj norm! 1G'
         }})
 enddef
@@ -214,7 +215,7 @@ def man#foldexpr(): string #{{{2
     return '='
 enddef
 
-def man#init_pager() #{{{2
+def man#initPager() #{{{2
     # clear message:  "-stdin-" 123L, 456B
     echo ''
     au VimEnter * keepj norm! 1GzR
@@ -225,7 +226,7 @@ def man#init_pager() #{{{2
     if getline(1) =~ '^\s*$'
         sil keepj :1d _
     endif
-    Highlight_on_cursormoved()
+    HighlightOnCursormoved()
     OpenFolds()
 
     # Guess the ref from the heading (which is usually uppercase, so we cannot
@@ -234,7 +235,7 @@ def man#init_pager() #{{{2
         ->matchstr('^[^)]\+)')
         ->substitute(' ', '_', 'g')
     try
-        b:man_sect = Extract_sect_and_name_ref(ref)[0]
+        b:man_sect = ExtractSectAndNameRef(ref)[0]
     catch
         b:man_sect = ''
     endtry
@@ -254,7 +255,7 @@ enddef
 #}}}1
 # Core {{{1
 # Main {{{2
-def Extract_sect_and_name_ref(ref: string): list<string> #{{{3
+def ExtractSectAndNameRef(ref: string): list<string> #{{{3
 # attempt to extract the name and sect out of `name(sect)`
 # otherwise just return the largest string of valid characters in ref
 
@@ -276,7 +277,7 @@ def Extract_sect_and_name_ref(ref: string): list<string> #{{{3
     return [split(left[1], ')')[0]->tolower(), left[0]]
 enddef
 
-def Extract_sect_and_name_path(path: string): list<string> #{{{3
+def ExtractSectAndNamePath(path: string): list<string> #{{{3
 # Extracts the name/section from the `path/name.sect`, because sometimes the actual section is
 # more specific than what we provided to `man` (try `:Man 3 App::CLI`).
 # Also on linux, name seems to be case-insensitive. So for `:Man PRIntf`, we
@@ -291,8 +292,8 @@ def Extract_sect_and_name_path(path: string): list<string> #{{{3
     return [sect, name]
 enddef
 
-def Verify_exists(sect: string, name: string): string #{{{3
-# Verify_exists attempts to find the path to a manpage
+def VerifyExists(sect: string, name: string): string #{{{3
+# VerifyExists attempts to find the path to a manpage
 # based on the passed section and name.
 #
 # 1. If the passed section is empty, b:man_default_sects is used.
@@ -310,19 +311,19 @@ def Verify_exists(sect: string, name: string): string #{{{3
         _sect = get(b:, 'man_default_sects', '')
     endif
     try
-        return Get_path(_sect, name)
+        return GetPath(_sect, name)
     catch /^command error \%x28/
     endtry
     if !get(b:, 'man_default_sects', '')->empty()
         && _sect != b:man_default_sects
         try
-            return Get_path(b:man_default_sects, name)
+            return GetPath(b:man_default_sects, name)
         catch /^command error \%x28/
         endtry
     endif
     if !empty(_sect)
         try
-            return Get_path('', name)
+            return GetPath('', name)
         catch /^command error \%x28/
         endtry
     endif
@@ -331,7 +332,7 @@ def Verify_exists(sect: string, name: string): string #{{{3
         try
             MANSECT = $MANSECT
             unlet! $MANSECT
-            return Get_path('', name)
+            return GetPath('', name)
         catch /^command error \%x28/
         finally
             $MANSECT = MANSECT
@@ -341,7 +342,7 @@ def Verify_exists(sect: string, name: string): string #{{{3
     return ''
 enddef
 
-def Get_path(sect: string, name: string): string #{{{3
+def GetPath(sect: string, name: string): string #{{{3
 # Some man  implementations (OpenBSD)  return all  available paths  from the
 # search command, so we `get()` the first one. #8341
 
@@ -358,7 +359,7 @@ def Get_path(sect: string, name: string): string #{{{3
         ->substitute('\n\+$', '', '')
 enddef
 
-def Get_page(path: string): string #{{{3
+def GetPage(path: string): string #{{{3
     # Disable hard-wrap by using a big $MANWIDTH (max 1000 on some systems #9065).
     # Soft-wrap: ftplugin/man.vim sets wrap/breakindent/….
     # Hard-wrap: driven by `man`.
@@ -379,7 +380,7 @@ def Get_page(path: string): string #{{{3
     return Job_start(cmd + (localfile_arg ? ['-l', path] : [path]))
 enddef
 
-def Put_page(page: string) #{{{3
+def PutPage(page: string) #{{{3
     setl modifiable noreadonly noswapfile
     # `git-ls-files(1)` is all one keyword/tag-target
     setl iskeyword+=(,)
@@ -393,7 +394,7 @@ def Put_page(page: string) #{{{3
     # size for those whitespace regions.
     sil! keepp keepj :%s/\s\{199,}/\=repeat(' ', 10)/g
     :1
-    Highlight_on_cursormoved()
+    HighlightOnCursormoved()
     OpenFolds()
     setl filetype=man
 enddef
@@ -407,11 +408,11 @@ def Job_start(cmd: list<string>): string #{{{3
         }
 
     var job = job_start(cmd, {
-        out_cb: function(Job_handler, [opts, 'stdout']),
-        err_cb: function(Job_handler, [opts, 'stderr']),
+        out_cb: function(JobHandler, [opts, 'stdout']),
+        err_cb: function(JobHandler, [opts, 'stderr']),
         # TODO: Should we use `close_cb` instead?
         # https://vi.stackexchange.com/questions/27963/why-would-job-starts-close-cb-sometimes-not-be-called
-        exit_cb: function(Job_handler, [opts, 'exit']),
+        exit_cb: function(JobHandler, [opts, 'exit']),
         mode: 'raw',
         noblock: true,
         })
@@ -457,7 +458,7 @@ def Job_start(cmd: list<string>): string #{{{3
         # Do *not* change anything in the text!{{{
         #
         # If you really want to, make sure that the new message is still matched
-        # by the patterns used in the try/catch in `Verify_exists()`.
+        # by the patterns used in the try/catch in `VerifyExists()`.
         #
         #     try
         #         ...
@@ -476,7 +477,7 @@ def Job_start(cmd: list<string>): string #{{{3
         #
         #     man.vim: No manual entry for unknown
         #
-        # Besides, `Verify_exists()` will return earlier than expected.
+        # Besides, `VerifyExists()` will return earlier than expected.
         # IOW, the function's logic is affected.
         #}}}
         throw printf('command error (PID %d) %s: %s',
@@ -529,7 +530,7 @@ def Job_start(cmd: list<string>): string #{{{3
     return opts.stdout
 enddef
 
-def Job_handler(opts: dict<any>, event: string, _: any, data: any) #{{{3
+def JobHandler(opts: dict<any>, event: string, _: any, data: any) #{{{3
 # When the callback  is invoked to write  on the stdout or stderr,  `_` is a
 # channel and `data` a string.
 # When the  callback is  invoked because  the job  exits, `_`  is a  job and
@@ -542,7 +543,7 @@ def Job_handler(opts: dict<any>, event: string, _: any, data: any) #{{{3
 enddef
 #}}}2
 # Highlighting {{{2
-def Highlight_window() #{{{3
+def HighlightWindow() #{{{3
     if !exists('b:_seen')
         return
     endif
@@ -570,7 +571,7 @@ def Highlight_window() #{{{3
         if b:_seen[lnum]
             continue
         endif
-        Highlight_line(line, lnum)
+        HighlightLine(line, lnum)
         b:_seen[lnum] = true
     endfor
 
@@ -583,7 +584,7 @@ def Highlight_window() #{{{3
     b:_hls = []
 enddef
 
-def Highlight_line(line: string, linenr: number): string #{{{3
+def HighlightLine(line: string, linenr: number): string #{{{3
     var chars: list<string>
     var prev_char = ''
     var overstrike = false
@@ -594,14 +595,14 @@ def Highlight_line(line: string, linenr: number): string #{{{3
     var UNDERLINE = 2
     var ITALIC = 3
     var hl_groups = {
-        string(BOLD): 'manBold',
-        string(UNDERLINE): 'manUnderline',
-        string(ITALIC): 'manItalic',
+        [string(BOLD)]: 'manBold',
+        [string(UNDERLINE)]: 'manUnderline',
+        [string(ITALIC)]: 'manItalic',
         }
     var attr = NONE
     var byte = 0 # byte offset
 
-    def End_attr_hl(attr_: number)
+    def EndAttrHl(attr_: number)
         var i = 0
         for hl in hls
             if hl.attr == attr_ && hl.end == -1
@@ -612,7 +613,7 @@ def Highlight_line(line: string, linenr: number): string #{{{3
         endfor
     enddef
 
-    def Add_attr_hl(code: number)
+    def AddAttrHl(code: number)
         var continue_hl = true
         if code == 0
             attr = NONE
@@ -642,10 +643,10 @@ def Highlight_line(line: string, linenr: number): string #{{{3
         else
             if attr == NONE
                 for a_ in items(hl_groups)
-                    End_attr_hl(a_[0])
+                    EndAttrHl(a_[0])
                 endfor
             else
-                End_attr_hl(attr)
+                EndAttrHl(attr)
             endif
         endif
     enddef
@@ -734,7 +735,7 @@ def Highlight_line(line: string, linenr: number): string #{{{3
                     var matchlist = matchlist(sgr, '^\(\d*\);\=\(.*\)')
                     match = matchlist[1]
                     sgr = matchlist[2]
-                    str2nr(match)->Add_attr_hl()
+                    str2nr(match)->AddAttrHl()
                 endwhile
                 escape = false
             elseif match(prev_char, '^%[[\d032-\d063]*$') == -1
@@ -769,7 +770,7 @@ def Highlight_line(line: string, linenr: number): string #{{{3
     return join(chars, '')
 enddef
 
-def Highlight_on_cursormoved() #{{{3
+def HighlightOnCursormoved() #{{{3
     b:_hls = []
     b:_lines = getline(1, '$')
     # Remove backspaces used to display bold or underlined text.{{{
@@ -801,24 +802,24 @@ def Highlight_on_cursormoved() #{{{3
     b:_seen = repeat([false], line('$'))
     augroup highlight_manpage
         au! * <buffer>
-        au CursorMoved <buffer> Highlight_window()
+        au CursorMoved <buffer> HighlightWindow()
         # for  when  we   type  a  pattern  on  the   search  command-line,  and
         # `'incsearch'` is set (causing the view to change)
         exe 'au CmdlineChanged /,\? '
             .. 'if bufnr("%") == ' .. bufnr('%')
-            .. ' | Highlight_window() | endif'
+            .. ' | HighlightWindow() | endif'
     augroup END
 enddef
 #}}}2
 # :Man completion {{{2
 def Complete(sect: string, psect: string, name: string): list<string> #{{{3
-    var pages = Get_paths(sect, name, false)
+    var pages = GetPaths(sect, name, false)
     # We remove duplicates in case the same manpage in different languages was found.
-    return map(pages, {_, v -> Format_candidate(v, psect)})
+    return map(pages, {_, v -> FormatCandidate(v, psect)})
         ->sort('i')
         ->uniq()
         # TODO: Instead of running  `filter()` just to remove  one empty string,{{{
-        # refactor `Format_candidate()` so that it returns a number (`0`):
+        # refactor `FormatCandidate()` so that it returns a number (`0`):
         #
         #     if path =~ '\.\%(pdf\|in\)$' # invalid extensions
         #         return ''
@@ -844,8 +845,8 @@ def Complete(sect: string, psect: string, name: string): list<string> #{{{3
         ->filter({_, v -> !empty(v)})
 enddef
 
-def Get_paths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
-# see `Extract_sect_and_name_ref()` on why `tolower(sect)`
+def GetPaths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
+# see `ExtractSectAndNameRef()` on why `tolower(sect)`
 
     # callers must try-catch this, as some `man(1)` implementations don't support `-w`
     try
@@ -855,7 +856,7 @@ def Get_paths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
         var paths = globpath(mandirs, 'man?/' .. name .. '*.' .. sect .. '*', false, true)
         try
             # Prioritize the result from verify_exists as it obeys b:man_default_sects.
-            var first = Verify_exists(sect, name)
+            var first = VerifyExists(sect, name)
             filter(paths, {_, v -> v != first})
             paths = [first] + paths
         catch
@@ -868,7 +869,7 @@ def Get_paths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
 
         # Fallback to a single path, with the page we're trying to find.
         try
-            return [Verify_exists(sect, name)]
+            return [VerifyExists(sect, name)]
         catch
             return []
         endtry
@@ -876,13 +877,13 @@ def Get_paths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
     return []
 enddef
 
-def Format_candidate(path: string, psect: string): string #{{{3
+def FormatCandidate(path: string, psect: string): string #{{{3
     if path =~ '\.\%(pdf\|in\)$' # invalid extensions
         return ''
     endif
     var sect: string
     var name: string
-    [sect, name] = Extract_sect_and_name_path(path)
+    [sect, name] = ExtractSectAndNamePath(path)
     if sect == psect
         return name
     elseif sect =~ psect .. '.\+$'
@@ -902,7 +903,7 @@ def Error(msg: string) #{{{2
     echohl None
 enddef
 
-def Find_man(): bool #{{{2
+def FindMan(): bool #{{{2
     var win = 1
     while win <= winnr('$')
         var buf = winbufnr(win)
@@ -936,9 +937,7 @@ enddef
 
 try
     # check for `-l` support
-    Get_path('', 'man')->Get_page()
-catch /E145:/
-    # ignore the error in restricted mode
+    GetPath('', 'man')->GetPage()
 catch /command error .*/
     localfile_arg = false
 endtry

@@ -60,7 +60,7 @@ if &filetype !=# 'man'
 endif
 
 if !exists('b:man_sect')
-    call man#init_pager()
+    call man#initPager()
 endif
 
 if b:man_sect =~# '^[023]'

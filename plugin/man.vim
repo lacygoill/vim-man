@@ -3,8 +3,6 @@ if exists('g:loaded_man')
 endif
 let g:loaded_man = 1
 
-nno <space>o <cmd>call man#toc#show()<cr>
-
 " `:Man foo` doesn't work!{{{
 "
 "     :Man foo
@@ -31,11 +29,19 @@ nno <space>o <cmd>call man#toc#show()<cr>
 "     └── man1~
 "         └── youtube-dl.1~
 "}}}
-com -bang -bar -range=0 -complete=customlist,man#complete -nargs=* Man
+
+nno <space>o <cmd>call man#toc#show()<cr>
+
+" For `-range=-1`, see:{{{
+"
+" https://github.com/neovim/neovim/commit/ba2e94d223d6cf4bd2594f6f2b2bfeb2aaa29368
+" https://github.com/tpope/vim-scriptease/commit/d15112a77d0aa278f8ca88f07d53b018be79b585
+"}}}
+com -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man
       \ if <bang>0
       \ |     set ft=man
       \ | else
-      \ |     call man#excmd(v:count, v:count1, <q-mods>, <f-args>)
+      \ |     call man#excmd(<count>, <q-mods>, <f-args>)
       \ | endif
 
 augroup man
