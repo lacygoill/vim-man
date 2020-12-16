@@ -555,8 +555,8 @@ def HighlightWindow() #{{{3
     if b:_seen[lnum1 - 1 : lnum2 - 1]->index(false) == -1
         # if *all* the lines are already highlighted, nothing will *ever* need to be done
         if index(b:_seen, false) == -1
-            au! highlight_manpage
-            aug! highlight_manpage
+            au! HighlightManpage
+            aug! HighlightManpage
             unlet! b:_hls b:_lines b:_seen
         endif
         return
@@ -800,7 +800,7 @@ def HighlightOnCursormoved() #{{{3
     #}}}
     sil keepj keepp :%s/.\b//ge
     b:_seen = repeat([false], line('$'))
-    augroup highlight_manpage
+    augroup HighlightManpage
         au! * <buffer>
         au CursorMoved <buffer> HighlightWindow()
         # for  when  we   type  a  pattern  on  the   search  command-line,  and
@@ -927,7 +927,7 @@ enddef
 def OpenFolds() #{{{2
     # The autocmd is necessary in case we jump to another man page with `C-]`.
     # Also when we come back with `C-t`.
-    augroup man_all_folds_open_by_default
+    augroup ManAllFoldsOpenByDefault
         au! * <buffer>
         au BufWinEnter <buffer> setl foldlevel=1
     augroup END

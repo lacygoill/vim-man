@@ -229,7 +229,7 @@ def Highlight(id: number) #{{{2
         # Besides, the qf filetype plugin installs this autocmd:
         #
         #     " /usr/local/share/nvim/runtime/ftplugin/qf.vim
-        #     augroup qf_toc
+        #     augroup QfToc
         #       autocmd!
         #       autocmd Syntax <buffer> call s:setup_toc()
         #     augroup END
