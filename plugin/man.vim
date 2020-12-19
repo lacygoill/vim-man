@@ -44,8 +44,7 @@ com -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man
       \ |     call man#excmd(<count>, <q-mods>, <f-args>)
       \ | endif
 
-augroup man
-    au!
+augroup man | au!
     au BufReadCmd man://* call expand('<amatch>')
         \ ->matchstr('man://\zs.*')
         \ ->man#shellcmd()
