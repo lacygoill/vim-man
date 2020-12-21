@@ -1,7 +1,6 @@
 vim9script
 
 # TODO: Consolidate all `b:` variables into a single one big dictionary.
-# Wait for Vim9 to support `var dict.key = value`.
 
 # TODO: Extract this script into a separate plugin.
 # Rationale: It's no  longer specific  to man.   It can work  in other  types of
