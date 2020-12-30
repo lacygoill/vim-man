@@ -1,6 +1,12 @@
-vim9script
+vim9script noclear
+
+if exists('loaded') | finish | endif
+var loaded = true
 
 # TODO: Consolidate all `b:` variables into a single one big dictionary.
+
+# TODO: Add a `/` mapping  to type some filtering text and use  it to filter out
+# entries in the toc menu.
 
 # TODO: Extract this script into a separate plugin.
 # Rationale: It's no  longer specific  to man.   It can work  in other  types of
@@ -90,63 +96,63 @@ def CacheTocMan() #{{{2
     # This can only be perceived in big man pages like ffmpeg-all.
     #}}}
     var lines = getline(2, line('$') - 1)
-        ->map({i, v -> {lnum: i + 2, text: v}})
+        ->map((i, v) => ({lnum: i + 2, text: v}))
 
     if b:_toc_foldlevel == 0
-        b:_toc['0'] = filter(lines, {_, v -> v.text =~ '^\S'})
+        b:_toc['0'] = filter(lines, (_, v) => v.text =~ '^\S')
     else
-        b:_toc['1'] = filter(lines, {_, v -> v.text =~ '^\%( \{3\}\)\=\S'})
+        b:_toc['1'] = filter(lines, (_, v) => v.text =~ '^\%( \{3\}\)\=\S')
     endif
 enddef
 
 def CacheTocMarkdown() #{{{2
     var lines = getline(1, '$')
-        ->map({i, v -> {lnum: i + 1, text: v}})
+        ->map((i, v) => ({lnum: i + 1, text: v}))
 
     var lastlnum = line('$')
     # prepend a marker (`C-a`) in front of lines underlined with `---`
-    map(lines, {i, v ->
+    map(lines, (i, v) =>
         i < lastlnum - 1
         && lines[i + 1].text =~ '^-\+$'
         && v.text =~ '\S'
         ? extend(v, {text: "\x01" .. v.text})
         : v
-        })
+        )
 
     var pat1 = '^#\{1,' .. (b:_toc_foldlevel + 1) .. '}\s*[^ \t#]'
     var pat2 = b:_toc_foldlevel == 0 ? '^=\+$' : '^[-=]\+$'
     b:_toc[b:_toc_foldlevel] = copy(lines)
         # keep only title lines
-        ->filter({i, v -> v.text =~ pat1
+        ->filter((i, v) => v.text =~ pat1
             ||
             i < lastlnum - 1
             && lines[i + 1].text =~ pat2
             && v.text =~ '\S'
-            })
+            )
         # remove noise (`###`), and indent
-        ->map({_, v -> extend(v,
+        ->map((_, v) => extend(v,
             {text: substitute(v.text, '^#\+\s*\|^\%x01',
-                {m -> repeat('   ', m[0] =~ '^\%x01' ? 1 : count(m[0], '#') - 1)},
+                (m) => repeat('   ', m[0] =~ '^\%x01' ? 1 : count(m[0], '#') - 1),
                 '')}
-            )})
+            ))
 enddef
 
 def CacheTocHelp() #{{{2
     var lines = getline(1, '$')
-        ->map({i, v -> {lnum: i + 1, text: v}})
+        ->map((i, v) => ({lnum: i + 1, text: v}))
 
     # append a marker on underlined sub-headers
     #
     #     some sub-header
     #     ---------------
     var len = len(lines)
-    map(lines, {i, v -> i < len - 1
+    map(lines, (i, v) => i < len - 1
         # there must be a tag at the end
         && v.text =~ '\*$'
         && lines[i + 1].text =~ '^-\+$'
         ? extend(v, {text: v.text .. "\x01"})
         : v
-        })
+        )
 
     # TODO: Include all tag lines (`\*$`).
     # Yeah, I know; this is going to give a shitload of results.
@@ -158,21 +164,21 @@ def CacheTocHelp() #{{{2
         '2': HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2,
         '3': HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2 .. '\|' .. SUBSUBHEADER,
         }[string(b:_toc_foldlevel)]
-    filter(lines, {i, v -> v.text =~ pat})
+    filter(lines, (i, v) => v.text =~ pat)
 
     # indent appropriately
-    map(lines, {_, v -> v.text =~ SUBHEADER1
+    map(lines, (_, v) => v.text =~ SUBHEADER1
         .. '\|' .. SUBHEADER2
         .. '\|' .. HEADLINE
         ? extend(v, {text: '   ' .. v.text})
         : v.text =~ '\~$'
         ? extend(v, {text: '      ' .. v.text})
         : v
-        })
+        )
     # remove noise
-    map(lines, {_, v -> extend(v,
+    map(lines, (_, v) => extend(v,
         {text: substitute(v.text, '\t.*\|[~\x01]$', '', '')}
-        )})
+        ))
     b:_toc[b:_toc_foldlevel] = lines
 enddef
 
@@ -182,8 +188,8 @@ def CacheTocTerminal() #{{{2
 # command executed so far as an entry.
 
     b:_toc[b:_toc_foldlevel] = getline(1, '$')
-        ->map({i, v -> {lnum: i + 1, text: v}})
-        ->filter({_, v -> v.text =~ '^٪'})
+        ->map((i, v) => ({lnum: i + 1, text: v}))
+        ->filter((_, v) => v.text =~ '^٪')
 enddef
 
 def SetTitle(id: number) #{{{2
@@ -203,7 +209,7 @@ def JumpToRelevantLine(id: number) #{{{2
     var lnum = line('.')
     var firstline = b:_toc[b:_toc_foldlevel]
         ->copy()
-        ->filter({_, v -> v.lnum <= lnum})
+        ->filter((_, v) => v.lnum <= lnum)
         ->len()
     if firstline == 0
         return
