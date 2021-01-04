@@ -51,8 +51,8 @@ def man#toc#show() #{{{2
             CacheTocTerminal()
         endif
     endif
-    var statusline = &ls == 2 || &ls == 1 && winnr('$') >= 2 ? 1 : 0
-    var tabline = &stal == 2 || &stal == 1 && tabpagenr('$') >= 2 ? 1 : 0
+    var statusline = (&ls == 2 || &ls == 1 && winnr('$') >= 2) ? 1 : 0
+    var tabline = (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0
     var borders = 2 # top/bottom
     # Is `popup_menu()` ok with a list of dictionaries?{{{
     #
