@@ -13,7 +13,11 @@ setl noswapfile buftype=nofile bufhidden=hide
 setl nomodified readonly nomodifiable
 setl noexpandtab tabstop=8 softtabstop=8 shiftwidth=8
 setl wrap breakindent linebreak
-setl iskeyword+=-
+" Parentheses and '-' for references like `git-ls-files(1)`; '@' for systemd
+" pages; ':' for Perl and C++ pages.  Here, I intentionally omit the locale
+" specific characters matched by `@`.
+setl iskeyword=@-@,:,a-z,A-Z,48-57,_,.,-,(,)
+
 
 setl nonumber norelativenumber
 setl foldcolumn=0 colorcolumn=0 nolist nofoldenable

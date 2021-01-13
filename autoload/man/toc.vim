@@ -95,8 +95,8 @@ def CacheTocMan() #{{{2
     # seconds, there is some lag if you then try to move with `j` and `k`.
     # This can only be perceived in big man pages like ffmpeg-all.
     #}}}
-    var lines = getline(2, line('$') - 1)
-        ->map((i, v) => ({lnum: i + 2, text: v}))
+    var lines: list<dict<any>> = getline(2, line('$') - 1)
+        ->mapnew((i, v) => ({lnum: i + 2, text: v}))
 
     if b:_toc_foldlevel == 0
         b:_toc['0'] = filter(lines, (_, v) => v.text =~ '^\S')
@@ -106,18 +106,18 @@ def CacheTocMan() #{{{2
 enddef
 
 def CacheTocMarkdown() #{{{2
-    var lines = getline(1, '$')
-        ->map((i, v) => ({lnum: i + 1, text: v}))
+    var lines: list<dict<any>> = getline(1, '$')
+        ->mapnew((i, v) => ({lnum: i + 1, text: v}))
 
     var lastlnum = line('$')
     # prepend a marker (`C-a`) in front of lines underlined with `---`
     map(lines, (i, v) =>
-        i < lastlnum - 1
-        && lines[i + 1].text =~ '^-\+$'
-        && v.text =~ '\S'
-        ? extend(v, {text: "\x01" .. v.text})
-        : v
-        )
+            i < lastlnum - 1
+                && lines[i + 1].text =~ '^-\+$'
+                && v.text =~ '\S'
+            ? extend(v, {text: "\x01" .. v.text})
+            : v
+            )
 
     var pat1 = '^#\{1,' .. (b:_toc_foldlevel + 1) .. '}\s*[^ \t#]'
     var pat2 = b:_toc_foldlevel == 0 ? '^=\+$' : '^[-=]\+$'
@@ -138,21 +138,22 @@ def CacheTocMarkdown() #{{{2
 enddef
 
 def CacheTocHelp() #{{{2
-    var lines = getline(1, '$')
-        ->map((i, v) => ({lnum: i + 1, text: v}))
+    var lines: list<dict<any>> = getline(1, '$')
+        ->mapnew((i, v) => ({lnum: i + 1, text: v}))
 
     # append a marker on underlined sub-headers
     #
     #     some sub-header
     #     ---------------
     var len = len(lines)
-    map(lines, (i, v) => i < len - 1
-        # there must be a tag at the end
-        && v.text =~ '\*$'
-        && lines[i + 1].text =~ '^-\+$'
-        ? extend(v, {text: v.text .. "\x01"})
-        : v
-        )
+    map(lines, (i, v) =>
+            i < len - 1
+                # there must be a tag at the end
+                && v.text =~ '\*$'
+                && lines[i + 1].text =~ '^-\+$'
+            ? extend(v, {text: v.text .. "\x01"})
+            : v
+            )
 
     # TODO: Include all tag lines (`\*$`).
     # Yeah, I know; this is going to give a shitload of results.
@@ -167,9 +168,10 @@ def CacheTocHelp() #{{{2
     filter(lines, (i, v) => v.text =~ pat)
 
     # indent appropriately
-    map(lines, (_, v) => v.text =~ SUBHEADER1
-        .. '\|' .. SUBHEADER2
-        .. '\|' .. HEADLINE
+    map(lines, (_, v) =>
+        v.text =~ SUBHEADER1
+            .. '\|' .. SUBHEADER2
+            .. '\|' .. HEADLINE
         ? extend(v, {text: '   ' .. v.text})
         : v.text =~ '\~$'
         ? extend(v, {text: '      ' .. v.text})
@@ -188,7 +190,7 @@ def CacheTocTerminal() #{{{2
 # command executed so far as an entry.
 
     b:_toc[b:_toc_foldlevel] = getline(1, '$')
-        ->map((i, v) => ({lnum: i + 1, text: v}))
+        ->mapnew((i, v) => ({lnum: i + 1, text: v}))
         ->filter((_, v) => v.text =~ '^٪')
 enddef
 

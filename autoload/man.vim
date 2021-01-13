@@ -417,7 +417,7 @@ def Job_start(cmd: list<string>): string #{{{3
 
     if job_status(job) !=? 'run'
         # Tip: to get more info about the job which has started the process of ID 1234
-        #     :echo job_info()->map((_, v) => job_info(v))->filter((_, v) => v.process == 1234)
+        #     :echo job_info()->mapnew((_, v) => job_info(v))->filter((_, v) => v.process == 1234)
         printf('job error (PID %d): %s', job_info(job).process, join(cmd))
             ->Error()
     endif
