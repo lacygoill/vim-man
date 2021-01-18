@@ -19,16 +19,16 @@ import InTerminalBuffer from 'lg.vim'
 # a few patterns for help files
 
 #     123. Some header     *some tag*
-const HEADER = '^\d\+\.\s.*\*$'
+const HEADER: string = '^\d\+\.\s.*\*$'
 #     SOME HEADLINE    *some-tag*
-const HEADLINE = '^[A-Z][-A-Z0-9 .()_]*\%(\s\+\*\|$\)'
+const HEADLINE: string = '^[A-Z][-A-Z0-9 .()_]*\%(\s\+\*\|$\)'
 #     12.34 Some sub-header~
-const SUBHEADER1 = '^\d\+\.\d\+\s.*\~$'
+const SUBHEADER1: string = '^\d\+\.\d\+\s.*\~$'
 #     some sub-header
 #     ---------------
-const SUBHEADER2 = '\%x01$'
+const SUBHEADER2: string = '\%x01$'
 #     Some sub-sub-header~
-const SUBSUBHEADER = '^[A-Z].*\~$'
+const SUBSUBHEADER: string = '^[A-Z].*\~$'
 
 # Interface {{{1
 def man#toc#show() #{{{2
@@ -51,9 +51,9 @@ def man#toc#show() #{{{2
             CacheTocTerminal()
         endif
     endif
-    var statusline = (&ls == 2 || &ls == 1 && winnr('$') >= 2) ? 1 : 0
-    var tabline = (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0
-    var borders = 2 # top/bottom
+    var statusline: number = (&ls == 2 || &ls == 1 && winnr('$') >= 2) ? 1 : 0
+    var tabline: number = (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0
+    var borders: number = 2 # top/bottom
     # Is `popup_menu()` ok with a list of dictionaries?{{{
     #
     # Yes, see `:h popup_create-arguments`.
@@ -61,7 +61,7 @@ def man#toc#show() #{{{2
     # But we use dictionaries with the keys `text` and `lnum`.
     # IOW, we abuse the feature which lets us use text properties in a popup.
     #}}}
-    var id = b:_toc[string(b:_toc_foldlevel)]
+    var id: number = b:_toc[string(b:_toc_foldlevel)]
         ->popup_menu({
             line: 2,
             col: &columns,
@@ -109,7 +109,7 @@ def CacheTocMarkdown() #{{{2
     var lines: list<dict<any>> = getline(1, '$')
         ->mapnew((i, v) => ({lnum: i + 1, text: v}))
 
-    var lastlnum = line('$')
+    var lastlnum: number = line('$')
     # prepend a marker (`C-a`) in front of lines underlined with `---`
     map(lines, (i, v) =>
             i < lastlnum - 1
@@ -119,8 +119,8 @@ def CacheTocMarkdown() #{{{2
             : v
             )
 
-    var pat1 = '^#\{1,' .. (b:_toc_foldlevel + 1) .. '}\s*[^ \t#]'
-    var pat2 = b:_toc_foldlevel == 0 ? '^=\+$' : '^[-=]\+$'
+    var pat1: string = '^#\{1,' .. (b:_toc_foldlevel + 1) .. '}\s*[^ \t#]'
+    var pat2: string = b:_toc_foldlevel == 0 ? '^=\+$' : '^[-=]\+$'
     b:_toc[b:_toc_foldlevel] = copy(lines)
         # keep only title lines
         ->filter((i, v) => v.text =~ pat1
@@ -145,7 +145,7 @@ def CacheTocHelp() #{{{2
     #
     #     some sub-header
     #     ---------------
-    var len = len(lines)
+    var len: number = len(lines)
     map(lines, (i, v) =>
             i < len - 1
                 # there must be a tag at the end
@@ -159,7 +159,7 @@ def CacheTocHelp() #{{{2
     # Yeah, I know; this is going to give a shitload of results.
     # But that shouldn't be  an issue if you tweak `H` and `L`  so that they can
     # decrease / increase one level of folding.
-    var pat = {
+    var pat: string = {
         '0': HEADER,
         '1': HEADER .. '\|' .. HEADLINE,
         '2': HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2,
@@ -195,8 +195,8 @@ def CacheTocTerminal() #{{{2
 enddef
 
 def SetTitle(id: number) #{{{2
-    var lastlnum = line('$', id)
-    var newtitle = printf(' %*d/%d (%d)',
+    var lastlnum: number = line('$', id)
+    var newtitle: string = printf(' %*d/%d (%d)',
         len(lastlnum), line('.', id),
         lastlnum,
         (b:_toc_foldlevel + 1))
@@ -208,8 +208,8 @@ def SetTitle(id: number) #{{{2
 enddef
 
 def JumpToRelevantLine(id: number) #{{{2
-    var lnum = line('.')
-    var firstline = b:_toc[b:_toc_foldlevel]
+    var lnum: number = line('.')
+    var firstline: number = b:_toc[b:_toc_foldlevel]
         ->copy()
         ->filter((_, v) => v.lnum <= lnum)
         ->len()
@@ -329,7 +329,7 @@ def Filter(id: number, key: string): bool #{{{2
         # it's  reliable  (e.g. does  it  still  work  as  expected in  case  of
         # duplicate titles?).
         #}}}
-        var prevheading = win_execute(id, 'echo search("^\\S", "bcW")->getline()')
+        var prevheading: string = win_execute(id, 'echo search("^\\S", "bcW")->getline()')
             ->trim("\<c-j>")
 
         if b:_toc[b:_toc_foldlevel]->empty()
@@ -347,7 +347,7 @@ def Filter(id: number, key: string): bool #{{{2
         popup_settext(id, b:_toc[string(b:_toc_foldlevel)])
         SetTitle(id)
 
-        var pat = '^\V' .. escape(prevheading, '\') .. '\m$'
+        var pat: string = '^\V' .. escape(prevheading, '\') .. '\m$'
         win_execute(id, [printf('search(%s)', string(pat)), 'norm! zz'])
         return true
     endif
@@ -358,7 +358,7 @@ def Callback(id: number, choice: number) #{{{2
     if choice == -1
         return
     endif
-    var lnum = get(b:_toc[b:_toc_foldlevel], choice - 1)->get('lnum')
+    var lnum: number = get(b:_toc[b:_toc_foldlevel], choice - 1)->get('lnum')
     if lnum == 0
         return
     endif

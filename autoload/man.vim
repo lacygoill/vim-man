@@ -3,7 +3,7 @@ vim9 noclear
 if exists('loaded') | finish | endif
 var loaded = true
 
-var localfile_arg = true  # Always use -l if possible. #6683
+var localfile_arg: bool = true  # Always use -l if possible. #6683
 
 # TODO:
 #
@@ -57,7 +57,7 @@ def man#shellcmd(ref: string) #{{{2
     var page: string
     try
         [sect, name] = ExtractSectAndNameRef(ref)
-        var path = VerifyExists(sect, name)
+        var path: string = VerifyExists(sect, name)
         [sect, name] = ExtractSectAndNamePath(path)
         page = GetPage(path)
     catch
@@ -95,18 +95,18 @@ def man#excmd(count: number, mods: string, ...fargs: list<string>) #{{{2
         if count > 0
             sect = string(count)
         endif
-        var path = VerifyExists(sect, name)
+        var path: string = VerifyExists(sect, name)
         [sect, name] = ExtractSectAndNamePath(path)
     catch
         Error(v:exception)
         return
     endtry
 
-    var buf = bufnr('%')
-    var save_tfu = &l:tagfunc
+    var buf: number = bufnr('%')
+    var save_tfu: string = &l:tagfunc
     try
         setl tagfunc=man#gotoTag
-        var target = name .. '(' .. sect .. ')'
+        var target: string = name .. '(' .. sect .. ')'
         if mods !~ 'tab' && FindMan()
             execute 'silent keepalt tag ' .. target
         else
@@ -124,14 +124,14 @@ def man#excmd(count: number, mods: string, ...fargs: list<string>) #{{{2
 enddef
 
 def man#complete(arg_lead: string, cmd_line: string, _p: any): list<string> #{{{2
-    var args = split(cmd_line)
-    var cmd_offset = index(args, 'Man')
+    var args: list<string> = split(cmd_line)
+    var cmd_offset: number = index(args, 'Man')
     if cmd_offset > 0
         # Prune all arguments up to :Man itself. Otherwise modifier commands like
         # :tab, :vertical, etc. would lead to a wrong length.
         args = args[cmd_offset :]
     endif
-    var l = len(args)
+    var l: number = len(args)
     var name: string
     var sect: string
     if l > 3
@@ -143,7 +143,7 @@ def man#complete(arg_lead: string, cmd_line: string, _p: any): list<string> #{{{
         # cursor (|) is at `:Man printf(|` or `:Man 1 printf(|`
         # The later is is allowed because of `:Man pri<TAB>`.
         # It will offer `priclass.d(1m)` even though section is specified as 1.
-        var tmp = split(arg_lead, '(')
+        var tmp: list<string> = split(arg_lead, '(')
         name = tmp[0]
         sect = get(tmp, true, '')->tolower()
         return Complete(sect, '', name)
@@ -182,7 +182,7 @@ def man#gotoTag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
     var name: string
     [sect, name] = ExtractSectAndNameRef(pattern)
 
-    var paths = GetPaths(sect, name, true)
+    var paths: list<string> = GetPaths(sect, name, true)
     var structured: list<dict<string>>
 
     for path in paths
@@ -218,7 +218,7 @@ def man#initPager() #{{{2
     echo ''
     au VimEnter * keepj norm! 1GzR
     # https://github.com/neovim/neovim/issues/6828
-    var og_modifiable = &modifiable
+    var og_modifiable: bool = &modifiable
     setl modifiable
 
     if getline(1) =~ '^\s*$'
@@ -229,7 +229,7 @@ def man#initPager() #{{{2
 
     # Guess the ref from the heading (which is usually uppercase, so we cannot
     # know the correct casing, cf. `man glDrawArraysInstanced`).
-    var ref = getline(1)
+    var ref: string = getline(1)
         ->matchstr('^[^)]\+)')
         ->substitute(' ', '_', 'g')
     try
@@ -246,8 +246,8 @@ enddef
 
 def man#JumpToRef(fwd = true) #{{{2
     # regex used by the `manReference` syntax group
-    var pat = '[^()[:space:]]\+([0-9nx][a-z]*)'
-    var flags = fwd ? 'W' : 'bW'
+    var pat: string = '[^()[:space:]]\+([0-9nx][a-z]*)'
+    var flags: string = fwd ? 'W' : 'bW'
     search(pat, flags)
 enddef
 #}}}1
@@ -260,15 +260,15 @@ def ExtractSectAndNameRef(ref: string): list<string> #{{{3
     if ref[0] == '-' # try `:Man -pandoc` with this disabled
         throw 'manpage name cannot start with ''-'''
     endif
-    var _ref = matchstr(ref, '[^()]\+([^()]\+)')
+    var _ref: string = matchstr(ref, '[^()]\+([^()]\+)')
     if empty(_ref)
-        var name = matchstr(ref, '[^()]\+')
+        var name: string = matchstr(ref, '[^()]\+')
         if empty(name)
             throw 'manpage reference cannot contain only parentheses'
         endif
         return ['', name]
     endif
-    var left = split(_ref, '(')
+    var left: list<string> = split(_ref, '(')
     # see `:Man 3X curses` on why `tolower()`.
     # TODO(nhooyr) Not sure if this is portable across OSs
     # but I have not seen a single uppercase section.
@@ -281,12 +281,12 @@ def ExtractSectAndNamePath(path: string): list<string> #{{{3
 # Also on linux, name seems to be case-insensitive. So for `:Man PRIntf`, we
 # still want the name of the buffer to be `printf`.
 
-    var tail = fnamemodify(path, ':t')
+    var tail: string = fnamemodify(path, ':t')
     if path =~ '\.\%([glx]z\|bz2\|lzma\|Z\)$' # valid extensions
         tail = fnamemodify(tail, ':r')
     endif
-    var sect = matchstr(tail, '\.\zs[^.]\+$')
-    var name = matchstr(tail, '^.\+\ze\.')
+    var sect: string = matchstr(tail, '\.\zs[^.]\+$')
+    var name: string = matchstr(tail, '^.\+\ze\.')
     return [sect, name]
 enddef
 
@@ -304,7 +304,7 @@ def VerifyExists(sect: string, name: string): string #{{{3
 # This function is careful to avoid duplicating a search if a previous
 # step has already done it. i.e if we use b:man_default_sects in step 1,
 # then we don't do it again in step 2.
-    var _sect = sect
+    var _sect: string = sect
     if empty(_sect)
         _sect = get(b:, 'man_default_sects', '')
     endif
@@ -361,13 +361,13 @@ def GetPage(path: string): string #{{{3
     # Disable hard-wrap by using a big $MANWIDTH (max 1000 on some systems #9065).
     # Soft-wrap: ftplugin/man.vim sets wrap/breakindent/….
     # Hard-wrap: driven by `man`.
-    var manwidth = !get(g:, 'man_hardwrap', true)
+    var manwidth: number = !get(g:, 'man_hardwrap', true)
         ? 999
-        : (empty($MANWIDTH) ? winwidth(0) : $MANWIDTH)
+        : (empty($MANWIDTH) ? winwidth(0) : $MANWIDTH->str2nr())
     # Force `MANPAGER=cat` to ensure Vim is not recursively invoked (by `man-db`).
     # http://comments.gmane.org/gmane.editors.vim.devel/29085
     # Set `MAN_KEEP_FORMATTING` so that Debian's `man(1)` doesn't discard backspaces.
-    var cmd =<< trim END
+    var cmd: list<string> =<< trim END
         env
         MANPAGER=cat
         MANWIDTH=%d
@@ -399,13 +399,13 @@ enddef
 
 def Job_start(cmd: list<string>): string #{{{3
 # Run a shell command asynchronously; timeout after 30 seconds.
-    var opts = {
+    var opts: dict<any> = {
         stdout: '',
         stderr: '',
         exit_status: 0,
         }
 
-    var job = job_start(cmd, {
+    var job: job = job_start(cmd, {
         out_cb: function(JobHandler, [opts, 'stdout']),
         err_cb: function(JobHandler, [opts, 'stderr']),
         # TODO: Should we use `close_cb` instead?
@@ -423,11 +423,11 @@ def Job_start(cmd: list<string>): string #{{{3
     endif
 
     # let's wait up to 30 seconds
-    var res = -1
+    var res: number = -1
     try
-        var start = reltime()
+        var start: list<number> = reltime()
         while reltime(start)->reltimefloat() < 30.0
-            var info = job_info(job)
+            var info: dict<any> = job_info(job)
             if info.status == 'dead'
                 res = info.exitval
                 break
@@ -545,8 +545,8 @@ def HighlightWindow() #{{{3
     if !exists('b:_seen')
         return
     endif
-    var lnum1 = max([1, line('.') - winheight(0)])
-    var lnum2 = min([line('.') + winheight(0), line('$')])
+    var lnum1: number = max([1, line('.') - winheight(0)])
+    var lnum2: number = min([line('.') + winheight(0), line('$')])
     # if the *visible* lines are already highlighted, nothing needs to be done
     # TODO: Once Vim9 supports `dict.key`, try to consolidate all `b:` variables
     # into a single dictionary.  And use the prefix `man`.
@@ -560,8 +560,8 @@ def HighlightWindow() #{{{3
         return
     endif
 
-    var lines = b:_lines[lnum1 - 1 : lnum2 - 1]
-    var i = 0
+    var lines: list<string> = b:_lines[lnum1 - 1 : lnum2 - 1]
+    var i: number = 0
     var lnum: number
     for line in lines
         lnum = i + lnum1 - 1
@@ -584,24 +584,24 @@ enddef
 
 def HighlightLine(line: string, linenr: number): string #{{{3
     var chars: list<string>
-    var prev_char = ''
-    var overstrike = false
-    var escape = false
+    var prev_char: string = ''
+    var overstrike: bool = false
+    var escape: bool = false
     var hls: list<dict<number>> # Store highlight groups as { attr, start, end }
-    var NONE = 0
-    var BOLD = 1
-    var UNDERLINE = 2
-    var ITALIC = 3
-    var hl_groups = {
+    var NONE: number = 0
+    var BOLD: number = 1
+    var UNDERLINE: number = 2
+    var ITALIC: number = 3
+    var hl_groups: dict<string> = {
         [string(BOLD)]: 'manBold',
         [string(UNDERLINE)]: 'manUnderline',
         [string(ITALIC)]: 'manItalic',
         }
-    var attr = NONE
-    var byte = 0 # byte offset
+    var attr: number = NONE
+    var byte: number = 0 # byte offset
 
     def EndAttrHl(attr_: number)
-        var i = 0
+        var i: number = 0
         for hl in hls
             if hl.attr == attr_ && hl.end == -1
                 extend(hl, {end: byte})
@@ -612,7 +612,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
     enddef
 
     def AddAttrHl(code: number)
-        var continue_hl = true
+        var continue_hl: bool = true
         if code == 0
             attr = NONE
             continue_hl = false
@@ -651,7 +651,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
 
     for char in Gmatch(line, '[^\d128-\d191][\d128-\d191]*')
         if overstrike
-            var last_hl = get(hls, -1)
+            var last_hl: dict<number> = get(hls, -1, {})
             if char == prev_char
                 if char == '_' && attr == UNDERLINE
                     && !empty(last_hl)
@@ -723,14 +723,14 @@ def HighlightLine(line: string, linenr: number): string #{{{3
             # We only want to match against SGR sequences, which consist of ESC
             # followed by `[`, then a series of parameter and intermediate bytes in
             # the range 0x20 - 0x3f, then `m`. (See ECMA-48, sections 5.4 & 8.3.117)
-            var sgr = matchstr(prev_char, '^\[\zs[\d032-\d063]*\zem$')
+            var sgr: string = matchstr(prev_char, '^\[\zs[\d032-\d063]*\zem$')
             # Ignore escape sequences with : characters, as specified by ITU's T.416
             # Open Document Architecture and interchange format.
             if !empty(sgr) && stridx(sgr, ':') == -1
                 var match: string
                 while !empty(sgr) && strlen(sgr) > 0
                     # Match against SGR parameters, which may be separated by `;`
-                    var matchlist = matchlist(sgr, '^\(\d*\);\=\(.*\)')
+                    var matchlist: list<string> = matchlist(sgr, '^\(\d*\);\=\(.*\)')
                     match = matchlist[1]
                     sgr = matchlist[2]
                     str2nr(match)->AddAttrHl()
@@ -803,15 +803,21 @@ def HighlightOnCursormoved() #{{{3
         au CursorMoved <buffer> HighlightWindow()
         # for  when  we   type  a  pattern  on  the   search  command-line,  and
         # `'incsearch'` is set (causing the view to change)
-        exe 'au CmdlineChanged /,\? '
-            .. 'if bufnr("%") == ' .. bufnr('%')
-            .. ' | HighlightWindow() | endif'
+        CHRef = function(ConditionalHighlight, [bufnr('%')])
+        au CmdlineChanged /,\? CHRef()
     augroup END
+enddef
+
+var CHRef: func
+def ConditionalHighlight(bufnr: number)
+    if bufnr == bufnr('%')
+        HighlightWindow()
+    endif
 enddef
 #}}}2
 # :Man completion {{{2
 def Complete(sect: string, psect: string, name: string): list<string> #{{{3
-    var pages = GetPaths(sect, name, false)
+    var pages: list<string> = GetPaths(sect, name, false)
     # We remove duplicates in case the same manpage in different languages was found.
     return map(pages, (_, v) => FormatCandidate(v, psect))
         ->sort('i')
@@ -848,13 +854,14 @@ def GetPaths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
 
     # callers must try-catch this, as some `man(1)` implementations don't support `-w`
     try
-        var mandirs = Job_start(['man', '-w'])
+        var mandirs: string = Job_start(['man', '-w'])
             ->split(':\|\n')
             ->join(',')
-        var paths = globpath(mandirs, 'man?/' .. name .. '*.' .. sect .. '*', false, true)
+        var paths: list<string> = globpath(mandirs,
+            'man?/' .. name .. '*.' .. sect .. '*', false, true)
         try
             # Prioritize the result from verify_exists as it obeys b:man_default_sects.
-            var first = VerifyExists(sect, name)
+            var first: string = VerifyExists(sect, name)
             filter(paths, (_, v) => v != first)
             paths = [first] + paths
         catch
@@ -902,9 +909,9 @@ def Error(msg: string) #{{{2
 enddef
 
 def FindMan(): bool #{{{2
-    var win = 1
+    var win: number = 1
     while win <= winnr('$')
-        var buf = winbufnr(win)
+        var buf: number = winbufnr(win)
         if getbufvar(buf, '&filetype', '') == 'man'
             execute ':' .. win .. 'wincmd w'
             return true
