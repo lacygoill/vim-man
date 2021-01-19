@@ -116,6 +116,7 @@ def man#excmd(count: number, mods: string, ...fargs: list<string>) #{{{2
     # *raised when you ask for an unknown man page*
     catch /E987:/
         Error(v:exception)
+        return
     finally
         setbufvar(buf, '&tagfunc', save_tfu)
     endtry
@@ -420,6 +421,7 @@ def Job_start(cmd: list<string>): string #{{{3
         #     :echo job_info()->mapnew((_, v) => job_info(v))->filter((_, v) => v.process == 1234)
         printf('job error (PID %d): %s', job_info(job).process, join(cmd))
             ->Error()
+        return ''
     endif
 
     # let's wait up to 30 seconds
@@ -446,6 +448,7 @@ def Job_start(cmd: list<string>): string #{{{3
             job_stop(job)
             printf('job timed out (PID %d): %s', job_info(job).process, join(cmd))
                 ->Error()
+            return ''
         catch /^Vim(call):E900:/
         endtry
     elseif res == -2
