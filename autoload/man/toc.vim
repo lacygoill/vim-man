@@ -38,8 +38,8 @@ def man#toc#show() #{{{2
     endif
     if !exists('b:_toc')
         # `''` is for a terminal buffer
-        b:_toc = {'': [], '0': [], '1': [], '2': [], '3': [], '4': [], '5': []}
-        b:_toc_foldlevel_max = {'': 0, 'man': 1, 'help': 3, 'markdown': 5}[&ft]
+        b:_toc = {'': [], 0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
+        b:_toc_foldlevel_max = {'': 0, man: 1, help: 3, markdown: 5}[&ft]
         b:_toc_foldlevel = b:_toc_foldlevel_max
         if &ft == 'man'
             CacheTocMan()
@@ -160,10 +160,10 @@ def CacheTocHelp() #{{{2
     # But that shouldn't be  an issue if you tweak `H` and `L`  so that they can
     # decrease / increase one level of folding.
     var pat: string = {
-        '0': HEADER,
-        '1': HEADER .. '\|' .. HEADLINE,
-        '2': HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2,
-        '3': HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2 .. '\|' .. SUBSUBHEADER,
+        0: HEADER,
+        1: HEADER .. '\|' .. HEADLINE,
+        2: HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2,
+        3: HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2 .. '\|' .. SUBSUBHEADER,
         }[string(b:_toc_foldlevel)]
     filter(lines, (i, v) => v.text =~ pat)
 
