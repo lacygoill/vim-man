@@ -596,9 +596,9 @@ def HighlightLine(line: string, linenr: number): string #{{{3
     var UNDERLINE: number = 2
     var ITALIC: number = 3
     var hl_groups: dict<string> = {
-        [string(BOLD)]: 'manBold',
-        [string(UNDERLINE)]: 'manUnderline',
-        [string(ITALIC)]: 'manItalic',
+        [BOLD]: 'manBold',
+        [UNDERLINE]: 'manUnderline',
+        [ITALIC]: 'manItalic',
         }
     var attr: number = NONE
     var byte: number = 0 # byte offset

@@ -61,7 +61,7 @@ def man#toc#show() #{{{2
     # But we use dictionaries with the keys `text` and `lnum`.
     # IOW, we abuse the feature which lets us use text properties in a popup.
     #}}}
-    var id: number = b:_toc[string(b:_toc_foldlevel)]
+    var id: number = b:_toc[b:_toc_foldlevel]
         ->popup_menu({
             line: 2,
             col: &columns,
@@ -164,7 +164,7 @@ def CacheTocHelp() #{{{2
         1: HEADER .. '\|' .. HEADLINE,
         2: HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2,
         3: HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2 .. '\|' .. SUBSUBHEADER,
-        }[string(b:_toc_foldlevel)]
+        }[b:_toc_foldlevel]
     filter(lines, (i, v) => v.text =~ pat)
 
     # indent appropriately
@@ -344,7 +344,7 @@ def Filter(id: number, key: string): bool #{{{2
         # TODO: If the contents of the TOC does not change (happens sometimes in
         # Vim help  files), continue increasing/decreasing until  it changes, or
         # it's no longer possible to increase/decrease.
-        popup_settext(id, b:_toc[string(b:_toc_foldlevel)])
+        popup_settext(id, b:_toc[b:_toc_foldlevel])
         SetTitle(id)
 
         var pat: string = '^\V' .. escape(prevheading, '\') .. '\m$'

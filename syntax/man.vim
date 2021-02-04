@@ -47,10 +47,10 @@ hi def manItalic    cterm=italic    gui=italic
 " for the bold/underline/italic styles.
 "}}}
 let s:buf = bufnr('%')
-if prop_type_list(#{bufnr: s:buf})->index('manBold') == -1
-    call prop_type_add('manBold', #{bufnr: s:buf, highlight: 'manBold'})
-    call prop_type_add('manUnderline', #{bufnr: s:buf, highlight: 'manUnderline'})
-    call prop_type_add('manItalic', #{bufnr: s:buf, highlight: 'manItalic'})
+if prop_type_list({'bufnr': s:buf})->index('manBold') == -1
+    call prop_type_add('manBold', {'bufnr': s:buf, 'highlight': 'manBold'})
+    call prop_type_add('manUnderline', {'bufnr': s:buf, 'highlight': 'manUnderline'})
+    call prop_type_add('manItalic', {'bufnr': s:buf, 'highlight': 'manItalic'})
 endif
 unlet! s:buf
 
