@@ -330,7 +330,7 @@ def Filter(id: number, key: string): bool #{{{2
         # duplicate titles?).
         #}}}
         var prevheading: string = win_execute(id, 'echo search("^\\S", "bcW")->getline()')
-            ->trim("\<c-j>")
+            ->trim("\<NL>")
 
         if b:_toc[b:_toc_foldlevel]->empty()
             if &ft == 'man'
