@@ -381,8 +381,6 @@ enddef
 
 def PutPage(page: string) #{{{3
     setl modifiable noreadonly noswapfile
-    # `git-ls-files(1)` is all one keyword/tag-target
-    setl iskeyword+=(,)
     sil keepj :%d _
     page->split('\n')->setline(1)
     while getline(1) =~ '^\s*$'
