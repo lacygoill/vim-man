@@ -199,7 +199,7 @@ def man#gotoTag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
         structured = structured[: 0]
     endif
 
-    return map(structured, (_, entry) => ({
+    return map(structured, (_, entry: dict<string>): dict<string> => ({
         name: entry.name,
         filename: 'man://' .. entry.title,
         cmd: 'keepj norm! 1G'
@@ -415,8 +415,6 @@ def Job_start(cmd: list<string>): string #{{{3
         })
 
     if job_status(job) !=? 'run'
-        # Tip: to get more info about the job which has started the process of ID 1234
-        #     :echo job_info()->mapnew((_, v) => job_info(v))->filter((_, v) => v.process == 1234)
         printf('job error (PID %d): %s', job_info(job).process, join(cmd))
             ->Error()
         return ''
@@ -820,7 +818,8 @@ enddef
 def Complete(sect: string, psect: string, name: string): list<string> #{{{3
     var pages: list<string> = GetPaths(sect, name, false)
     # We remove duplicates in case the same manpage in different languages was found.
-    return map(pages, (_, v) => FormatCandidate(v, psect))
+    return pages
+        ->map((_, v: string): string => FormatCandidate(v, psect))
         ->sort('i')
         ->uniq()
         # TODO: Instead of running  `filter()` just to remove  one empty string,{{{
@@ -847,7 +846,7 @@ def Complete(sect: string, psect: string, name: string): list<string> #{{{3
         # For this to work, you'll need  to change the return type from `string`
         # to `any`.  Also, you'll need to report a crash, and wait for a fix.
         #}}}
-        ->filter((_, v) => !empty(v))
+        ->filter((_, v: string): bool => !empty(v))
 enddef
 
 def GetPaths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
@@ -863,7 +862,7 @@ def GetPaths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
         try
             # Prioritize the result from verify_exists as it obeys b:man_default_sects.
             var first: string = VerifyExists(sect, name)
-            filter(paths, (_, v) => v != first)
+            filter(paths, (_, v: string): bool => v != first)
             paths = [first] + paths
         catch
         endtry
@@ -926,7 +925,7 @@ def Gmatch(text: string, pat: string): list<string> #{{{2
 # TODO: Is there something simpler?
 # If not, consider asking for a builtin `gmatch()` as a feature request.
     var res: list<string>
-    substitute(text, pat, (m) => add(res, m[0])[-1], 'g')
+    substitute(text, pat, (m: list<string>) => add(res, m[0])[-1], 'g')
     return res
 enddef
 
