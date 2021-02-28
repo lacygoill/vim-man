@@ -113,7 +113,7 @@ def CacheTocMarkdown() #{{{2
     # prepend a marker (`C-a`) in front of lines underlined with `---`
     map(lines, (i: number, v: dict<any>): dict<any> =>
         i < lastlnum - 1
-            && lines[i + 1].text =~ '^-\+$'
+            && lines[i + 1]['text'] =~ '^-\+$'
             && v.text =~ '\S'
         ? extend(v, {text: "\x01" .. v.text})
         : v
@@ -126,7 +126,7 @@ def CacheTocMarkdown() #{{{2
         ->filter((i, v: dict<any>): bool => v.text =~ pat1
             ||
             i < lastlnum - 1
-            && lines[i + 1].text =~ pat2
+            && lines[i + 1]['text'] =~ pat2
             && v.text =~ '\S'
             )
         # remove noise (`###`), and indent
@@ -152,7 +152,7 @@ def CacheTocHelp() #{{{2
         i < len - 1
             # there must be a tag at the end
             && v.text =~ '\*$'
-            && lines[i + 1].text =~ '^-\+$'
+            && lines[i + 1]['text'] =~ '^-\+$'
         ? extend(v, {text: v.text .. "\x01"})
         : v
         )
@@ -260,7 +260,7 @@ def Highlight(id: number) #{{{2
         #         return
         #       endif
         #
-        #       let bufnr = list[0].bufnr
+        #       let bufnr = list[0]['bufnr']
         #       setlocal modifiable
         #       silent %delete _
         #       call setline(1, map(list, 'v:val.text'))
@@ -305,7 +305,7 @@ def Filter(id: number, key: string): bool #{{{2
 
     # when we press `p`, print the selected line (useful when it's truncated)
     elseif key == 'p'
-        echo b:_toc[b:_toc_foldlevel][line('.', id) - 1].text
+        echo b:_toc[b:_toc_foldlevel][line('.', id) - 1]['text']
         return true
 
     elseif key == 'q'

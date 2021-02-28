@@ -254,22 +254,22 @@ enddef
 #}}}1
 # Core {{{1
 # Main {{{2
-def ExtractSectAndNameRef(ref: string): list<string> #{{{3
+def ExtractSectAndNameRef(arg_ref: string): list<string> #{{{3
 # attempt to extract the name and sect out of `name(sect)`
 # otherwise just return the largest string of valid characters in ref
 
-    if ref[0] == '-' # try `:Man -pandoc` with this disabled
+    if arg_ref[0] == '-' # try `:Man -pandoc` with this disabled
         throw 'manpage name cannot start with ''-'''
     endif
-    var _ref: string = matchstr(ref, '[^()]\+([^()]\+)')
-    if empty(_ref)
-        var name: string = matchstr(ref, '[^()]\+')
+    var ref: string = matchstr(arg_ref, '[^()]\+([^()]\+)')
+    if empty(ref)
+        var name: string = matchstr(arg_ref, '[^()]\+')
         if empty(name)
             throw 'manpage reference cannot contain only parentheses'
         endif
         return ['', name]
     endif
-    var left: list<string> = split(_ref, '(')
+    var left: list<string> = split(ref, '(')
     # see `:Man 3X curses` on why `tolower()`.
     # TODO(nhooyr) Not sure if this is portable across OSs
     # but I have not seen a single uppercase section.
@@ -291,7 +291,7 @@ def ExtractSectAndNamePath(path: string): list<string> #{{{3
     return [sect, name]
 enddef
 
-def VerifyExists(sect: string, name: string): string #{{{3
+def VerifyExists(arg_sect: string, name: string): string #{{{3
 # VerifyExists attempts to find the path to a manpage
 # based on the passed section and name.
 #
@@ -305,22 +305,22 @@ def VerifyExists(sect: string, name: string): string #{{{3
 # This function is careful to avoid duplicating a search if a previous
 # step has already done it. i.e if we use b:man_default_sects in step 1,
 # then we don't do it again in step 2.
-    var _sect: string = sect
-    if empty(_sect)
-        _sect = get(b:, 'man_default_sects', '')
+    var sect: string = arg_sect
+    if empty(sect)
+        sect = get(b:, 'man_default_sects', '')
     endif
     try
-        return GetPath(_sect, name)
+        return GetPath(sect, name)
     catch /^command error \%x28/
     endtry
     if !get(b:, 'man_default_sects', '')->empty()
-        && _sect != b:man_default_sects
+        && sect != b:man_default_sects
         try
             return GetPath(b:man_default_sects, name)
         catch /^command error \%x28/
         endtry
     endif
-    if !empty(_sect)
+    if !empty(sect)
         try
             return GetPath('', name)
         catch /^command error \%x28/
@@ -535,7 +535,7 @@ def JobHandler(opts: dict<any>, event: string, _: any, data: any) #{{{3
     if event == 'stdout' || event == 'stderr'
         opts[event] = opts[event] .. data
     else
-        extend(opts, {exit_status: data})
+        opts.exit_status = data
     endif
 enddef
 #}}}2
@@ -603,7 +603,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         var i: number = 0
         for hl in hls
             if hl.attr == attr_ && hl.end == -1
-                extend(hl, {end: byte})
+                hl.end = byte
                 hls[i] = hl
             endif
             i += 1
@@ -707,7 +707,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
             if !empty(last_hl)
                 && last_hl.attr == attr
                 && last_hl.end == byte
-                extend(last_hl, {end: byte + strlen(char)})
+                last_hl.end = byte + strlen(char)
             else
                 hls += [{attr: attr, start: byte, end: byte + strlen(char)}]
             endif
