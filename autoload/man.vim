@@ -199,11 +199,12 @@ def man#gotoTag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
         structured = structured[: 0]
     endif
 
-    return map(structured, (_, entry: dict<string>): dict<string> => ({
-        name: entry.name,
-        filename: 'man://' .. entry.title,
-        cmd: 'keepj norm! 1G'
-        }))
+    return structured
+        ->map((_, entry: dict<string>): dict<string> => ({
+                  name: entry.name,
+                  filename: 'man://' .. entry.title,
+                  cmd: 'keepj norm! 1G'
+                }))
 enddef
 
 def man#foldexpr(): string #{{{2
@@ -375,7 +376,7 @@ def GetPage(path: string): string #{{{3
         MAN_KEEP_FORMATTING=1
         man
     END
-    cmd[2] = substitute(cmd[2], '%d', manwidth, '')
+    cmd[2] = cmd[2]->substitute('%d', manwidth, '')
     return Job_start(cmd + (localfile_arg ? ['-l', path] : [path]))
 enddef
 
@@ -480,7 +481,7 @@ def Job_start(cmd: list<string>): string #{{{3
         throw printf('command error (PID %d) %s: %s',
                 job_info(job).process,
                 join(cmd),
-                substitute(opts.stderr, '\_s\+$', '', ''))
+                opts.stderr->substitute('\_s\+$', '', ''))
     endif
 
     # FIXME: Sometimes, a man page is truncated when we use `:Man`.{{{
@@ -862,7 +863,7 @@ def GetPaths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
         try
             # Prioritize the result from verify_exists as it obeys b:man_default_sects.
             var first: string = VerifyExists(sect, name)
-            filter(paths, (_, v: string): bool => v != first)
+            paths->filter((_, v: string): bool => v != first)
             paths = [first] + paths
         catch
         endtry
@@ -925,7 +926,7 @@ def Gmatch(text: string, pat: string): list<string> #{{{2
 # TODO: Is there something simpler?
 # If not, consider asking for a builtin `gmatch()` as a feature request.
     var res: list<string>
-    substitute(text, pat, (m: list<string>) => add(res, m[0])[-1], 'g')
+    text->substitute(pat, (m: list<string>) => add(res, m[0])[-1], 'g')
     return res
 enddef
 

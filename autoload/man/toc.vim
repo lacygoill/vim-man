@@ -96,7 +96,7 @@ def CacheTocMan() #{{{2
     # This can only be perceived in big man pages like ffmpeg-all.
     #}}}
     var lines: list<dict<any>> = getline(2, line('$') - 1)
-        ->mapnew((i, v: string): dict<any> => ({lnum: i + 2, text: v}))
+        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 2, text: v}))
 
     if b:_toc_foldlevel == 0
         b:_toc['0'] = lines->filter((_, v: dict<any>): bool => v.text =~ '^\S')
@@ -107,55 +107,62 @@ enddef
 
 def CacheTocMarkdown() #{{{2
     var lines: list<dict<any>> = getline(1, '$')
-        ->mapnew((i, v: string): dict<any> => ({lnum: i + 1, text: v}))
+        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
 
     var lastlnum: number = line('$')
     # prepend a marker (`C-a`) in front of lines underlined with `---`
-    map(lines, (i: number, v: dict<any>): dict<any> =>
+    lines->map((i: number, v: dict<any>): dict<any> =>
         i < lastlnum - 1
             && lines[i + 1]['text'] =~ '^-\+$'
             && v.text =~ '\S'
         ? extend(v, {text: "\x01" .. v.text})
         : v
-        )
+    )
 
     var pat1: string = '^#\{1,' .. (b:_toc_foldlevel + 1) .. '}\s*[^ \t#]'
     var pat2: string = b:_toc_foldlevel == 0 ? '^=\+$' : '^[-=]\+$'
     b:_toc[b:_toc_foldlevel] = copy(lines)
         # keep only title lines
-        ->filter((i, v: dict<any>): bool => v.text =~ pat1
+        ->filter((i: number, v: dict<any>): bool =>
+            v.text =~ pat1
             ||
             i < lastlnum - 1
             && lines[i + 1]['text'] =~ pat2
             && v.text =~ '\S'
-            )
         # remove noise (`###`), and indent
-        ->map((_, v: dict<any>): dict<any> =>
+        )->map((_, v: dict<any>): dict<any> =>
             extend(v, {
-                text: v.text
-                    ->substitute('^#\+\s*\|^\%x01',
-                        (m) => repeat('   ', m[0] =~ '^\%x01' ? 1 : count(m[0], '#') - 1),
-                        '')
-            }))
+                        text: v.text
+                            ->substitute(
+                                '^#\+\s*\|^\%x01',
+                                (m: list<string>): string =>
+                                    repeat('   ',
+                                              m[0] =~ '^\%x01'
+                                            ?     1
+                                            :     count(m[0], '#') - 1),
+                                ''
+                            )
+                      }
+        ))
 enddef
 
 def CacheTocHelp() #{{{2
     var lines: list<dict<any>> = getline(1, '$')
-        ->mapnew((i, v: string): dict<any> => ({lnum: i + 1, text: v}))
+        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
 
     # append a marker on underlined sub-headers
     #
     #     some sub-header
     #     ---------------
     var len: number = len(lines)
-    map(lines, (i: number, v: dict<any>): dict<any> =>
-        i < len - 1
-            # there must be a tag at the end
-            && v.text =~ '\*$'
-            && lines[i + 1]['text'] =~ '^-\+$'
-        ? extend(v, {text: v.text .. "\x01"})
-        : v
-        )
+    lines->map((i: number, v: dict<any>): dict<any> =>
+                    i < len - 1
+                        # there must be a tag at the end
+                        && v.text =~ '\*$'
+                        && lines[i + 1]['text'] =~ '^-\+$'
+                    ? extend(v, {text: v.text .. "\x01"})
+                    : v
+    )
 
     # TODO: Include all tag lines (`\*$`).
     # Yeah, I know; this is going to give a shitload of results.
@@ -167,23 +174,22 @@ def CacheTocHelp() #{{{2
         2: HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2,
         3: HEADER .. '\|' .. HEADLINE .. '\|' .. SUBHEADER1 .. '\|' .. SUBHEADER2 .. '\|' .. SUBSUBHEADER,
         }[b:_toc_foldlevel]
-    filter(lines, (i, v: dict<any>): bool => v.text =~ pat)
 
-    # indent appropriately
-    map(lines, (_, v: dict<any>): dict<any> =>
-        v.text =~ SUBHEADER1
-            .. '\|' .. SUBHEADER2
-            .. '\|' .. HEADLINE
-        ? extend(v, {text: '   ' .. v.text})
-        : v.text =~ '\~$'
-        ? extend(v, {text: '      ' .. v.text})
-        : v
-        )
-    # remove noise
-    map(lines, (_, v: dict<any>): dict<any> => extend(v,
-        {text: substitute(v.text, '\t.*\|[~\x01]$', '', '')}
-        ))
     b:_toc[b:_toc_foldlevel] = lines
+        ->filter((_, v: dict<any>): bool => v.text =~ pat)
+        # indent appropriately
+        ->map((_, v: dict<any>): dict<any> =>
+                v.text =~ SUBHEADER1
+                    .. '\|' .. SUBHEADER2
+                    .. '\|' .. HEADLINE
+                ? extend(v, {text: '   ' .. v.text})
+                : v.text =~ '\~$'
+                ? extend(v, {text: '      ' .. v.text})
+                : v
+        # remove noise
+        )->map((_, v: dict<any>): dict<any> =>
+                extend(v, {text: v.text->substitute('\t.*\|[~\x01]$', '', '')}
+        ))
 enddef
 
 def CacheTocTerminal() #{{{2
@@ -192,7 +198,7 @@ def CacheTocTerminal() #{{{2
 # command executed so far as an entry.
 
     b:_toc[b:_toc_foldlevel] = getline(1, '$')
-        ->mapnew((i, v: string): dict<any> => ({lnum: i + 1, text: v}))
+        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
         ->filter((_, v: dict<any>): bool => v.text =~ '^٪')
 enddef
 
@@ -204,7 +210,7 @@ def SetTitle(id: number) #{{{2
         (b:_toc_foldlevel + 1))
     # In a terminal buffer, the foldlevel indicator is useless.  There is only 1 level.
     if &ft == ''
-        newtitle = substitute(newtitle, ' (\d\+)$', '', '')
+        newtitle = newtitle->substitute(' (\d\+)$', '', '')
     endif
     popup_setoptions(id, {title: newtitle})
 enddef
