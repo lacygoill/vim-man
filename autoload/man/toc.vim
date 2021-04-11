@@ -79,7 +79,7 @@ def man#toc#show() #{{{2
             maxwidth: &columns / 3,
             filter: Filter,
             callback: Callback,
-            })
+        })
     Highlight(id)
     JumpToRelevantLine(id)
     # can't set  the title before  jumping to  the relevant line,  otherwise the
@@ -188,8 +188,7 @@ def CacheTocHelp() #{{{2
                 : v
         # remove noise
         )->map((_, v: dict<any>): dict<any> =>
-                extend(v, {text: v.text->substitute('\t.*\|[~\x01]$', '', '')}
-        ))
+                extend(v, {text: v.text->substitute('\t.*\|[~\x01]$', '', '')}))
 enddef
 
 def CacheTocTerminal() #{{{2

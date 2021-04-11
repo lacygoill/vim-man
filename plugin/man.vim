@@ -45,5 +45,5 @@ com -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man
       | endif
 
 augroup man | au!
-    au BufReadCmd man://* call expand('<amatch>')->substitute('^man://', '', '')->man#shellcmd()
+    au BufReadCmd man://* expand('<amatch>')->substitute('^man://', '', '')->man#shellcmd()
 augroup END

@@ -19,6 +19,6 @@ def man#zsh#moveInPages(dir: string) #{{{1
     endif
     pos = (pos + (dir == 'fwd' ? 1 : -1)) % len(pages)
     exe 'Man ' .. pages[pos]
-endfu
+enddef
 
 var pos: number

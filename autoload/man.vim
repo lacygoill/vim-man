@@ -68,7 +68,11 @@ def man#shellcmd(ref: string) #{{{2
     PutPage(page)
 enddef
 
-def man#excmd(count: number, mods: string, ...fargs: list<string>) #{{{2
+def man#excmd( #{{{2
+    count: number,
+    mods: string,
+    ...fargs: list<string>
+)
     var ref: string
     if len(fargs) > 2
         Error('too many arguments')
@@ -124,8 +128,13 @@ def man#excmd(count: number, mods: string, ...fargs: list<string>) #{{{2
     b:man_sect = sect
 enddef
 
-def man#complete(arg_lead: string, cmd_line: string, _p: any): list<string> #{{{2
-    var args: list<string> = split(cmd_line)
+def man#complete( #{{{2
+    arg_lead: string,
+    cmdline: string,
+    _
+): list<string>
+
+    var args: list<string> = split(cmdline)
     var cmd_offset: number = index(args, 'Man')
     if cmd_offset > 0
         # Prune all arguments up to :Man itself. Otherwise modifier commands like
@@ -178,7 +187,7 @@ def man#complete(arg_lead: string, cmd_line: string, _p: any): list<string> #{{{
     return Complete(sect, sect, name)
 enddef
 
-def man#gotoTag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
+def man#gotoTag(pattern: string, _, _): list<dict<string>> #{{{2
     var sect: string
     var name: string
     [sect, name] = ExtractSectAndNameRef(pattern)
@@ -191,7 +200,7 @@ def man#gotoTag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
         structured += [{
             name: name,
             title: name .. '(' .. sect .. ')'
-            }]
+        }]
     endfor
 
     if &cscopetag
@@ -204,7 +213,7 @@ def man#gotoTag(pattern: string, _f: any, _i: any): list<dict<string>> #{{{2
                   name: entry.name,
                   filename: 'man://' .. entry.title,
                   cmd: 'keepj norm! 1G'
-                }))
+        }))
 enddef
 
 def man#foldexpr(): string #{{{2
@@ -403,7 +412,7 @@ def Job_start(cmd: list<string>): string #{{{3
         stdout: '',
         stderr: '',
         exit_status: 0,
-        }
+    }
 
     var job: job = job_start(cmd, {
         out_cb: function(JobHandler, [opts, 'stdout']),
@@ -413,7 +422,7 @@ def Job_start(cmd: list<string>): string #{{{3
         exit_cb: function(JobHandler, [opts, 'exit']),
         mode: 'raw',
         noblock: true,
-        })
+    })
 
     if job_status(job) !=? 'run'
         printf('job error (PID %d): %s', job_info(job).process, join(cmd))
@@ -528,13 +537,18 @@ def Job_start(cmd: list<string>): string #{{{3
     return opts.stdout
 enddef
 
-def JobHandler(opts: dict<any>, event: string, _: any, data: any) #{{{3
+def JobHandler( #{{{3
+    opts: dict<any>,
+    event: string,
+    _,
+    data: any
+)
 # When the callback  is invoked to write  on the stdout or stderr,  `_` is a
 # channel and `data` a string.
 # When the  callback is  invoked because  the job  exits, `_`  is a  job and
 # `data` a number (exit status).
     if event == 'stdout' || event == 'stderr'
-        opts[event] = opts[event] .. data
+        opts[event] ..= data
     else
         opts.exit_status = data
     endif
@@ -548,8 +562,8 @@ def HighlightWindow() #{{{3
     var lnum1: number = max([1, line('.') - winheight(0)])
     var lnum2: number = min([line('.') + winheight(0), line('$')])
     # if the *visible* lines are already highlighted, nothing needs to be done
-    # TODO: Once Vim9 supports `dict.key`, try to consolidate all `b:` variables
-    # into a single dictionary.  And use the prefix `man`.
+    # TODO: Now  that Vim9  supports  `dict.key`, try  to  consolidate all  `b:`
+    # variables into a single dictionary.  And use the prefix `man`.
     if b:_seen[lnum1 - 1 : lnum2 - 1]->index(false) == -1
         # if *all* the lines are already highlighted, nothing will *ever* need to be done
         if index(b:_seen, false) == -1
@@ -577,7 +591,7 @@ def HighlightWindow() #{{{3
         prop_add(args[1] + 1, args[2] + 1, {
             length: args[3] - args[2],
             type: args[0]
-            })
+        })
     endfor
     b:_hls = []
 enddef
@@ -596,7 +610,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         [BOLD]: 'manBold',
         [UNDERLINE]: 'manUnderline',
         [ITALIC]: 'manItalic',
-        }
+    }
     var attr: number = NONE
     var byte: number = 0 # byte offset
 
@@ -761,11 +775,11 @@ def HighlightLine(line: string, linenr: number): string #{{{3
                 linenr,
                 hl.start,
                 hl.end,
-                ]]
+            ]]
         endif
     endfor
 
-    return join(chars, '')
+    return chars->join('')
 enddef
 
 def HighlightOnCursormoved() #{{{3
@@ -816,7 +830,12 @@ def ConditionalHighlight(bufnr: number)
 enddef
 #}}}2
 # :Man completion {{{2
-def Complete(sect: string, psect: string, name: string): list<string> #{{{3
+def Complete( #{{{3
+    sect: string,
+    psect: string,
+    name: string
+): list<string>
+
     var pages: list<string> = GetPaths(sect, name, false)
     # We remove duplicates in case the same manpage in different languages was found.
     return pages
@@ -850,7 +869,11 @@ def Complete(sect: string, psect: string, name: string): list<string> #{{{3
         ->filter((_, v: string): bool => !empty(v))
 enddef
 
-def GetPaths(sect: string, name: string, do_fallback: bool): list<string> #{{{3
+def GetPaths( #{{{3
+    sect: string,
+    name: string,
+    do_fallback: bool
+): list<string>
 # see `ExtractSectAndNameRef()` on why `tolower(sect)`
 
     # callers must try-catch this, as some `man(1)` implementations don't support `-w`
