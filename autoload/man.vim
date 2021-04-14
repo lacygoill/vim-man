@@ -424,7 +424,7 @@ def Job_start(cmd: list<string>): string #{{{3
         noblock: true,
     })
 
-    if job_status(job) !=? 'run'
+    if job_status(job) != '\crun'
         printf('job error (PID %d): %s', job_info(job).process, join(cmd))
             ->Error()
         return ''
@@ -664,10 +664,13 @@ def HighlightLine(line: string, linenr: number): string #{{{3
     enddef
 
     for char in Gmatch(line, '[^\d128-\d191][\d128-\d191]*')
+        # Need to make a copy of `char`, because Vim automatically locks it, and
+        # we might need to replace it during the loop (`c = '·'`).
+        var c: string = char
         if overstrike
             var last_hl: dict<number> = get(hls, -1, {})
-            if char == prev_char
-                if char == '_' && attr == UNDERLINE
+            if c == prev_char
+                if c == '_' && attr == UNDERLINE
                     && !empty(last_hl)
                     && last_hl.end == byte
                     # This underscore is in the middle of an underlined word
@@ -705,14 +708,14 @@ def HighlightLine(line: string, linenr: number): string #{{{3
                 #}}}
                 # char is underlined
                 attr = UNDERLINE
-            elseif prev_char == '+' && char == 'o'
+            elseif prev_char == '+' && c == 'o'
                 # bullet (overstrike text `+^Ho`)
                 attr = BOLD
-                char = '·'
-            elseif prev_char == '·' && char == 'o'
+                c = '·'
+            elseif prev_char == '·' && c == 'o'
                 # bullet (additional handling for `+^H+^Ho^Ho`)
                 attr = BOLD
-                char = '·'
+                c = '·'
             else
                 # use plain char
                 attr = NONE
@@ -722,18 +725,18 @@ def HighlightLine(line: string, linenr: number): string #{{{3
             if !empty(last_hl)
                 && last_hl.attr == attr
                 && last_hl.end == byte
-                last_hl.end = byte + strlen(char)
+                last_hl.end = byte + strlen(c)
             else
-                hls += [{attr: attr, start: byte, end: byte + strlen(char)}]
+                hls += [{attr: attr, start: byte, end: byte + strlen(c)}]
             endif
 
             overstrike = false
             prev_char = ''
-            byte += strlen(char)
-            chars += [char]
+            byte += strlen(c)
+            chars += [c]
         elseif escape
             # Use prev_char to store the escape sequence
-            prev_char ..= char
+            prev_char ..= c
             # We only want to match against SGR sequences, which consist of ESC
             # followed by `[`, then a series of parameter and intermediate bytes in
             # the range 0x20 - 0x3f, then `m`. (See ECMA-48, sections 5.4 & 8.3.117)
@@ -754,17 +757,17 @@ def HighlightLine(line: string, linenr: number): string #{{{3
                 # Stop looking if this isn't a partial CSI sequence
                 escape = false
             endif
-        elseif char == "\027"
+        elseif c == "\027"
             escape = true
             prev_char = ''
-        elseif char == "\b"
+        elseif c == "\b"
             overstrike = true
             prev_char = chars[-1]
             byte -= strlen(prev_char)
             chars[-1] = ''
         else
-            byte += strlen(char)
-            chars += [char]
+            byte += strlen(c)
+            chars += [c]
         endif
     endfor
 
