@@ -424,7 +424,7 @@ def Job_start(cmd: list<string>): string #{{{3
         noblock: true,
     })
 
-    if job_status(job) != '\crun'
+    if job_status(job) !=? 'run'
         printf('job error (PID %d): %s', job_info(job).process, join(cmd))
             ->Error()
         return ''
