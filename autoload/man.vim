@@ -112,9 +112,9 @@ def man#excmd( #{{{2
         setl tagfunc=man#gotoTag
         var target: string = name .. '(' .. sect .. ')'
         if mods !~ 'tab' && FindMan()
-            execute 'silent keepalt tag ' .. target
+            exe 'silent keepalt tag ' .. target
         else
-            execute 'silent keepalt ' .. mods .. ' stag ' .. target
+            exe 'silent keepalt ' .. mods .. ' stag ' .. target
         endif
     # E987: invalid return value from tagfunc
     # *raised when you ask for an unknown man page*
@@ -249,13 +249,13 @@ def man#initPager() #{{{2
         b:man_sect = ''
     endtry
     if -1 == match(bufname('%'), 'man:\/\/')  # Avoid duplicate buffers, E95.
-        execute 'silent file man://' .. fnameescape(ref)->tolower()
+        exe 'silent file man://' .. fnameescape(ref)->tolower()
     endif
 
     &l:modifiable = og_modifiable
 enddef
 
-def man#JumpToRef(fwd = true) #{{{2
+def man#jumpToRef(fwd = true) #{{{2
     # regex used by the `manReference` syntax group
     var pat: string = '[^()[:space:]]\+([0-9nx][a-z]*)'
     var flags: string = fwd ? 'W' : 'bW'
@@ -271,9 +271,9 @@ def ExtractSectAndNameRef(arg_ref: string): list<string> #{{{3
     if arg_ref[0] == '-' # try `:Man -pandoc` with this disabled
         throw 'manpage name cannot start with ''-'''
     endif
-    var ref: string = matchstr(arg_ref, '[^()]\+([^()]\+)')
+    var ref: string = arg_ref->matchstr('[^()]\+([^()]\+)')
     if empty(ref)
-        var name: string = matchstr(arg_ref, '[^()]\+')
+        var name: string = arg_ref->matchstr('[^()]\+')
         if empty(name)
             throw 'manpage reference cannot contain only parentheses'
         endif
@@ -292,12 +292,12 @@ def ExtractSectAndNamePath(path: string): list<string> #{{{3
 # Also on linux, name seems to be case-insensitive. So for `:Man PRIntf`, we
 # still want the name of the buffer to be `printf`.
 
-    var tail: string = fnamemodify(path, ':t')
+    var tail: string = path->fnamemodify(':t')
     if path =~ '\.\%([glx]z\|bz2\|lzma\|Z\)$' # valid extensions
-        tail = fnamemodify(tail, ':r')
+        tail = tail->fnamemodify(':r')
     endif
-    var sect: string = matchstr(tail, '\.\zs[^.]\+$')
-    var name: string = matchstr(tail, '^.\+\ze\.')
+    var sect: string = tail->matchstr('\.\zs[^.]\+$')
+    var name: string = tail->matchstr('^.\+\ze\.')
     return [sect, name]
 enddef
 
@@ -579,7 +579,7 @@ def HighlightWindow() #{{{3
     var lnum: number
     for line in lines
         lnum = i + lnum1 - 1
-        i += 1
+        ++i
         if b:_seen[lnum]
             continue
         endif
@@ -621,7 +621,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
                 hl.end = byte
                 hls[i] = hl
             endif
-            i += 1
+            ++i
         endfor
     enddef
 
@@ -740,7 +740,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
             # We only want to match against SGR sequences, which consist of ESC
             # followed by `[`, then a series of parameter and intermediate bytes in
             # the range 0x20 - 0x3f, then `m`. (See ECMA-48, sections 5.4 & 8.3.117)
-            var sgr: string = matchstr(prev_char, '^\[\zs[\d032-\d063]*\zem$')
+            var sgr: string = prev_char->matchstr('^\[\zs[\d032-\d063]*\zem$')
             # Ignore escape sequences with : characters, as specified by ITU's T.416
             # Open Document Architecture and interchange format.
             if !empty(sgr) && stridx(sgr, ':') == -1
@@ -940,10 +940,10 @@ def FindMan(): bool #{{{2
     while win <= winnr('$')
         var buf: number = winbufnr(win)
         if getbufvar(buf, '&filetype', '') == 'man'
-            execute ':' .. win .. 'wincmd w'
+            win_getid(win)->win_gotoid()
             return true
         endif
-        win += 1
+        ++win
     endwhile
     return false
 enddef

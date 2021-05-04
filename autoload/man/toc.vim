@@ -32,22 +32,22 @@ const SUBSUBHEADER: string = '^[A-Z].*\~$'
 
 # Interface {{{1
 def man#toc#show() #{{{2
-    if index(['man', 'help', 'markdown'], &ft) == -1
+    if index(['man', 'help', 'markdown'], &filetype) == -1
         && !InTerminalBuffer()
         return
     endif
     if !exists('b:_toc')
         # `''` is for a terminal buffer
         b:_toc = {'': [], 0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
-        b:_toc_foldlevel_max = {'': 0, man: 1, help: 3, markdown: 5}[&ft]
+        b:_toc_foldlevel_max = {'': 0, man: 1, help: 3, markdown: 5}[&filetype]
         b:_toc_foldlevel = b:_toc_foldlevel_max
-        if &ft == 'man'
+        if &filetype == 'man'
             CacheTocMan()
-        elseif &ft == 'markdown'
+        elseif &filetype == 'markdown'
             CacheTocMarkdown()
-        elseif &ft == 'help'
+        elseif &filetype == 'help'
             CacheTocHelp()
-        elseif &ft == ''
+        elseif &filetype == ''
             CacheTocTerminal()
         endif
     endif
@@ -208,7 +208,7 @@ def SetTitle(id: number) #{{{2
         lastlnum,
         (b:_toc_foldlevel + 1))
     # In a terminal buffer, the foldlevel indicator is useless.  There is only 1 level.
-    if &ft == ''
+    if &filetype == ''
         newtitle = newtitle->substitute(' (\d\+)$', '', '')
     endif
     popup_setoptions(id, {title: newtitle})
@@ -227,7 +227,7 @@ def JumpToRelevantLine(id: number) #{{{2
 enddef
 
 def Highlight(id: number) #{{{2
-    if &ft == 'man'
+    if &filetype == 'man'
         # Why not just setting the syntax to `man`?{{{
         #
         # Indeed, this would work for the most part:
@@ -294,10 +294,10 @@ def Highlight(id: number) #{{{2
         #}}}
         matchadd('manSectionHeading', '^\S.*', 10, -1, {window: id})
         matchadd('manSubHeading', '^\s\{3}\S.*', 10, -1, {window: id})
-    elseif &ft == 'help'
+    elseif &filetype == 'help'
         matchadd('helpHeadline', '^\S.*', 10, -1, {window: id})
         matchadd('helpHeader', '^   \S.*', 10, -1, {window: id})
-    elseif &ft == 'markdown'
+    elseif &filetype == 'markdown'
         matchadd('markdownHeader', '.*', 10, -1, {window: id})
     endif
 enddef
@@ -340,11 +340,11 @@ def Filter(id: number, key: string): bool #{{{2
             ->trim("\<NL>")
 
         if b:_toc[b:_toc_foldlevel]->empty()
-            if &ft == 'man'
+            if &filetype == 'man'
                 CacheTocMan()
-            elseif &ft == 'markdown'
+            elseif &filetype == 'markdown'
                 CacheTocMarkdown()
-            elseif &ft == 'help'
+            elseif &filetype == 'help'
                 CacheTocHelp()
             endif
         endif
