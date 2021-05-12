@@ -248,6 +248,11 @@ def man#initPager() #{{{2
     catch
         b:man_sect = ''
     endtry
+    # FIXME:
+    #
+    #     $ man man
+    #     :e /tmp/file.man
+    #     :e #
     if -1 == match(bufname('%'), 'man:\/\/')  # Avoid duplicate buffers, E95.
         exe 'silent file man://' .. fnameescape(ref)->tolower()
     endif
