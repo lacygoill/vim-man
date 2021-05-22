@@ -6,7 +6,7 @@ var loaded = true
 # `:Man foo` doesn't work!{{{
 #
 #     :Man foo
-#     man.vim: Vim(stag):E987: invalid return value from tagfunc~
+#     man.vim: Vim(stag):E987: invalid return value from tagfunc˜
 #
 # Check whether `$ man -w` can find the manpage:
 #
@@ -21,13 +21,13 @@ var loaded = true
 #
 #     $ cd ~/share/man
 #     $ tree
-#     .~
-#     ├── cat1~
-#     │   ├── tig.1.gz~
-#     │   └── youtube-dl.1.gz~
-#     ├── index.db~
-#     └── man1~
-#         └── youtube-dl.1~
+#     .˜
+#     ├── cat1˜
+#     │   ├── tig.1.gz˜
+#     │   └── youtube-dl.1.gz˜
+#     ├── index.db˜
+#     └── man1˜
+#         └── youtube-dl.1˜
 #}}}
 
 nno <space>o <cmd>call man#toc#show()<cr>

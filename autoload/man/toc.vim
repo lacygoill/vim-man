@@ -22,12 +22,12 @@ import InTerminalBuffer from 'lg.vim'
 const HEADER: string = '^\d\+\.\s.*\*$'
 #     SOME HEADLINE    *some-tag*
 const HEADLINE: string = '^[A-Z][-A-Z0-9 .()_]*\%(\s\+\*\|$\)'
-#     12.34 Some sub-header~
+#     12.34 Some sub-header˜
 const SUBHEADER1: string = '^\d\+\.\d\+\s.*\~$'
 #     some sub-header
 #     ---------------
 const SUBHEADER2: string = '\%x01$'
-#     Some sub-sub-header~
+#     Some sub-sub-header˜
 const SUBSUBHEADER: string = '^[A-Z].*\~$'
 
 # Interface {{{1
