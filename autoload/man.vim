@@ -345,11 +345,11 @@ def VerifyExists(arg_sect: string, name: string): string #{{{3
         var MANSECT: string
         try
             MANSECT = $MANSECT
-            unlet! $MANSECT
+            setenv('MANSECT', null)
             return GetPath('', name)
         catch /^command error \%x28/
         finally
-            $MANSECT = MANSECT
+            setenv('MANSECT', MANSECT)
         endtry
     endif
     throw 'No manual entry for ' .. name
