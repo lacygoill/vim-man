@@ -957,7 +957,7 @@ def Gmatch(text: string, pat: string): list<string> #{{{2
 # TODO: Is there something simpler?
 # If not, consider asking for a builtin `gmatch()` as a feature request.
     var res: list<string>
-    text->substitute(pat, (m: list<string>) => add(res, m[0])[-1], 'g')
+    text->substitute(pat, (m: list<string>) => res->add(m[0])[-1], 'g')
     return res
 enddef
 
