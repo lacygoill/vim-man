@@ -326,19 +326,19 @@ def VerifyExists(arg_sect: string, name: string): string #{{{3
     endif
     try
         return GetPath(sect, name)
-    catch /^command error \%x28/
+    catch /^command error (/
     endtry
     if !get(b:, 'man_default_sects', '')->empty()
         && sect != b:man_default_sects
         try
             return GetPath(b:man_default_sects, name)
-        catch /^command error \%x28/
+        catch /^command error (/
         endtry
     endif
     if !empty(sect)
         try
             return GetPath('', name)
-        catch /^command error \%x28/
+        catch /^command error (/
         endtry
     endif
     if !empty($MANSECT)
@@ -347,7 +347,7 @@ def VerifyExists(arg_sect: string, name: string): string #{{{3
             MANSECT = $MANSECT
             setenv('MANSECT', null)
             return GetPath('', name)
-        catch /^command error \%x28/
+        catch /^command error (/
         finally
             setenv('MANSECT', MANSECT)
         endtry
@@ -474,8 +474,8 @@ def Job_start(cmd: list<string>): string #{{{3
         #
         #     try
         #         ...
-        #     catch /^command error \%x28/
-        #            ^------------------^
+        #     catch /^command error (/
+        #            ^--------------^
         #     endtry
         #
         # Otherwise, when  you ask  for an  unknown man page,  you'll get  a too
