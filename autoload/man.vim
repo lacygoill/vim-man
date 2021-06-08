@@ -107,9 +107,9 @@ def man#excmd( #{{{2
     endtry
 
     var buf: number = bufnr('%')
-    var save_tfu: string = &l:tagfunc
+    var tagfunc_save: string = &l:tagfunc
     try
-        setl tagfunc=man#gotoTag
+        &l:tagfunc = 'man#gotoTag'
         var target: string = name .. '(' .. sect .. ')'
         if mods !~ 'tab' && FindMan()
             exe 'silent keepalt tag ' .. target
@@ -122,7 +122,7 @@ def man#excmd( #{{{2
         Error(v:exception)
         return
     finally
-        setbufvar(buf, '&tagfunc', save_tfu)
+        setbufvar(buf, '&tagfunc', tagfunc_save)
     endtry
 
     b:man_sect = sect
@@ -230,9 +230,9 @@ def man#initPager() #{{{2
     au VimEnter * keepj norm! 1GzR
     # https://github.com/neovim/neovim/issues/6828
     var og_modifiable: bool = &modifiable
-    setl modifiable
+    &l:modifiable = true
 
-    if getline(1) =~ '^\s*$'
+    if getline(1) !~ '\S'
         sil keepj :1d _
     endif
     HighlightOnCursormoved()
@@ -248,12 +248,47 @@ def man#initPager() #{{{2
     catch
         b:man_sect = ''
     endtry
-    # FIXME:
+    # Need to return if `ref` is empty.{{{
+    #
+    # Which can happen like this:
     #
     #     $ man man
     #     :e /tmp/file.man
+    #
+    # And if  `ref` is  empty, we  need to  return to  prevent Vim  from wrongly
+    # creating an undesirable (and unmodifiable) buffer.  That is, after
+    # `:e /tmp/file.man`, we want this buffer list:
+    #
+    #     ✔
+    #     1 #h-  "man://man(1)"                 line 1
+    #     2 %a-  "/tmp/file.man"                line 1
+    #
+    # *Not* this one:
+    #
+    #     ✘
+    #     1  h-  "man://man(1)"                 line 1
+    #     2 %a-  "man://"                       line 1
+    #     3u#    "/tmp/file.man"                line 1
+    #
+    # The latter is confusing, and creates other unexpected errors:
+    #
     #     :e #
-    if -1 == match(bufname('%'), 'man:\/\/')  # Avoid duplicate buffers, E95.
+    #
+    #     E95: Buffer with this name already exists˜
+    #}}}
+    # Do not move this check above the `b:man_sect` assignment.{{{
+    #
+    # It would give another error:
+    #
+    #     $ man man
+    #     :e /tmp/file.man
+    #
+    #     E121: Undefined variable: b:man_sect˜
+    #}}}
+    if ref->empty()
+        return
+    endif
+    if -1 == bufname('%')->match('man:\/\/')  # Avoid duplicate buffers, E95.
         exe 'silent file man://' .. fnameescape(ref)->tolower()
     endif
 
@@ -395,10 +430,12 @@ def GetPage(path: string): string #{{{3
 enddef
 
 def PutPage(page: string) #{{{3
-    setl modifiable noreadonly noswapfile
+    &l:modifiable = true
+    &l:readonly = false
+    &l:swapfile = false
     sil keepj :%d _
     page->split('\n')->setline(1)
-    while getline(1) =~ '^\s*$'
+    while getline(1) !~ '\S'
         sil keepj :1d _
     endwhile
     # XXX: nroff justifies text by filling it with whitespace.  That interacts
@@ -408,7 +445,7 @@ def PutPage(page: string) #{{{3
     :1
     HighlightOnCursormoved()
     OpenFolds()
-    setl filetype=man
+    &l:filetype = 'man'
 enddef
 
 def Job_start(cmd: list<string>): string #{{{3
@@ -606,7 +643,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
     var prev_char: string = ''
     var overstrike: bool = false
     var escape: bool = false
-    var hls: list<dict<number>> # Store highlight groups as { attr, start, end }
+    var highlights: list<dict<number>> # Store highlight groups as { attr, start, end }
     var NONE: number = 0
     var BOLD: number = 1
     var UNDERLINE: number = 2
@@ -621,10 +658,10 @@ def HighlightLine(line: string, linenr: number): string #{{{3
 
     def EndAttrHl(attr_: number)
         var i: number = 0
-        for hl in hls
-            if hl.attr == attr_ && hl.end == -1
-                hl.end = byte
-                hls[i] = hl
+        for highlight in highlights
+            if highlight.attr == attr_ && highlight.end == -1
+                highlight.end = byte
+                highlights[i] = highlight
             endif
             ++i
         endfor
@@ -656,7 +693,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         endif
 
         if continue_hl
-            hls += [{attr: attr, start: byte, end: -1}]
+            highlights += [{attr: attr, start: byte, end: -1}]
         else
             if attr == NONE
                 for a_ in items(hl_groups)
@@ -673,7 +710,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         # we might need to replace it during the loop (`c = '·'`).
         var c: string = char
         if overstrike
-            var last_hl: dict<number> = get(hls, -1, {})
+            var last_hl: dict<number> = get(highlights, -1, {})
             if c == prev_char
                 if c == '_' && attr == UNDERLINE
                     && !empty(last_hl)
@@ -732,7 +769,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
                 && last_hl.end == byte
                 last_hl.end = byte + strlen(c)
             else
-                hls += [{attr: attr, start: byte, end: byte + strlen(c)}]
+                highlights += [{attr: attr, start: byte, end: byte + strlen(c)}]
             endif
 
             overstrike = false
@@ -776,13 +813,13 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         endif
     endfor
 
-    for hl in hls
-        if hl.attr != NONE
+    for highlight in highlights
+        if highlight.attr != NONE
             b:_hls += [[
-                get(hl_groups, string(hl.attr), ''),
+                get(hl_groups, string(highlight.attr), ''),
                 linenr,
-                hl.start,
-                hl.end,
+                highlight.start,
+                highlight.end,
             ]]
         endif
     endfor
@@ -966,7 +1003,7 @@ def OpenFolds() #{{{2
     # Also when we come back with `C-t`.
     augroup ManAllFoldsOpenByDefault
         au! * <buffer>
-        au BufWinEnter <buffer> setl foldlevel=1
+        au BufWinEnter <buffer> &l:foldlevel = 1
     augroup END
 enddef
 #}}}1

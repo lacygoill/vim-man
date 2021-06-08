@@ -1,3 +1,5 @@
+vim9script
+
 if exists('b:current_syntax')
     finish
 endif
@@ -15,55 +17,55 @@ hi def link manOptionDesc     Constant
 hi def link manReference      PreProc
 hi def link manSubHeading     Function
 
-" Don't move these highlight groups in the autoload script.{{{
-"
-" You would lose the highlighting when changing the color scheme while reading a
-" man page.
-"
-"     $ man man
-"     :colo default
-"     " no highlighting for bold, italic, underline
-"     :Man tac
-"     " still no highlighting
-"
-" That's because a color scheme runs `:hi clear`.
-" When we  change the color  scheme, we need to  make sure that  these highlight
-" groups are re-installed.
-"}}}
+# Don't move these highlight groups in the autoload script.{{{
+#
+# You would lose the highlighting when changing the color scheme while reading a
+# man page.
+#
+#     $ man man
+#     :colo default
+#     " no highlighting for bold, italic, underline
+#     :Man tac
+#     " still no highlighting
+#
+# That's because a color scheme runs `:hi clear`.
+# When we  change the color  scheme, we need to  make sure that  these highlight
+# groups are re-installed.
+#}}}
 hi def manUnderline cterm=underline gui=underline
 hi def manBold      cterm=bold      gui=bold
 hi def manItalic    cterm=italic    gui=italic
-" If you make these properties global, don't move them in the autload script.{{{
-"
-" It wouldn't work.
-" When the autoload  script would be sourced, the highlight  groups on which the
-" properties rely on would not be installed yet.  You would get get errors:
-"
-"     E970: Unknown highlight group name: 'manBold'
-"     E970: Unknown highlight group name: 'manUnderline'
-"     E970: Unknown highlight group name: 'manItalic'
-"
-" The properties would not be created,  and you would never get any highlighting
-" for the bold/underline/italic styles.
-"}}}
-let s:buf = bufnr('%')
-if prop_type_list({'bufnr': s:buf})->index('manBold') == -1
-    call prop_type_add('manBold', {'bufnr': s:buf, 'highlight': 'manBold'})
-    call prop_type_add('manUnderline', {'bufnr': s:buf, 'highlight': 'manUnderline'})
-    call prop_type_add('manItalic', {'bufnr': s:buf, 'highlight': 'manItalic'})
+# If you make these properties global, don't move them in the autload script.{{{
+#
+# It wouldn't work.
+# When the autoload  script would be sourced, the highlight  groups on which the
+# properties rely on would not be installed yet.  You would get get errors:
+#
+#     E970: Unknown highlight group name: 'manBold'
+#     E970: Unknown highlight group name: 'manUnderline'
+#     E970: Unknown highlight group name: 'manItalic'
+#
+# The properties would not be created,  and you would never get any highlighting
+# for the bold/underline/italic styles.
+#}}}
+var buf: number = bufnr('%')
+if prop_type_list({bufnr: buf})->index('manBold') == -1
+    prop_type_add('manBold', {bufnr: buf, highlight: 'manBold'})
+    prop_type_add('manUnderline', {bufnr: buf, highlight: 'manUnderline'})
+    prop_type_add('manItalic', {bufnr: buf, highlight: 'manItalic'})
 endif
-unlet! s:buf
+buf = 0
 
-if &filetype !=# 'man'
-    " May have been included by some other filetype.
+if &filetype != 'man'
+    # May have been included by some other filetype.
     finish
 endif
 
 if !exists('b:man_sect')
-    call man#initPager()
+    man#initPager()
 endif
 
-if b:man_sect =~# '^[023]'
+if b:man_sect =~ '^[023]'
   syn case match
   syn include @c $VIMRUNTIME/syntax/c.vim
   syn match manCFuncDefinition display '\<\h\w*\>\ze\(\s\|\n\)*(' contained
@@ -80,13 +82,13 @@ if b:man_sect =~# '^[023]'
 
   syn region manExample start='^EXAMPLES\=$' end='^\%(\S.*\)\=\S$' keepend contains=manLowerSentence,manSentence,manSectionHeading,manSubHeading,@c,manCFuncDefinition
 
-  " XXX: groupthere doesn't seem to work
+  # XXX: groupthere doesn't seem to work
   syn sync minlines=500
-  "syntax sync match manSyncExample groupthere manExample '^EXAMPLES\=$'
-  "syntax sync match manSyncExample groupthere NONE '^\%(EXAMPLES\=\)\@!\%(\S.*\)\=\S$'
+  #syntax sync match manSyncExample groupthere manExample '^EXAMPLES\=$'
+  #syntax sync match manSyncExample groupthere NONE '^\%(EXAMPLES\=\)\@!\%(\S.*\)\=\S$'
 endif
 
-" Prevent everything else from matching the last line
+# Prevent everything else from matching the last line
 exe 'syntax match manFooter display "^\%' .. line('$') .. 'l.*$"'
 
-let b:current_syntax = 'man'
+b:current_syntax = 'man'

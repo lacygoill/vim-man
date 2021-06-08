@@ -39,7 +39,7 @@ nno <space>o <cmd>call man#toc#show()<cr>
 #}}}
 com -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man
       \ if <bang>0
-      |     set ft=man
+      |     &filetype = 'man'
       | else
       |     man#excmd(<count>, <q-mods>, <f-args>)
       | endif

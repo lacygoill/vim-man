@@ -51,8 +51,8 @@ def man#toc#show() #{{{2
             CacheTocTerminal()
         endif
     endif
-    var statusline: number = (&ls == 2 || &ls == 1 && winnr('$') >= 2) ? 1 : 0
-    var tabline: number = (&stal == 2 || &stal == 1 && tabpagenr('$') >= 2) ? 1 : 0
+    var statusline: number = (&laststatus == 2 || &laststatus == 1 && winnr('$') >= 2) ? 1 : 0
+    var tabline: number = (&showtabline == 2 || &showtabline == 1 && tabpagenr('$') >= 2) ? 1 : 0
     var borders: number = 2 # top/bottom
     # Is `popup_menu()` ok with a list of dictionaries?{{{
     #
@@ -73,8 +73,8 @@ def man#toc#show() #{{{2
             # TODO: Will it look good in a window which is not maximized?
             # Should we replace `&lines` with `winheight(0)` and `&columns` with `winwidth(0)`?
             # Look at how we've computed the geometry of the popup in `fuzzyhelp.vim`.
-            minheight: &lines - (&ch + statusline + tabline + borders),
-            maxheight: &lines - (&ch + statusline + tabline + borders),
+            minheight: &lines - (&cmdheight + statusline + tabline + borders),
+            maxheight: &lines - (&cmdheight + statusline + tabline + borders),
             minwidth: &columns / 3,
             maxwidth: &columns / 3,
             filter: Filter,
@@ -232,7 +232,7 @@ def Highlight(id: number) #{{{2
         #
         # Indeed, this would work for the most part:
         #
-        #     win_execute(id, 'set syntax=man')
+        #     win_execute(id, '&syntax = "man"')
         #
         # But the highlighting would be still wrong on the first and last line.
         #}}}
