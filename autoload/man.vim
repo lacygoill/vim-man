@@ -233,7 +233,7 @@ def man#initPager() #{{{2
     &l:modifiable = true
 
     if getline(1) !~ '\S'
-        sil keepj :1d _
+        sil keepj :1 d _
     endif
     HighlightOnCursormoved()
     OpenFolds()
@@ -433,15 +433,15 @@ def PutPage(page: string) #{{{3
     &l:modifiable = true
     &l:readonly = false
     &l:swapfile = false
-    sil keepj :%d _
+    sil keepj :% d _
     page->split('\n')->setline(1)
     while getline(1) !~ '\S'
-        sil keepj :1d _
+        sil keepj :1 d _
     endwhile
     # XXX: nroff justifies text by filling it with whitespace.  That interacts
     # badly with our use of `$MANWIDTH=999`.  Hack around this by using a fixed
     # size for those whitespace regions.
-    sil! keepp keepj :%s/\s\{199,}/\=repeat(' ', 10)/g
+    sil! keepp keepj :% s/\s\{199,}/\=repeat(' ', 10)/g
     :1
     HighlightOnCursormoved()
     OpenFolds()
@@ -855,7 +855,7 @@ def HighlightOnCursormoved() #{{{3
     # escape  sequences, which  we  will  use to  determine  where  to put  text
     # properties.
     #}}}
-    sil keepj keepp :%s/.\b//ge
+    sil keepj keepp :% s/.\b//ge
     b:_seen = repeat([false], line('$'))
     augroup HighlightManpage
         au! * <buffer>
