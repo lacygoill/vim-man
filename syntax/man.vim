@@ -4,18 +4,18 @@ if exists('b:current_syntax')
     finish
 endif
 
-syn case  ignore
-syn match manReference      display '[^()[:space:]]\+([0-9nx][a-z]*)'
-syn match manSectionHeading display '^\S.*$'
-syn match manTitle          display '^\%1l.*$'
-syn match manSubHeading     display '^ \{3\}\S.*$'
-syn match manOptionDesc     display '^\s\+\%(+\|-\)\S\+'
+syntax case  ignore
+syntax match manReference      display '[^()[:space:]]\+([0-9nx][a-z]*)'
+syntax match manSectionHeading display '^\S.*$'
+syntax match manTitle          display '^\%1l.*$'
+syntax match manSubHeading     display '^ \{3\}\S.*$'
+syntax match manOptionDesc     display '^\s\+\%(+\|-\)\S\+'
 
-hi def link manTitle          Title
-hi def link manSectionHeading Statement
-hi def link manOptionDesc     Constant
-hi def link manReference      PreProc
-hi def link manSubHeading     Function
+highlight def link manTitle          Title
+highlight def link manSectionHeading Statement
+highlight def link manOptionDesc     Constant
+highlight def link manReference      PreProc
+highlight def link manSubHeading     Function
 
 # Don't move these highlight groups in the autoload script.{{{
 #
@@ -23,18 +23,18 @@ hi def link manSubHeading     Function
 # man page.
 #
 #     $ man man
-#     :colo default
+#     :colorscheme default
 #     " no highlighting for bold, italic, underline
 #     :Man tac
 #     " still no highlighting
 #
-# That's because a color scheme runs `:hi clear`.
+# That's because a color scheme runs `:highlight clear`.
 # When we  change the color  scheme, we need to  make sure that  these highlight
 # groups are re-installed.
 #}}}
-hi def manUnderline cterm=underline gui=underline
-hi def manBold      cterm=bold      gui=bold
-hi def manItalic    cterm=italic    gui=italic
+highlight def manUnderline cterm=underline gui=underline
+highlight def manBold      cterm=bold      gui=bold
+highlight def manItalic    cterm=italic    gui=italic
 # If you make these properties global, don't move them in the autload script.{{{
 #
 # It wouldn't work.
@@ -66,29 +66,29 @@ if !exists('b:man_sect')
 endif
 
 if b:man_sect =~ '^[023]'
-  syn case match
-  syn include @c $VIMRUNTIME/syntax/c.vim
-  syn match manCFuncDefinition display '\<\h\w*\>\ze\(\s\|\n\)*(' contained
-  syn match manLowerSentence /\n\s\{7}\l.\+[()]\=\%(\:\|.\|-\)[()]\=[{};]\@<!\n$/ display keepend contained contains=manReference
-  syn region manSentence start=/^\s\{7}\%(\u\|\*\)[^{}=]*/ end=/\n$/ end=/\ze\n\s\{3,7}#/ keepend contained contains=manReference
-  syn region manSynopsis start='^\%(
+  syntax case match
+  syntax include @c $VIMRUNTIME/syntax/c.vim
+  syntax match manCFuncDefinition display '\<\h\w*\>\ze\(\s\|\n\)*(' contained
+  syntax match manLowerSentence /\n\s\{7}\l.\+[()]\=\%(\:\|.\|-\)[()]\=[{};]\@<!\n$/ display keepend contained contains=manReference
+  syntax region manSentence start=/^\s\{7}\%(\u\|\*\)[^{}=]*/ end=/\n$/ end=/\ze\n\s\{3,7}#/ keepend contained contains=manReference
+  syntax region manSynopsis start='^\%(
         \SYNOPSIS\|
         \SYNTAX\|
         \SINTASSI\|
         \SKŁADNIA\|
         \СИНТАКСИС\|
         \書式\)$' end='^\%(\S.*\)\=\S$' keepend contains=manLowerSentence,manSentence,manSectionHeading,@c,manCFuncDefinition
-  hi def link manCFuncDefinition Function
+  highlight def link manCFuncDefinition Function
 
-  syn region manExample start='^EXAMPLES\=$' end='^\%(\S.*\)\=\S$' keepend contains=manLowerSentence,manSentence,manSectionHeading,manSubHeading,@c,manCFuncDefinition
+  syntax region manExample start='^EXAMPLES\=$' end='^\%(\S.*\)\=\S$' keepend contains=manLowerSentence,manSentence,manSectionHeading,manSubHeading,@c,manCFuncDefinition
 
   # XXX: groupthere doesn't seem to work
-  syn sync minlines=500
+  syntax sync minlines=500
   #syntax sync match manSyncExample groupthere manExample '^EXAMPLES\=$'
   #syntax sync match manSyncExample groupthere NONE '^\%(EXAMPLES\=\)\@!\%(\S.*\)\=\S$'
 endif
 
 # Prevent everything else from matching the last line
-exe 'syntax match manFooter display "^\%' .. line('$') .. 'l.*$"'
+execute 'syntax match manFooter display "^\%' .. line('$') .. 'l.*$"'
 
 b:current_syntax = 'man'

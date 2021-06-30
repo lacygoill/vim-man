@@ -112,9 +112,9 @@ def man#excmd( #{{{2
         &l:tagfunc = 'man#gotoTag'
         var target: string = name .. '(' .. sect .. ')'
         if mods !~ 'tab' && FindMan()
-            exe 'silent keepalt tag ' .. target
+            execute 'silent keepalt tag ' .. target
         else
-            exe 'silent keepalt ' .. mods .. ' stag ' .. target
+            execute 'silent keepalt ' .. mods .. ' stag ' .. target
         endif
     # E987: invalid return value from tagfunc
     # *raised when you ask for an unknown man page*
@@ -212,7 +212,7 @@ def man#gotoTag(pattern: string, _, _): list<dict<string>> #{{{2
         ->map((_, entry: dict<string>): dict<string> => ({
                   name: entry.name,
                   filename: 'man://' .. entry.title,
-                  cmd: 'keepj norm! 1G'
+                  cmd: 'keepjumps normal! 1G'
         }))
 enddef
 
@@ -227,13 +227,13 @@ enddef
 def man#initPager() #{{{2
     # clear message:  "-stdin-" 123L, 456B
     echo ''
-    au VimEnter * keepj norm! 1GzR
+    autocmd VimEnter * keepjumps normal! 1GzR
     # https://github.com/neovim/neovim/issues/6828
     var og_modifiable: bool = &modifiable
     &l:modifiable = true
 
     if getline(1) !~ '\S'
-        sil keepj :1 d _
+        silent keepjumps :1 delete _
     endif
     HighlightOnCursormoved()
     OpenFolds()
@@ -253,11 +253,11 @@ def man#initPager() #{{{2
     # Which can happen like this:
     #
     #     $ man man
-    #     :e /tmp/file.man
+    #     :edit /tmp/file.man
     #
     # And if  `ref` is  empty, we  need to  return to  prevent Vim  from wrongly
     # creating an undesirable (and unmodifiable) buffer.  That is, after
-    # `:e /tmp/file.man`, we want this buffer list:
+    # `:edit /tmp/file.man`, we want this buffer list:
     #
     #     ✔
     #     1 #h-  "man://man(1)"                 line 1
@@ -272,7 +272,7 @@ def man#initPager() #{{{2
     #
     # The latter is confusing, and creates other unexpected errors:
     #
-    #     :e #
+    #     :edit %%
     #
     #     E95: Buffer with this name already exists˜
     #}}}
@@ -281,7 +281,7 @@ def man#initPager() #{{{2
     # It would give another error:
     #
     #     $ man man
-    #     :e /tmp/file.man
+    #     :edit /tmp/file.man
     #
     #     E121: Undefined variable: b:man_sect˜
     #}}}
@@ -289,7 +289,7 @@ def man#initPager() #{{{2
         return
     endif
     if -1 == bufname('%')->match('man:\/\/')  # Avoid duplicate buffers, E95.
-        exe 'silent file man://' .. fnameescape(ref)->tolower()
+        execute 'silent file man://' .. fnameescape(ref)->tolower()
     endif
 
     &l:modifiable = og_modifiable
@@ -433,15 +433,15 @@ def PutPage(page: string) #{{{3
     &l:modifiable = true
     &l:readonly = false
     &l:swapfile = false
-    sil keepj :% d _
+    silent keepjumps :% delete _
     page->split('\n')->setline(1)
     while getline(1) !~ '\S'
-        sil keepj :1 d _
+        silent keepjumps :1 delete _
     endwhile
     # XXX: nroff justifies text by filling it with whitespace.  That interacts
     # badly with our use of `$MANWIDTH=999`.  Hack around this by using a fixed
     # size for those whitespace regions.
-    sil! keepp keepj :% s/\s\{199,}/\=repeat(' ', 10)/g
+    silent! keeppatterns keepjumps :% substitute/\s\{199,}/\=repeat(' ', 10)/g
     :1
     HighlightOnCursormoved()
     OpenFolds()
@@ -609,8 +609,8 @@ def HighlightWindow() #{{{3
     if b:_seen[lnum1 - 1 : lnum2 - 1]->index(false) == -1
         # if *all* the lines are already highlighted, nothing will *ever* need to be done
         if index(b:_seen, false) == -1
-            au! HighlightManpage
-            aug! HighlightManpage
+            autocmd! HighlightManpage
+            augroup! HighlightManpage
             unlet! b:_hls b:_lines b:_seen
         endif
         return
@@ -802,7 +802,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         elseif c == "\027"
             escape = true
             prev_char = ''
-        elseif c == "\b"
+        elseif c == "\<C-H>"
             overstrike = true
             prev_char = chars[-1]
             byte -= strlen(prev_char)
@@ -842,11 +842,11 @@ def HighlightOnCursormoved() #{{{3
     #
     #     $ vim -Nu NONE -S <(cat <<'EOF'
     #         let lines = [
-    #             \ "this w\bwo\bor\brd\bd is bold",
-    #             \ "this _\bw_\bor\b_d\b_ is underlined"
+    #             \ "this w\<C-H>wo\<C-H>or\<C-H>rd\<C-H>d is bold",
+    #             \ "this _\<C-H>w_\<C-H>or\<C-H>_d\<C-H>_ is underlined"
     #             \ ]
     #         call setline(1, lines)
-    #         so $VIMRUNTIME/syntax/ctrlh.vim
+    #         source $VIMRUNTIME/syntax/ctrlh.vim
     #     EOF
     #     )
     #
@@ -855,15 +855,15 @@ def HighlightOnCursormoved() #{{{3
     # escape  sequences, which  we  will  use to  determine  where  to put  text
     # properties.
     #}}}
-    sil keepj keepp :% s/.\b//ge
+    silent keepjumps keeppatterns :% substitute/.\b//ge
     b:_seen = repeat([false], line('$'))
     augroup HighlightManpage
-        au! * <buffer>
-        au CursorMoved <buffer> HighlightWindow()
+        autocmd! * <buffer>
+        autocmd CursorMoved <buffer> HighlightWindow()
         # for  when  we   type  a  pattern  on  the   search  command-line,  and
         # `'incsearch'` is set (causing the view to change)
         CHRef = function(ConditionalHighlight, [bufnr('%')])
-        au CmdlineChanged /,\? CHRef()
+        autocmd CmdlineChanged /,\? CHRef()
     augroup END
 enddef
 
@@ -973,7 +973,7 @@ enddef
 def Error(msg: string) #{{{2
     redraw
     echohl ErrorMsg
-    echom 'man.vim: ' .. msg
+    echomsg 'man.vim: ' .. msg
     echohl None
 enddef
 
@@ -1002,8 +1002,8 @@ def OpenFolds() #{{{2
     # The autocmd is necessary in case we jump to another man page with `C-]`.
     # Also when we come back with `C-t`.
     augroup ManAllFoldsOpenByDefault
-        au! * <buffer>
-        au BufWinEnter <buffer> &l:foldlevel = 1
+        autocmd! * <buffer>
+        autocmd BufWinEnter <buffer> &l:foldlevel = 1
     augroup END
 enddef
 #}}}1

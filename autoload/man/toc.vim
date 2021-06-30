@@ -56,7 +56,7 @@ def man#toc#show() #{{{2
     var borders: number = 2 # top/bottom
     # Is `popup_menu()` ok with a list of dictionaries?{{{
     #
-    # Yes, see `:h popup_create-arguments`.
+    # Yes, see `:help popup_create-arguments`.
     # Although, it expects dictionaries with the keys `text` and `props`.
     # But we use dictionaries with the keys `text` and `lnum`.
     # IOW, we abuse the feature which lets us use text properties in a popup.
@@ -223,7 +223,7 @@ def JumpToRelevantLine(id: number) #{{{2
     if firstline == 0
         return
     endif
-    win_execute(id, 'norm! ' .. firstline .. 'Gzz')
+    win_execute(id, 'normal! ' .. firstline .. 'Gzz')
 enddef
 
 def Highlight(id: number) #{{{2
@@ -250,7 +250,7 @@ def Highlight(id: number) #{{{2
         #
         # Which could be replaced with:
         #
-        #     au Syntax <buffer> ++once call s:setup_toc()
+        #     autocmd Syntax <buffer> ++once call s:setup_toc()
         #
         # When the qf filetype plugin is sourced, 'syntax' has not been set yet;
         # when it happens right after, the autocmd calls `s:setup_toc()`:
@@ -283,8 +283,8 @@ def Highlight(id: number) #{{{2
         #
         # About `<buffer>`:
         #
-        #     au Syntax <buffer> call s:setup_toc()
-        #               ^------^
+        #     autocmd Syntax <buffer> call s:setup_toc()
+        #                    ^------^
         #
         # It doesn't matter what a "regular"  pattern is matched against (here a
         # syntax name like "python" or "ruby").
@@ -303,8 +303,8 @@ def Highlight(id: number) #{{{2
 enddef
 
 def Filter(id: number, key: string): bool #{{{2
-    if index(['j', 'k', 'g', 'G', "\<c-d>", "\<c-u>"], key) >= 0
-        win_execute(id, 'norm! ' .. (key == 'g' ? 'gg' : key))
+    if index(['j', 'k', 'g', 'G', "\<C-D>", "\<C-U>"], key) >= 0
+        win_execute(id, 'normal! ' .. (key == 'g' ? 'gg' : key))
         SetTitle(id)
         return true
 
@@ -355,7 +355,7 @@ def Filter(id: number, key: string): bool #{{{2
         SetTitle(id)
 
         var pat: string = '^\V' .. escape(prevheading, '\') .. '\m$'
-        win_execute(id, [printf('search(%s)', string(pat)), 'norm! zz'])
+        win_execute(id, [printf('search(%s)', string(pat)), 'normal! zz'])
         return true
     endif
     return popup_filter_menu(id, key)
@@ -370,6 +370,6 @@ def Callback(id: number, choice: number) #{{{2
         return
     endif
     cursor(lnum, 1)
-    norm! zvzt
+    normal! zvzt
 enddef
 

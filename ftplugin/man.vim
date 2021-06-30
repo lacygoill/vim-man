@@ -45,10 +45,10 @@ endif
 
 # TODO: Install  a  mapping which  would  manually  or automatically  display  a
 # preview of the manpage reference under the cursor (use `p` for the lhs).
-nno <buffer><expr><nowait> q reg_recording() != '' ? 'q' : '<cmd>q<cr>'
-nno <buffer><nowait> <cr> <c-]>
-nno <buffer><nowait> ) <cmd>call man#jumpToRef()<cr>
-nno <buffer><nowait> ( <cmd>call man#jumpToRef(v:false)<cr>
+nnoremap <buffer><expr><nowait> q reg_recording() != '' ? 'q' : '<Cmd>quit<CR>'
+nnoremap <buffer><nowait> <CR> <C-]>
+nnoremap <buffer><nowait> ) <Cmd>call man#jumpToRef()<CR>
+nnoremap <buffer><nowait> ( <Cmd>call man#jumpToRef(v:false)<CR>
 
 &l:foldenable = true
 &l:foldmethod = 'expr'
