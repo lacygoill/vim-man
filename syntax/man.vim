@@ -24,9 +24,9 @@ highlight def link manSubHeading     Function
 #
 #     $ man man
 #     :colorscheme default
-#     " no highlighting for bold, italic, underline
+#     # no highlighting for bold, italic, underline
 #     :Man tac
-#     " still no highlighting
+#     # still no highlighting
 #
 # That's because a color scheme runs `:highlight clear`.
 # When we  change the color  scheme, we need to  make sure that  these highlight

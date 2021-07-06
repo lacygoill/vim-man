@@ -1,8 +1,5 @@
 vim9script noclear
 
-if exists('loaded') | finish | endif
-var loaded = true
-
 # TODO: Consolidate all `b:` variables into a single one big dictionary.
 
 # TODO: Add a `/` mapping  to type some filtering text and use  it to filter out
@@ -111,7 +108,7 @@ def CacheTocMarkdown() #{{{2
 
     var lastlnum: number = line('$')
     # prepend a marker (`C-a`) in front of lines underlined with `---`
-    lines->map((i: number, v: dict<any>): dict<any> =>
+    lines->map((i: number, v: dict<any>) =>
         i < lastlnum - 1
             && lines[i + 1]['text'] =~ '^-\+$'
             && v.text =~ '\S'
@@ -130,7 +127,7 @@ def CacheTocMarkdown() #{{{2
             && lines[i + 1]['text'] =~ pat2
             && v.text =~ '\S'
         # remove noise (`###`), and indent
-        )->map((_, v: dict<any>): dict<any> =>
+        )->map((_, v: dict<any>) =>
             extend(v, {
                         text: v.text
                             ->substitute(
@@ -155,7 +152,7 @@ def CacheTocHelp() #{{{2
     #     some sub-header
     #     ---------------
     var len: number = len(lines)
-    lines->map((i: number, v: dict<any>): dict<any> =>
+    lines->map((i: number, v: dict<any>) =>
                     i < len - 1
                         # there must be a tag at the end
                         && v.text =~ '\*$'
@@ -178,7 +175,7 @@ def CacheTocHelp() #{{{2
     b:_toc[b:_toc_foldlevel] = lines
         ->filter((_, v: dict<any>): bool => v.text =~ pat)
         # indent appropriately
-        ->map((_, v: dict<any>): dict<any> =>
+        ->map((_, v: dict<any>) =>
                 v.text =~ SUBHEADER1
                     .. '\|' .. SUBHEADER2
                     .. '\|' .. HEADLINE
@@ -187,7 +184,7 @@ def CacheTocHelp() #{{{2
                 ? extend(v, {text: '      ' .. v.text})
                 : v
         # remove noise
-        )->map((_, v: dict<any>): dict<any> =>
+        )->map((_, v: dict<any>) =>
                 extend(v, {text: v.text->substitute('\t.*\|[~\x01]$', '', '')}))
 enddef
 
@@ -242,7 +239,7 @@ def Highlight(id: number) #{{{2
         #
         # Besides, the qf filetype plugin installs this autocmd:
         #
-        #     " /usr/local/share/nvim/runtime/ftplugin/qf.vim
+        #     # /usr/local/share/nvim/runtime/ftplugin/qf.vim
         #     augroup QfToc
         #       autocmd!
         #       autocmd Syntax <buffer> call s:setup_toc()

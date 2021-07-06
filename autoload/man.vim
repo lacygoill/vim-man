@@ -1,8 +1,5 @@
 vim9script noclear
 
-if exists('loaded') | finish | endif
-var loaded = true
-
 var localfile_arg: bool = true  # Always use -l if possible. #6683
 
 # TODO:
@@ -209,7 +206,7 @@ def man#gotoTag(pattern: string, _, _): list<dict<string>> #{{{2
     endif
 
     return structured
-        ->map((_, entry: dict<string>): dict<string> => ({
+        ->map((_, entry: dict<string>) => ({
                   name: entry.name,
                   filename: 'man://' .. entry.title,
                   cmd: 'keepjumps normal! 1G'
@@ -295,10 +292,10 @@ def man#initPager() #{{{2
     &l:modifiable = og_modifiable
 enddef
 
-def man#jumpToRef(fwd = true) #{{{2
+def man#jumpToRef(is_fwd = true) #{{{2
     # regex used by the `manReference` syntax group
     var pat: string = '[^()[:space:]]\+([0-9nx][a-z]*)'
-    var flags: string = fwd ? 'W' : 'bW'
+    var flags: string = is_fwd ? 'W' : 'bW'
     search(pat, flags)
 enddef
 #}}}1
@@ -884,7 +881,7 @@ def Complete( #{{{3
     var pages: list<string> = GetPaths(sect, name, false)
     # We remove duplicates in case the same manpage in different languages was found.
     return pages
-        ->map((_, v: string): string => FormatCandidate(v, psect))
+        ->map((_, v: string) => FormatCandidate(v, psect))
         ->sort('i')
         ->uniq()
         # TODO: Instead of running  `filter()` just to remove  one empty string,{{{

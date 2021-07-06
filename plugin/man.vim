@@ -30,7 +30,7 @@ var loaded = true
 #         └── youtube-dl.1˜
 #}}}
 
-nnoremap <Space>o <Cmd>call man#toc#show()<CR>
+nnoremap <unique> <Space>o <Cmd>call man#toc#show()<CR>
 
 # For `-range=-1`, see:{{{
 #
