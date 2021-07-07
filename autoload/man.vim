@@ -192,7 +192,7 @@ def man#gotoTag(pattern: string, _, _): list<dict<string>> #{{{2
     var paths: list<string> = GetPaths(sect, name, true)
     var structured: list<dict<string>>
 
-    for path in paths
+    for path: string in paths
         [sect, name] = ExtractSectAndNamePath(path)
         structured += [{
             name: name,
@@ -616,7 +616,7 @@ def HighlightWindow() #{{{3
     var lines: list<string> = b:_lines[lnum1 - 1 : lnum2 - 1]
     var i: number = 0
     var lnum: number
-    for line in lines
+    for line: string in lines
         lnum = i + lnum1 - 1
         ++i
         if b:_seen[lnum]
@@ -626,7 +626,7 @@ def HighlightWindow() #{{{3
         b:_seen[lnum] = true
     endfor
 
-    for args in b:_hls
+    for args: list<any> in b:_hls
         prop_add(args[1] + 1, args[2] + 1, {
             length: args[3] - args[2],
             type: args[0]
@@ -655,7 +655,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
 
     def EndAttrHl(attr_: number)
         var i: number = 0
-        for highlight in highlights
+        for highlight: dict<number> in highlights
             if highlight.attr == attr_ && highlight.end == -1
                 highlight.end = byte
                 highlights[i] = highlight
@@ -693,7 +693,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
             highlights += [{attr: attr, start: byte, end: -1}]
         else
             if attr == NONE
-                for a_ in items(hl_groups)
+                for a_: list<any> in items(hl_groups)
                     EndAttrHl(a_[0])
                 endfor
             else
@@ -702,7 +702,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         endif
     enddef
 
-    for char in Gmatch(line, '[^\d128-\d191][\d128-\d191]*')
+    for char: string in Gmatch(line, '[^\d128-\d191][\d128-\d191]*')
         # Need to make a copy of `char`, because Vim automatically locks it, and
         # we might need to replace it during the loop (`c = '·'`).
         var c: string = char
@@ -810,7 +810,7 @@ def HighlightLine(line: string, linenr: number): string #{{{3
         endif
     endfor
 
-    for highlight in highlights
+    for highlight: dict<number> in highlights
         if highlight.attr != NONE
             b:_hls += [[
                 get(hl_groups, string(highlight.attr), ''),
