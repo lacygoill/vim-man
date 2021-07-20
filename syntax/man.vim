@@ -11,11 +11,11 @@ syntax match manTitle          display '^\%1l.*$'
 syntax match manSubHeading     display '^ \{3\}\S.*$'
 syntax match manOptionDesc     display '^\s\+\%(+\|-\)\S\+'
 
-highlight def link manTitle          Title
-highlight def link manSectionHeading Statement
-highlight def link manOptionDesc     Constant
-highlight def link manReference      PreProc
-highlight def link manSubHeading     Function
+highlight default link manTitle          Title
+highlight default link manSectionHeading Statement
+highlight default link manOptionDesc     Constant
+highlight default link manReference      PreProc
+highlight default link manSubHeading     Function
 
 # Don't move these highlight groups in the autoload script.{{{
 #
@@ -32,9 +32,9 @@ highlight def link manSubHeading     Function
 # When we  change the color  scheme, we need to  make sure that  these highlight
 # groups are re-installed.
 #}}}
-highlight def manUnderline cterm=underline gui=underline
-highlight def manBold      cterm=bold      gui=bold
-highlight def manItalic    cterm=italic    gui=italic
+highlight default manUnderline cterm=underline gui=underline
+highlight default manBold      cterm=bold      gui=bold
+highlight default manItalic    cterm=italic    gui=italic
 # If you make these properties global, don't move them in the autload script.{{{
 #
 # It wouldn't work.
@@ -78,7 +78,7 @@ if b:man_sect =~ '^[023]'
         \SKŁADNIA\|
         \СИНТАКСИС\|
         \書式\)$' end='^\%(\S.*\)\=\S$' keepend contains=manLowerSentence,manSentence,manSectionHeading,@c,manCFuncDefinition
-  highlight def link manCFuncDefinition Function
+  highlight default link manCFuncDefinition Function
 
   syntax region manExample start='^EXAMPLES\=$' end='^\%(\S.*\)\=\S$' keepend contains=manLowerSentence,manSentence,manSectionHeading,manSubHeading,@c,manCFuncDefinition
 
