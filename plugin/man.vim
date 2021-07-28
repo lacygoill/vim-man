@@ -37,12 +37,13 @@ nnoremap <unique> <Space>o <Cmd>call man#toc#show()<CR>
 # https://github.com/neovim/neovim/commit/ba2e94d223d6cf4bd2594f6f2b2bfeb2aaa29368
 # https://github.com/tpope/vim-scriptease/commit/d15112a77d0aa278f8ca88f07d53b018be79b585
 #}}}
-command -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man
-      \ if <bang>0
-      |     &filetype = 'man'
-      | else
-      |     man#excmd(<count>, <q-mods>, <f-args>)
-      | endif
+command -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man {
+    if <bang>0
+        &filetype = 'man'
+    else
+        man#excmd(<count>, <q-mods>, <f-args>)
+    endif
+}
 
 augroup man | autocmd!
     autocmd BufReadCmd man://* expand('<amatch>')->substitute('^man://', '', '')->man#shellcmd()
