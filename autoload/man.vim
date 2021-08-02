@@ -152,7 +152,7 @@ def man#complete( #{{{2
         # It will offer `priclass.d(1m)` even though section is specified as 1.
         var tmp: list<string> = split(arg_lead, '(')
         name = tmp[0]
-        sect = get(tmp, true, '')->tolower()
+        sect = get(tmp, 1, '')->tolower()
         return Complete(sect, '', name)
     elseif args[1] !~ '^[^()]\+$'
         # cursor (|) is at `:Man 3() |` or `:Man (3|` or `:Man 3() pri|`
