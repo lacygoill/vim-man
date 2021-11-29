@@ -61,11 +61,7 @@ if &filetype != 'man'
     finish
 endif
 
-if !exists('b:man_sect')
-    man#initPager()
-endif
-
-if b:man_sect =~ '^[023]'
+if get(b:, 'man_sect', '') =~ '^[023]'
   syntax case match
   syntax include @c $VIMRUNTIME/syntax/c.vim
   syntax match manCFuncDefinition display '\<\h\w*\>\ze\(\s\|\n\)*(' contained
@@ -89,6 +85,6 @@ if b:man_sect =~ '^[023]'
 endif
 
 # Prevent everything else from matching the last line
-execute 'syntax match manFooter display "^\%' .. line('$') .. 'l.*$"'
+syntax match manFooter display '^.*\%$'
 
 b:current_syntax = 'man'

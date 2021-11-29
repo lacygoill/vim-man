@@ -5,20 +5,6 @@ if exists('b:did_ftplugin') || &filetype != 'man'
 endif
 b:did_ftplugin = true
 
-var pager: bool = !exists('b:man_sect')
-
-if pager
-    man#initPager()
-endif
-
-&l:swapfile = false
-&l:buftype = 'nofile'
-&l:bufhidden = 'hide'
-
-&l:modified = false
-&l:readonly = true
-&l:modifiable = false
-
 &l:expandtab = false
 &l:tabstop = 8
 &l:softtabstop = 8
@@ -56,5 +42,5 @@ nnoremap <buffer><nowait> ( <Cmd>call man#jumpToRef(v:false)<CR>
 &l:foldtext = 'fold#foldtext#get()'
 &l:foldnestmax = 1
 
-# TODO: Set `b:undo_ftplugin` so that it removes all our options/mappings?
-b:undo_ftplugin = ''
+b:undo_ftplugin = 'execute'
+# TODO: Append commands to remove all our options/mappings?

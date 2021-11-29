@@ -20,35 +20,9 @@ var localfile_arg: bool = true  # Always use -l if possible. #6683
 # TODO: Implement `:Mangrep`:
 # https://github.com/vim-utils/vim-man#about-mangrep
 
-# TODO: When we run `:Man`, the name of the file in the statusline is inconsistent with `$ man`.{{{
-#
-# Example:
-#
-#     $ man man
-#     man(1)
-#     ^----^
-#       ✔
-#
-#     :Man man
-#     man.1
-#     ^---^
-#       ✘
-#
-#     $ man ls
-#     ls(1)
-#     ^---^
-#       ✔
-#
-#     :Man ls
-#     ls.1.gz
-#     ^-----^
-#        ✘
-#
-# The Neovim plugin has the same issue.
-#}}}
-
 # Interface {{{1
 def man#shellcmd(ref: string) #{{{2
+# Called when a man:// buffer is opened.
     var sect: string
     var name: string
     var page: string
@@ -113,6 +87,7 @@ def man#excmd( #{{{2
         else
             execute 'silent keepalt ' .. mods .. ' stag ' .. target
         endif
+        SetOptions(false)
     # E987: invalid return value from tagfunc
     # *raised when you ask for an unknown man page*
     catch /E987:/
@@ -218,10 +193,12 @@ def man#foldexpr(): string #{{{2
     || indent(v:lnum) == 3
         return '>1'
     endif
-    return '='
+    return '1'
 enddef
 
 def man#initPager() #{{{2
+# Called when Vim is invoked as $MANPAGER.
+
     # clear message:  "-stdin-" 123L, 456B
     echo ''
     autocmd VimEnter * keepjumps normal! 1GzR
@@ -289,6 +266,7 @@ def man#initPager() #{{{2
         execute 'silent file man://' .. fnameescape(ref)->tolower()
     endif
 
+    SetOptions(true)
     &l:modifiable = og_modifiable
 enddef
 
@@ -314,13 +292,13 @@ def ExtractSectAndNameRef(arg_ref: string): list<string> #{{{3
         if empty(name)
             throw 'manpage reference cannot contain only parentheses'
         endif
-        return ['', name]
+        return ['', SpacesToUnderscores(name)]
     endif
     var left: list<string> = split(ref, '(')
     # see `:Man 3X curses` on why `tolower()`.
     # TODO(nhooyr) Not sure if this is portable across OSs
     # but I have not seen a single uppercase section.
-    return [split(left[1], ')')[0]->tolower(), left[0]]
+    return [left[1]->split(')')[0]->tolower(), left[0]->SpacesToUnderscores()]
 enddef
 
 def ExtractSectAndNamePath(path: string): list<string> #{{{3
@@ -442,7 +420,7 @@ def PutPage(page: string) #{{{3
     :1
     HighlightOnCursormoved()
     OpenFolds()
-    &l:filetype = 'man'
+    SetOptions(false)
 enddef
 
 def Job_start(cmd: list<string>): string #{{{3
@@ -592,14 +570,27 @@ def JobHandler( #{{{3
         opts.exit_status = data
     endif
 enddef
+
+def SetOptions(pager: bool) #{{{3
+  &l:filetype = 'man'
+  &l:swapfile = false
+  &l:buftype = 'nofile'
+  &l:bufhidden = 'hide'
+  &l:modified = false
+  &l:readonly = true
+  &l:modifiable = false
+  if pager
+    nnoremap <buffer><nowait> q <Cmd>lclose<Bar>q<CR>
+  endif
+enddef
 #}}}2
 # Highlighting {{{2
 def HighlightWindow() #{{{3
     if !exists('b:_seen')
         return
     endif
-    var lnum1: number = max([1, line('.') - winheight(0)])
-    var lnum2: number = min([line('.') + winheight(0), line('$')])
+    var lnum1: number = [1, line('.') - winheight(0)]->max()
+    var lnum2: number = [line('.') + winheight(0), line('$')]->min()
     # if the *visible* lines are already highlighted, nothing needs to be done
     # TODO: Now  that Vim9  supports  `dict.key`, try  to  consolidate all  `b:`
     # variables into a single dictionary.  And use the prefix `man`.
@@ -635,7 +626,7 @@ def HighlightWindow() #{{{3
     b:_hls = []
 enddef
 
-def HighlightLine(line: string, linenr: number): string #{{{3
+def HighlightLine(line: string, linenr: number) #{{{
     var chars: list<string>
     var prev_char: string = ''
     var overstrike: bool = false
@@ -820,11 +811,12 @@ def HighlightLine(line: string, linenr: number): string #{{{3
             ]]
         endif
     endfor
-
-    return chars->join('')
 enddef
 
 def HighlightOnCursormoved() #{{{3
+# TODO: Investigate  whether  `prop_add_list()` could  let  us  install all  the
+# properties in a single step (instead of splitting them on each `CursorMoved`),
+# without getting worse performance.
     b:_hls = []
     b:_lines = getline(1, '$')
     # Remove backspaces used to display bold or underlined text.{{{
@@ -884,31 +876,6 @@ def Complete( #{{{3
         ->map((_, v: string) => FormatCandidate(v, psect))
         ->sort('i')
         ->uniq()
-        # TODO: Instead of running  `filter()` just to remove  one empty string,{{{
-        # refactor `FormatCandidate()` so that it returns a number (`0`):
-        #
-        #     if path =~ '\.\%(pdf\|in\)$' # invalid extensions
-        #         return ''
-        #     endif
-        #
-        #     ...
-        #
-        #     return ''
-        #
-        #     →
-        #
-        #     if path =~ '\.\%(pdf\|in\)$' # invalid extensions
-        #         return 0
-        #     endif
-        #
-        #     ...
-        #
-        #     return 0
-        #
-        # For this to work, you'll need  to change the return type from `string`
-        # to `any`.  Also, you'll need to report a crash, and wait for a fix.
-        #}}}
-        ->filter((_, v: string): bool => !empty(v))
 enddef
 
 def GetPaths( #{{{3
@@ -1002,6 +969,14 @@ def OpenFolds() #{{{2
         autocmd! * <buffer>
         autocmd BufWinEnter <buffer> &l:foldlevel = 1
     augroup END
+enddef
+
+def SpacesToUnderscores(str: string): string #{{{2
+# replace spaces in a man page name with underscores
+# intended for PostgreSQL, which has man pages like 'CREATE_TABLE(7)';
+# while editing SQL source code, it's nice to visually select 'CREATE TABLE'
+# and hit 'K', which requires this transformation
+  return substitute(str, ' ', '_', 'g')
 enddef
 #}}}1
 # Init {{{1
