@@ -29,7 +29,7 @@ const SUBSUBHEADER: string = '^[A-Z].*\~$'
 
 # Interface {{{1
 def man#toc#show() #{{{2
-    if index(['man', 'help', 'markdown'], &filetype) == -1
+    if ['man', 'help', 'markdown']->index(&filetype) == -1
         && !InTerminalBuffer()
         return
     endif
@@ -300,7 +300,7 @@ def Highlight(id: number) #{{{2
 enddef
 
 def Filter(id: number, key: string): bool #{{{2
-    if index(['j', 'k', 'g', 'G', "\<C-D>", "\<C-U>"], key) >= 0
+    if ['j', 'k', 'g', 'G', "\<C-D>", "\<C-U>"]->index(key) >= 0
         win_execute(id, 'normal! ' .. (key == 'g' ? 'gg' : key))
         SetTitle(id)
         return true

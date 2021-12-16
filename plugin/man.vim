@@ -3,6 +3,8 @@ vim9script noclear
 if exists('loaded') | finish | endif
 var loaded = true
 
+# TODO: We should be able to preview another referenced manpage in a popup window.
+
 # `:Man foo` doesn't work!{{{
 #
 #     :Man foo
@@ -29,7 +31,6 @@ var loaded = true
 #     └── man1˜
 #         └── youtube-dl.1˜
 #}}}
-
 nnoremap <unique> <Space>o <Cmd>call man#toc#show()<CR>
 
 # For `-range=-1`, see:

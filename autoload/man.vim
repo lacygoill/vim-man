@@ -107,7 +107,7 @@ def man#complete( #{{{2
 ): list<string>
 
     var args: list<string> = split(cmdline)
-    var cmd_offset: number = index(args, 'Man')
+    var cmd_offset: number = args->index('Man')
     if cmd_offset > 0
         # Prune all arguments up to :Man itself. Otherwise modifier commands like
         # :tab, :vertical, etc. would lead to a wrong length.
@@ -203,7 +203,7 @@ def man#initPager() #{{{2
     echo ''
     autocmd VimEnter * keepjumps normal! 1GzR
     # https://github.com/neovim/neovim/issues/6828
-    var og_modifiable: bool = &modifiable
+    var og_modifiable: bool = &l:modifiable
     &l:modifiable = true
 
     if getline(1) !~ '\S'
@@ -596,7 +596,7 @@ def HighlightWindow() #{{{3
     # variables into a single dictionary.  And use the prefix `man`.
     if b:_seen[lnum1 - 1 : lnum2 - 1]->index(false) == -1
         # if *all* the lines are already highlighted, nothing will *ever* need to be done
-        if index(b:_seen, false) == -1
+        if b:_seen->index(false) == -1
             autocmd! HighlightManpage
             augroup! HighlightManpage
             unlet! b:_hls b:_lines b:_seen
