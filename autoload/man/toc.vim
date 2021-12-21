@@ -369,4 +369,3 @@ def Callback(id: number, choice: number) #{{{2
     cursor(lnum, 1)
     normal! zvzt
 enddef
-
