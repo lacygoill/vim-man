@@ -31,7 +31,7 @@ var loaded = true
 #     └── man1˜
 #         └── youtube-dl.1˜
 #}}}
-nnoremap <unique> <Space>o <Cmd>call man#toc#show()<CR>
+nnoremap <unique> <Space>o <ScriptCmd>man#toc#show()<CR>
 
 # For `-range=-1`, see:
 # https://github.com/tpope/vim-scriptease/commit/d15112a77d0aa278f8ca88f07d53b018be79b585
@@ -44,6 +44,7 @@ command -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man {
 }
 cnoreabbrev <expr> man getcmdtype() == ':' && getcmdpos() == 4 ? 'Man' : 'man'
 
-augroup man | autocmd!
+augroup man
+    autocmd!
     autocmd BufReadCmd man://* expand('<amatch>')->substitute('^man://', '', '')->man#shellcmd()
 augroup END

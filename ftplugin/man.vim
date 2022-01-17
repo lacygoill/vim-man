@@ -28,10 +28,10 @@ b:did_ftplugin = true
 
 # TODO: Install  a  mapping which  would  manually  or automatically  display  a
 # preview of the manpage reference under the cursor (use `p` for the lhs).
-nnoremap <buffer><expr><nowait> q reg_recording() != '' ? 'q' : '<Cmd>quit<CR>'
+nnoremap <buffer><expr><nowait> q reg_recording() != '' ? 'q' : '<ScriptCmd>quit<CR>'
 nnoremap <buffer><nowait> <CR> <C-]>
-nnoremap <buffer><nowait> ) <Cmd>call man#jumpToRef()<CR>
-nnoremap <buffer><nowait> ( <Cmd>call man#jumpToRef(v:false)<CR>
+nnoremap <buffer><nowait> ) <ScriptCmd>man#jumpToRef()<CR>
+nnoremap <buffer><nowait> ( <ScriptCmd>man#jumpToRef(false)<CR>
 
 &l:foldcolumn = 0
 &l:foldenable = true

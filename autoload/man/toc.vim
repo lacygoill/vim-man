@@ -11,7 +11,8 @@ vim9script noclear
 
 # Init {{{1
 
-import InTerminalBuffer from 'lg.vim'
+import 'Lg.vim'
+const InTerminalBuffer: func = Lg.InTerminalBuffer
 
 # a few patterns for help files
 

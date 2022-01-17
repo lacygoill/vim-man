@@ -89,7 +89,7 @@ def man#excmd( #{{{2
         endif
         SetOptions(false)
     # E987: invalid return value from tagfunc
-    # *raised when you ask for an unknown man page*
+    # *given when you ask for an unknown man page*
     catch /E987:/
         Error(v:exception)
         return
@@ -512,6 +512,8 @@ def Job_start(cmd: list<string>): string #{{{3
 
     # FIXME: Sometimes, a man page is truncated when we use `:Man`.{{{
     #
+    #     $ vim +'Man ffmpeg-all | normal! G'
+    #
     # A few characters are missing from a  line, and the next few lines are also
     # missing.  No issue with `$ man`.
     #
@@ -580,7 +582,7 @@ def SetOptions(pager: bool) #{{{3
   &l:readonly = true
   &l:modifiable = false
   if pager
-    nnoremap <buffer><nowait> q <Cmd>lclose<Bar>q<CR>
+    nnoremap <buffer><nowait> q <ScriptCmd>lclose<Bar>q<CR>
   endif
 enddef
 #}}}2
@@ -829,7 +831,7 @@ def HighlightOnCursormoved() #{{{3
     #
     # There is a syntax script which can highlight such a text:
     #
-    #     $ vim -Nu NONE -S <(cat <<'EOF'
+    #     $ vim -Nu NONE -S <(tee <<'EOF'
     #         let lines = [
     #             \ "this w\<C-H>wo\<C-H>or\<C-H>rd\<C-H>d is bold",
     #             \ "this _\<C-H>w_\<C-H>or\<C-H>_d\<C-H>_ is underlined"
@@ -912,7 +914,6 @@ def GetPaths( #{{{3
             return []
         endtry
     endtry
-    return []
 enddef
 
 def FormatCandidate(path: string, psect: string): string #{{{3
