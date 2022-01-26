@@ -3,6 +3,9 @@ vim9script noclear
 if exists('loaded') | finish | endif
 var loaded = true
 
+import autoload 'man.vim'
+import autoload 'man/toc.vim'
+
 # TODO: We should be able to preview another referenced manpage in a popup window.
 
 # `:Man foo` doesn't work!{{{
@@ -31,20 +34,20 @@ var loaded = true
 #     └── man1˜
 #         └── youtube-dl.1˜
 #}}}
-nnoremap <unique> <Space>o <ScriptCmd>man#toc#show()<CR>
+nnoremap <unique> <Space>o <ScriptCmd>toc.Show()<CR>
 
 # For `-range=-1`, see:
 # https://github.com/tpope/vim-scriptease/commit/d15112a77d0aa278f8ca88f07d53b018be79b585
-command -bang -bar -range=-1 -complete=customlist,man#complete -nargs=* Man {
+command -bang -bar -range=-1 -complete=customlist,man.CmdComplete -nargs=* Man {
     if <bang>0
-        man#initPager()
+        man.InitPager()
     else
-        man#excmd(<count>, <q-mods>, <f-args>)
+        man.ExCmd(<count>, <q-mods>, <f-args>)
     endif
 }
 cnoreabbrev <expr> man getcmdtype() == ':' && getcmdpos() == 4 ? 'Man' : 'man'
 
 augroup man
     autocmd!
-    autocmd BufReadCmd man://* expand('<amatch>')->substitute('^man://', '', '')->man#shellcmd()
+    autocmd BufReadCmd man://* expand('<amatch>')->substitute('^man://', '', '')->man.ShellCmd()
 augroup END

@@ -21,7 +21,7 @@ var localfile_arg: bool = true  # Always use -l if possible. #6683
 # https://github.com/vim-utils/vim-man#about-mangrep
 
 # Interface {{{1
-def man#shellcmd(ref: string) #{{{2
+export def ShellCmd(ref: string) #{{{2
 # Called when a man:// buffer is opened.
     var sect: string
     var name: string
@@ -39,7 +39,7 @@ def man#shellcmd(ref: string) #{{{2
     PutPage(page)
 enddef
 
-def man#excmd( #{{{2
+export def ExCmd( #{{{2
     count: number,
     mods: string,
     ...fargs: list<string>
@@ -80,7 +80,7 @@ def man#excmd( #{{{2
     var buf: number = bufnr('%')
     var tagfunc_save: string = &l:tagfunc
     try
-        &l:tagfunc = 'man#gotoTag'
+        &l:tagfunc = 'GoToTag'
         var target: string = name .. '(' .. sect .. ')'
         if mods !~ 'tab' && FindMan()
             execute 'silent keepalt tag ' .. target
@@ -100,7 +100,7 @@ def man#excmd( #{{{2
     b:man_sect = sect
 enddef
 
-def man#complete( #{{{2
+export def CmdComplete( #{{{2
     arg_lead: string,
     cmdline: string,
     _
@@ -159,7 +159,7 @@ def man#complete( #{{{2
     return Complete(sect, sect, name)
 enddef
 
-def man#gotoTag(pattern: string, _, _): list<dict<string>> #{{{2
+export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
     var sect: string
     var name: string
     [sect, name] = ExtractSectAndNameRef(pattern)
@@ -188,7 +188,7 @@ def man#gotoTag(pattern: string, _, _): list<dict<string>> #{{{2
         }))
 enddef
 
-def man#foldexpr(): string #{{{2
+export def FoldExpr(): string #{{{2
     if indent(v:lnum) == 0 && getline(v:lnum) =~ '\S'
     || indent(v:lnum) == 3
         return '>1'
@@ -196,7 +196,7 @@ def man#foldexpr(): string #{{{2
     return '1'
 enddef
 
-def man#initPager() #{{{2
+export def InitPager() #{{{2
 # Called when Vim is invoked as $MANPAGER.
 
     # clear message:  "-stdin-" 123L, 456B
@@ -270,7 +270,7 @@ def man#initPager() #{{{2
     &l:modifiable = og_modifiable
 enddef
 
-def man#jumpToRef(is_fwd = true) #{{{2
+export def JumpToRef(is_fwd = true) #{{{2
     # regex used by the `manReference` syntax group
     var pat: string = '[^()[:space:]]\+([0-9nx][a-z]*)'
     var flags: string = is_fwd ? 'W' : 'bW'

@@ -11,8 +11,7 @@ vim9script noclear
 
 # Init {{{1
 
-import 'Lg.vim'
-const InTerminalBuffer: func = Lg.InTerminalBuffer
+import 'lg.vim'
 
 # a few patterns for help files
 
@@ -29,9 +28,9 @@ const SUBHEADER2: string = '\%x01$'
 const SUBSUBHEADER: string = '^[A-Z].*\~$'
 
 # Interface {{{1
-def man#toc#show() #{{{2
+export def Show() #{{{2
     if ['man', 'help', 'markdown']->index(&filetype) == -1
-        && !InTerminalBuffer()
+        && !lg.InTerminalBuffer()
         return
     endif
     if !exists('b:_toc')

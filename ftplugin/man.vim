@@ -5,6 +5,8 @@ if exists('b:did_ftplugin') || &filetype != 'man'
 endif
 b:did_ftplugin = true
 
+import autoload 'man.vim'
+
 &l:expandtab = false
 &l:shiftwidth = 8
 &l:softtabstop = 8
@@ -24,26 +26,26 @@ b:did_ftplugin = true
 &l:number = false
 &l:relativenumber = false
 
-&l:tagfunc = 'man#gotoTag'
+&l:tagfunc = 'man.GoToTag'
 
 # TODO: Install  a  mapping which  would  manually  or automatically  display  a
 # preview of the manpage reference under the cursor (use `p` for the lhs).
 nnoremap <buffer><expr><nowait> q reg_recording() != '' ? 'q' : '<ScriptCmd>quit<CR>'
 nnoremap <buffer><nowait> <CR> <C-]>
-nnoremap <buffer><nowait> ) <ScriptCmd>man#jumpToRef()<CR>
-nnoremap <buffer><nowait> ( <ScriptCmd>man#jumpToRef(false)<CR>
+nnoremap <buffer><nowait> ) <ScriptCmd>man.JumpToRef()<CR>
+nnoremap <buffer><nowait> ( <ScriptCmd>man.JumpToRef(false)<CR>
 
 &l:foldcolumn = 0
 &l:foldenable = true
-&l:foldexpr = 'man#foldexpr()'
+&l:foldexpr = 'man.FoldExpr()'
 &l:foldmethod = 'expr'
 &l:foldnestmax = 1
-&l:foldtext = 'fold#foldtext#get()'
+&l:foldtext = 'getline(v:foldstart)'
 
 # If we press `u` by accident, we don't want to get back the deleted control characters.
 # `:help clear-undo`
 # TODO: Resetting `'modifiable'` would  be simpler, but it  doesn't work because
-# this script  is sourced  in the  middle of  `man#initPager()`, and  the latter
+# this script  is sourced  in the  middle of  `man.InitPager()`, and  the latter
 # saves/restores `'modifiable'`.  BTW,  the whole way this option  is handled by
 # the autoload script looks confusing.  Anyway, find a way to reset it.
 # Alternatively, consider asking for a `:clearundo` command (or function?).
