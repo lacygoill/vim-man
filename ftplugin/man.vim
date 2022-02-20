@@ -1,4 +1,4 @@
-vim9script
+vim9script noclear
 
 if exists('b:did_ftplugin') || &filetype != 'man'
     finish
@@ -40,7 +40,7 @@ nnoremap <buffer><nowait> ( <ScriptCmd>man.JumpToRef(false)<CR>
 &l:foldexpr = 'man.FoldExpr()'
 &l:foldmethod = 'expr'
 &l:foldnestmax = 1
-&l:foldtext = 'getline(v:foldstart)'
+&l:foldtext = 'man.FoldTitle()'
 
 # If we press `u` by accident, we don't want to get back the deleted control characters.
 # `:help clear-undo`

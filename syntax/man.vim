@@ -1,4 +1,4 @@
-vim9script
+vim9script noclear
 
 if exists('b:current_syntax')
     finish
@@ -19,18 +19,14 @@ highlight default link manSubHeading     Function
 
 # Don't move these highlight groups in the autoload script.{{{
 #
-# You would lose the highlighting when changing the color scheme while reading a
-# man page.
+# `manBold`, `manItalic`, `manUnderline` might be cleared when a color scheme is
+# set.  That's because a color scheme can run `:highlight clear`.
+# Note that the `default` argument does not help here; `:highlight clear` resets
+# all highlight groups  to their default attributes.  And by  default, an ad-hoc
+# group like `manBold` has no attributes; thus, it's cleared:
 #
-#     $ man man
-#     :colorscheme default
-#     # no highlighting for bold, italic, underline
-#     :Man tac
-#     # still no highlighting
-#
-# That's because a color scheme runs `:highlight clear`.
-# When we  change the color  scheme, we need to  make sure that  these highlight
-# groups are re-installed.
+#     $ vim -Nu NONE +'highlight default MyGroup cterm=bold | highlight clear | highlight MyGroup'
+#     MyGroup        xxx cleared
 #}}}
 highlight default manUnderline cterm=underline gui=underline
 highlight default manBold      cterm=bold      gui=bold
@@ -39,7 +35,7 @@ highlight default manItalic    cterm=italic    gui=italic
 #
 # It wouldn't work.
 # When the autoload  script would be sourced, the highlight  groups on which the
-# properties rely on would not be installed yet.  You would get get errors:
+# properties rely on would not be installed yet.  You would get errors:
 #
 #     E970: Unknown highlight group name: 'manBold'
 #     E970: Unknown highlight group name: 'manUnderline'

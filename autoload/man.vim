@@ -196,6 +196,18 @@ export def FoldExpr(): string #{{{2
     return '1'
 enddef
 
+export def FoldTitle(): string #{{{2
+  var title: string = getline(v:foldstart)
+  var indent: string = title->matchstr('^\s*')
+  if get(b:, 'foldtitle_full', false)
+      var foldsize: number = v:foldend - v:foldstart
+      var linecount: string = '[' .. foldsize .. ']' .. repeat(' ', 4 - len(foldsize))
+      return indent .. (foldsize > 1 ? linecount : '') .. title
+  else
+      return indent .. title
+  endif
+enddef
+
 export def InitPager() #{{{2
 # Called when Vim is invoked as $MANPAGER.
 
@@ -316,7 +328,7 @@ def ExtractSectAndNamePath(path: string): list<string> #{{{3
     return [sect, name]
 enddef
 
-def VerifyExists(arg_sect: string, name: string): string #{{{3
+def VerifyExists(sect: string, name: string): string #{{{3
 # VerifyExists attempts to find the path to a manpage
 # based on the passed section and name.
 #
@@ -330,57 +342,116 @@ def VerifyExists(arg_sect: string, name: string): string #{{{3
 # This function is careful to avoid duplicating a search if a previous
 # step has already done it. i.e if we use b:man_default_sects in step 1,
 # then we don't do it again in step 2.
-    var sect: string = arg_sect
-    if empty(sect)
-        sect = get(b:, 'man_default_sects', '')
+    if sect->empty()
+        # no section specified, so search with b:man_default_sects
+        if exists('b:man_default_sects')
+            var sects: list<string> = b:man_default_sects->split(',')
+            for sec: string in sects
+                try
+                    var res: string = GetPath(sec, name)
+                    if !res->empty()
+                        return res
+                    endif
+                catch /^command error (/
+                endtry
+            endfor
+        endif
+    else
+        # try with specified section
+        try
+            var res: string = GetPath(sect, name)
+            if !res->empty()
+                return res
+            endif
+        catch /^command error (/
+        endtry
+        # try again with b:man_default_sects
+        if exists('b:man_default_sects')
+            var sects: list<string> = b:man_default_sects->split(',')
+            for sec: string in sects
+                try
+                    var res: string = GetPath(sec, name)
+                    if !res->empty()
+                        return res
+                    endif
+                catch /^command error (/
+                endtry
+            endfor
+        endif
     endif
+
+    # if none of the above worked, we will try with no section
     try
-        return GetPath(sect, name)
+        var res: string = GetPath('', name)
+        if !res->empty()
+            return res
+        endif
     catch /^command error (/
     endtry
-    if !get(b:, 'man_default_sects', '')->empty()
-        && sect != b:man_default_sects
-        try
-            return GetPath(b:man_default_sects, name)
-        catch /^command error (/
-        endtry
-    endif
-    if !empty(sect)
-        try
-            return GetPath('', name)
-        catch /^command error (/
-        endtry
-    endif
+
+    # if that still didn't work, we will check for $MANSECT and try again with it
+    # unset
     if !empty($MANSECT)
         var MANSECT: string
         try
             MANSECT = $MANSECT
             setenv('MANSECT', null)
-            return GetPath('', name)
+            var res: string = GetPath('', name)
+            if !res->empty()
+                return res
+            endif
         catch /^command error (/
         finally
             setenv('MANSECT', MANSECT)
         endtry
     endif
+
+    # finally, if that didn't work, there is no hope
     throw 'No manual entry for ' .. name
     return ''
 enddef
 
 def GetPath(sect: string, name: string): string #{{{3
 # Some man  implementations (OpenBSD)  return all  available paths  from the
-# search command, so we `get()` the first one. #8341
+# search command. Previously, this function would simply select the first one.
+#
+# However, some searches  will report matches that are incorrect:  man -w strlen
+# may return  string.3 followed by  strlen.3, and therefore selecting  the first
+# would get us the wrong page.  Thus, we must find the first matching one.
+#
+# There's yet  another special case here.   Consider the following:  If  you run
+# man -w  strlen and  string.3 comes  up first,  this is  a problem.   We should
+# search for a matching  named one in the results list.   However, if you search
+# for man  -w clock_gettime, you  will *only*  get clock_getres.2, which  is the
+# right page.  Searching  the resuls for clock_gettime will no  longer work.  In
+# this case,  we should just  use the  first one that  was found in  the correct
+# section.
+#
+# Finally,  we  can  avoid  relying  on  -S or  -s  here  since  they  are  very
+# inconsistently supported.  Instead, call -w with a section and a name.
 
-    # `-S` flag handles:{{{
-    #
-    #   - tokens like `printf(echo)`
-    #   - sections starting with `-`
-    #   - 3pcap section (found on macOS)
-    #   - commas between sections (for section priority)
-    #}}}
-    return Job_start(empty(sect) ? ['man', '-w', name] : ['man', '-w', '-S', sect, name])
+    var results: list<string> = ['man', '-w', sect, name]
+        ->Job_start()
         ->split()
-        ->get(0, '')
-        ->substitute('\n\+$', '', '')
+    if results->empty()
+        return ''
+    endif
+
+    # find any that match the specified name
+    var namematches: list<string> = results
+      ->copy()
+      ->filter((_, v: string): bool => v->fnamemodify(':t') =~ name)
+    var sectmatches: list<string>
+
+    if !namematches->empty() && !sect->empty()
+      sectmatches = namematches
+        ->copy()
+        ->filter((_, v: string): bool => fnamemodify(v, ':e') == sect)
+    endif
+
+    return sectmatches
+      ->get(0, namematches->get(0, results[0]))
+      ->substitute('\n\+$', '', '')
 enddef
 
 def GetPage(path: string): string #{{{3
@@ -425,20 +496,23 @@ enddef
 
 def Job_start(cmd: list<string>): string #{{{3
 # Run a shell command asynchronously; timeout after 30 seconds.
-    var opts: dict<any> = {
+    var cb_opts: dict<any> = {
         stdout: '',
         stderr: '',
         exit_status: 0,
     }
 
-    var job: job = job_start(cmd, {
-        out_cb: function(JobHandler, [opts, 'stdout']),
-        err_cb: function(JobHandler, [opts, 'stderr']),
-        # TODO: Should we use `close_cb` instead?
-        # https://vi.stackexchange.com/questions/27963/why-would-job-starts-close-cb-sometimes-not-be-called
-        exit_cb: function(JobHandler, [opts, 'exit']),
-        mode: 'raw',
-        noblock: true,
+    var job: job = cmd
+        ->filter((_, v: string): bool => v != '')
+        ->job_start({
+            out_cb: function(JobHandler, [cb_opts, 'stdout']),
+            err_cb: function(JobHandler, [cb_opts, 'stderr']),
+            # TODO: Should we use `close_cb` instead?
+            # https://vi.stackexchange.com/questions/27963/why-would-job-starts-close-cb-sometimes-not-be-called
+            exit_cb: function(JobHandler, [cb_opts, 'exit']),
+            in_io: 'null',
+            mode: 'raw',
+            noblock: true,
     })
 
     if job_status(job) !=? 'run'
@@ -478,7 +552,7 @@ def Job_start(cmd: list<string>): string #{{{3
         throw printf('job interrupted (PID %d): %s', job_info(job).process, join(cmd))
     endif
     # if you ask for an unknown man page, the job will exit with the status `16`
-    if opts.exit_status != 0
+    if cb_opts.exit_status != 0
         # Do *not* change anything in the text!{{{
         #
         # If you really want to, make sure that the new message is still matched
@@ -492,7 +566,7 @@ def Job_start(cmd: list<string>): string #{{{3
         #
         # Otherwise, when  you ask  for an  unknown man page,  you'll get  a too
         # noisy error message.
-        # For example,  if you replace "command"  with "job", and you  run `:Man
+        # For example,  if you replace `command`  with `job`, and you  run `:Man
         # unknown`, you'll get this error message:
         #
         #     man.vim: job error (PID 1826) man -w unknown: No manual entry for unknown
@@ -507,7 +581,7 @@ def Job_start(cmd: list<string>): string #{{{3
         throw printf('command error (PID %d) %s: %s',
                 job_info(job).process,
                 join(cmd),
-                opts.stderr->substitute('\_s\+$', '', ''))
+                cb_opts.stderr->substitute('\_s\+$', '', ''))
     endif
 
     # FIXME: Sometimes, a man page is truncated when we use `:Man`.{{{
@@ -553,7 +627,7 @@ def Job_start(cmd: list<string>): string #{{{3
     if cmd[0] == 'env'
         sleep 1m
     endif
-    return opts.stdout
+    return cb_opts.stdout
 enddef
 
 def JobHandler( #{{{3
@@ -620,7 +694,9 @@ def HighlightWindow() #{{{3
     endfor
 
     for args: list<any> in b:_hls
-        prop_add(args[1] + 1, args[2] + 1, {
+        # `silent!` to suppress `E971` if syntax highlighting is not enabled:
+        #     E971: Property type manBold does not exist
+        silent! prop_add(args[1] + 1, args[2] + 1, {
             length: args[3] - args[2],
             type: args[0]
         })
@@ -711,14 +787,14 @@ def HighlightLine(line: string, linenr: number) #{{{
                     attr = BOLD
                 endif
             elseif prev_char == '_'
-                # FIXME: In the `zshcontrib(1)` man page, look for "prompt_theme_setup".{{{
+                # FIXME: In the `zshcontrib(1)` man page, look for “prompt_theme_setup”.{{{
                 #
                 # Notice how `_theme_` is wrongly underlined.
                 #
                 # ---
                 #
-                # Move down a little until you find the "Writing Themes" SubHeading.
-                # A lot of words are wrongly underlined after "prompt_name_setup".
+                # Move down a little until you find the “Writing Themes” SubHeading.
+                # A lot of words are wrongly underlined after “prompt_name_setup”.
                 #
                 # ---
                 #
@@ -731,12 +807,12 @@ def HighlightLine(line: string, linenr: number) #{{{
                 #     /usr/local/share/man/man1/zshcontrib.1
                 #
                 # I think there are 2 issues.
-                # First, in  "prompt_theme_setup", "theme" should  be underlined
+                # First, in  “prompt_theme_setup”, “theme” should  be underlined
                 # (or italic?), *and* bold.  IOW, the current logic is unable to
-                # combine attributes.  Same thing with "prompt_name_setup".
+                # combine attributes.  Same thing with “prompt_name_setup”.
                 #
                 # Second, because  of the  first issue (I  guess...), everything
-                # after "prompt_name_setup" is wrongly underlined.
+                # after “prompt_name_setup” is wrongly underlined.
                 #}}}
                 # char is underlined
                 attr = UNDERLINE

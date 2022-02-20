@@ -93,7 +93,7 @@ def CacheTocMan() #{{{2
     # This can only be perceived in big man pages like ffmpeg-all.
     #}}}
     var lines: list<dict<any>> = getline(2, line('$') - 1)
-        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 2, text: v}))
+        ->map((i: number, v: string): dict<any> => ({lnum: i + 2, text: v}))
 
     if b:_toc_foldlevel == 0
         b:_toc['0'] = lines->filter((_, v: dict<any>): bool => v.text =~ '^\S')
@@ -104,7 +104,7 @@ enddef
 
 def CacheTocMarkdown() #{{{2
     var lines: list<dict<any>> = getline(1, '$')
-        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
+        ->map((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
 
     var lastlnum: number = line('$')
     # prepend a marker (`C-a`) in front of lines underlined with `---`
@@ -145,7 +145,7 @@ enddef
 
 def CacheTocHelp() #{{{2
     var lines: list<dict<any>> = getline(1, '$')
-        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
+        ->map((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
 
     # append a marker on underlined sub-headers
     #
@@ -194,7 +194,7 @@ def CacheTocTerminal() #{{{2
 # command executed so far as an entry.
 
     b:_toc[b:_toc_foldlevel] = getline(1, '$')
-        ->mapnew((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
+        ->map((i: number, v: string): dict<any> => ({lnum: i + 1, text: v}))
         ->filter((_, v: dict<any>): bool => v.text =~ '^٪')
 enddef
 
@@ -283,8 +283,8 @@ def Highlight(id: number) #{{{2
         #     autocmd Syntax <buffer> call s:setup_toc()
         #                    ^------^
         #
-        # It doesn't matter what a "regular"  pattern is matched against (here a
-        # syntax name like "python" or "ruby").
+        # It  doesn't matter  what a  “regular” pattern  is matched  against
+        # (here a syntax name like `python` or `ruby`).
         # `<buffer>` is always matched against a buffer number, and matches only
         # if that number is  the one of the current buffer  (here, the one where
         # the 'syntax' option has just been set, triggering the Syntax event).
