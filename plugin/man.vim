@@ -3,8 +3,8 @@ vim9script noclear
 if exists('loaded') | finish | endif
 var loaded = true
 
-import autoload 'man.vim'
-import autoload 'man/toc.vim'
+import autoload '../autoload/man.vim'
+import autoload '../autoload/man/toc.vim'
 
 # TODO: We should be able to preview another referenced manpage in a popup window.
 
