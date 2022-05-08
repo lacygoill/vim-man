@@ -1,5 +1,7 @@
 vim9script noclear
 
+var MANPAGES_TO_GREP: dict<list<string>>
+
 var localfile_arg: bool = true  # Always use -l if possible. #6683
 
 # TODO:
@@ -288,6 +290,110 @@ export def JumpToRef(is_fwd = true) #{{{2
     var flags: string = is_fwd ? 'W' : 'bW'
     search(pat, flags)
 enddef
+
+export def Grep(args: string) #{{{2
+  if args == '' || args =~ '^\%(--help\|-h\)\>'
+     var help: list<string> =<< trim END
+       # look for pattern "foo" in all manpages using current filetype as topic
+       :ManGrep foo
+       # look for pattern "foo" in all manpages using "bar" as topic
+       :ManGrep --apropos=bar foo
+     END
+     for line: string in help
+       var hg: string = line =~ '^:' ? 'Statement' : 'Comment'
+       execute 'echohl ' .. hg
+       echo line
+       echohl NONE
+     endfor
+     return
+  endif
+
+  var topic: string = args->matchstr('^--apropos=\zs\S*') ?? &filetype
+  var pattern: string = args->substitute('^--apropos=\S*\s*', '', '')
+  if topic == ''
+    echo 'missing topic'
+    return
+  elseif pattern == ''
+    echo 'missing pattern'
+    return
+  endif
+
+  if !MANPAGES_TO_GREP->has_key(topic)
+    if topic == 'fish'
+      silent var fish_mandir: string = system("fish -c 'echo $__fish_data_dir'")
+        ->trim() .. '/man/man1'
+      MANPAGES_TO_GREP.fish = fish_mandir
+        ->readdir()
+        ->map((_, v: string) => 'man://' .. v .. '(1)')
+        ->filter((_, v: string): bool => v !~ '\<fish-\%(doc\|releasenotes\)\>')
+
+    # For  every config  file at  the root  of `/etc/systemd/`,  there exists  a
+    # dedicated manpage.   We don't  need to grep  *all* systemd  manpages; just
+    # this one.
+    elseif topic == 'systemd' && expand('%:p') =~ '^/etc/systemd/.*\.conf$'
+      topic = 'systemd-' .. expand('%:p:t')
+      silent system('man --where ' .. topic)
+      # These manpages follow an inconsistent naming scheme:{{{
+      #
+      #     # sometimes, they're prefixed with `systemd-`
+      #     /etc/systemd/system.conf   → systemd-system.conf
+      #     /etc/systemd/sleep.conf    → systemd-sleep.conf
+      #
+      #     # sometimes not
+      #     /etc/systemd/journald.conf → journald.conf
+      #     /etc/systemd/logind.conf   → logind.conf
+      #
+      # I guess  the `systemd-` prefix  is only used  when necessary to  avoid a
+      # clash with another manpage.
+      #}}}
+       if v:shell_error != 0
+           topic = topic->substitute('systemd-', '', '')
+       endif
+       MANPAGES_TO_GREP[topic] = ['man://' .. topic]
+
+    else
+      silent var lines: list<string> = systemlist('man --apropos ' .. topic)
+      if v:shell_error != 0
+        echo lines->join("\n")
+        return
+      endif
+      # Why `300`?{{{
+      #
+      #     # for the "systemd" topic
+      #     $ man --apropos systemd | wc --lines
+      #     203
+      #     ^^^
+      #
+      # Let's round that number to the nearest multiple of a hundred.
+      #}}}
+      if lines->len() > 300
+        echo 'too many manpages match the topic: ' .. topic
+        return
+      endif
+      MANPAGES_TO_GREP[topic] = lines
+        ->map((_, line: string) => line
+                ->matchstr('[^(]*([^)]*)')
+                ->substitute(' ', '', '')
+                ->substitute('^', 'man://', ''))
+    endif
+  endif
+  if MANPAGES_TO_GREP[topic]->empty()
+    return
+  endif
+
+  try
+    execute 'vimgrep /' .. pattern .. '/gj ' .. MANPAGES_TO_GREP[topic]->join()
+  # E480: No match: ...
+  catch /^Vim\%((\a\+)\)\=:E480:/
+    echohl ErrorMsg
+    echomsg v:exception
+    echohl NONE
+  endtry
+enddef
+
+export def GrepComplete(..._): string #{{{2
+  return ['-h', '--help', '--apropos=']->join("\n")
+enddef
 #}}}1
 # Core {{{1
 # Main {{{2
@@ -464,14 +570,13 @@ def GetPage(path: string): string #{{{3
     # Force `MANPAGER=cat` to ensure Vim is not recursively invoked (by `man-db`).
     # http://comments.gmane.org/gmane.editors.vim.devel/29085
     # Set `MAN_KEEP_FORMATTING` so that Debian's `man(1)` doesn't discard backspaces.
-    var cmd: list<string> =<< trim END
+    var cmd: list<string> =<< trim eval END
         env
         MANPAGER=cat
-        MANWIDTH=%d
+        MANWIDTH={manwidth}
         MAN_KEEP_FORMATTING=1
         man
     END
-    cmd[2] = cmd[2]->substitute('%d', manwidth, '')
     return Job_start(cmd + (localfile_arg ? ['-l', path] : [path]))
 enddef
 
