@@ -4,9 +4,6 @@ if exists('loaded') | finish | endif
 var loaded = true
 
 import autoload '../autoload/man.vim'
-import autoload '../autoload/man/toc.vim'
-
-# TODO: We should be able to preview another referenced manpage in a popup window.
 
 # `:Man foo` doesn't work!{{{
 #
@@ -34,7 +31,6 @@ import autoload '../autoload/man/toc.vim'
 #     └── man1˜
 #         └── youtube-dl.1˜
 #}}}
-nnoremap <unique> <Space>o <ScriptCmd>toc.Show()<CR>
 
 # For `-range=-1`, see:
 # https://github.com/tpope/vim-scriptease/commit/d15112a77d0aa278f8ca88f07d53b018be79b585

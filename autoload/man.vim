@@ -4,20 +4,11 @@ var MANPAGES_TO_GREP: dict<list<string>>
 
 var localfile_arg: bool = true  # Always use -l if possible. #6683
 
-# TODO:
-#
-# `p` could be used to preview a reference to another manpage in a popup window.
+# TODO: `p` could be used to preview a reference to another manpage in a popup window.
 # `]r` and `]o` could be used to jump to the next reference or option.
 
 # TODO: Implement an ad-hoc annotations feature?
 # They could be saved persistently in files, and displayed via popup windows.
-
-# TODO:  Assimilate the plugin; i.e. understand it, simplify it, ...
-
-# TODO: Read all the todos/fixmes in our old implementation.
-# Check whether some of them are still relevant in the new implementation.
-# Also, check  whether we've lost some  code/feature, which we should  copy from
-# the old code.
 
 # TODO: Implement `:Mangrep`:
 # https://github.com/vim-utils/vim-man#about-mangrep
@@ -63,7 +54,7 @@ export def ExCmd( #{{{2
         # verification/extraction can be kept in a single function.
         # If `farg[1]` is  a reference as well,  that is fine because  it is the
         # only reference that will match.
-        ref = fargs[1] .. '(' .. fargs[0] .. ')'
+        ref = $'{fargs[1]}({fargs[0]})'
     endif
     var sect: string
     var name: string
@@ -83,11 +74,11 @@ export def ExCmd( #{{{2
     var tagfunc_save: string = &l:tagfunc
     try
         &l:tagfunc = 'GoToTag'
-        var target: string = name .. '(' .. sect .. ')'
+        var target: string = $'{name}({sect})'
         if mods !~ 'tab' && FindMan()
-            execute 'silent keepalt tag ' .. target
+            execute $'silent keepalt tag {target}'
         else
-            execute 'silent keepalt ' .. mods .. ' stag ' .. target
+            execute $'silent keepalt {mods} stag {target}'
         endif
         SetOptions(false)
     # E987: invalid return value from tagfunc
@@ -145,7 +136,7 @@ export def CmdComplete( #{{{2
             if arg_lead =~ '\/'
                 # if the name is a path, complete files
                 # TODO(nhooyr) why does this complete the last one automatically
-                return glob(arg_lead .. '*', false, true)
+                return glob($'{arg_lead}*', false, true)
             endif
             name = arg_lead
             sect = ''
@@ -173,7 +164,7 @@ export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
         [sect, name] = ExtractSectAndNamePath(path)
         structured += [{
             name: name,
-            title: name .. '(' .. sect .. ')'
+            title: $'{name}({sect})'
         }]
     endfor
 
@@ -185,7 +176,7 @@ export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
     return structured
         ->map((_, entry: dict<string>) => ({
                   name: entry.name,
-                  filename: 'man://' .. entry.title,
+                  filename: $'man://{entry.title}',
                   cmd: 'keepjumps normal! 1G'
         }))
 enddef
@@ -203,10 +194,10 @@ export def FoldTitle(): string #{{{2
   var indent: string = title->matchstr('^\s*')
   if get(b:, 'foldtitle_full', false)
       var foldsize: number = v:foldend - v:foldstart
-      var linecount: string = '[' .. foldsize .. ']' .. repeat(' ', 4 - len(foldsize))
-      return indent .. (foldsize > 1 ? linecount : '') .. title
+      var linecount: string = $'[{foldsize}]{repeat(" ", 4 - len(foldsize))}'
+      return $'{indent}{foldsize > 1 ? linecount : ""}{title}'
   else
-      return indent .. title
+      return $'{indent}{title}'
   endif
 enddef
 
@@ -216,9 +207,6 @@ export def InitPager() #{{{2
     # clear message:  "-stdin-" 123L, 456B
     echo ''
     autocmd VimEnter * keepjumps normal! 1GzR
-    # https://github.com/neovim/neovim/issues/6828
-    var og_modifiable: bool = &l:modifiable
-    &l:modifiable = true
 
     if getline(1) !~ '\S'
         silent keepjumps :1 delete _
@@ -277,11 +265,10 @@ export def InitPager() #{{{2
         return
     endif
     if -1 == bufname('%')->match('man:\/\/')  # Avoid duplicate buffers, E95.
-        execute 'silent file man://' .. fnameescape(ref)->tolower()
+        execute $'silent file man://{fnameescape(ref)->tolower()}'
     endif
 
     SetOptions(true)
-    &l:modifiable = og_modifiable
 enddef
 
 export def JumpToRef(is_fwd = true) #{{{2
@@ -301,7 +288,7 @@ export def Grep(args: string) #{{{2
      END
      for line: string in help
        var hg: string = line =~ '^:' ? 'Statement' : 'Comment'
-       execute 'echohl ' .. hg
+       execute $'echohl {hg}'
        echo line
        echohl NONE
      endfor
@@ -324,15 +311,15 @@ export def Grep(args: string) #{{{2
         ->trim() .. '/man/man1'
       MANPAGES_TO_GREP.fish = fish_mandir
         ->readdir()
-        ->map((_, v: string) => 'man://' .. v .. '(1)')
+        ->map((_, v: string) => $'man://{v}(1)')
         ->filter((_, v: string): bool => v !~ '\<fish-\%(doc\|releasenotes\)\>')
 
     # For  every config  file at  the root  of `/etc/systemd/`,  there exists  a
     # dedicated manpage.   We don't  need to grep  *all* systemd  manpages; just
     # this one.
     elseif topic == 'systemd' && expand('%:p') =~ '^/etc/systemd/.*\.conf$'
-      topic = 'systemd-' .. expand('%:p:t')
-      silent system('man --where ' .. topic)
+      topic = $'systemd-{expand("%:p:t")}'
+      silent system($'man --where {topic}')
       # These manpages follow an inconsistent naming scheme:{{{
       #
       #     # sometimes, they're prefixed with `systemd-`
@@ -349,10 +336,10 @@ export def Grep(args: string) #{{{2
        if v:shell_error != 0
            topic = topic->substitute('systemd-', '', '')
        endif
-       MANPAGES_TO_GREP[topic] = ['man://' .. topic]
+       MANPAGES_TO_GREP[topic] = [$'man://{topic}']
 
     else
-      silent var lines: list<string> = systemlist('man --apropos ' .. topic)
+      silent var lines: list<string> = systemlist($'man --apropos {topic}')
       if v:shell_error != 0
         echo lines->join("\n")
         return
@@ -367,7 +354,7 @@ export def Grep(args: string) #{{{2
       # Let's round that number to the nearest multiple of a hundred.
       #}}}
       if lines->len() > 300
-        echo 'too many manpages match the topic: ' .. topic
+        echo $'too many manpages match the topic: {topic}'
         return
       endif
       MANPAGES_TO_GREP[topic] = lines
@@ -382,7 +369,7 @@ export def Grep(args: string) #{{{2
   endif
 
   try
-    execute 'vimgrep /' .. pattern .. '/gj ' .. MANPAGES_TO_GREP[topic]->join()
+    execute $'vimgrep /{pattern}/gj {MANPAGES_TO_GREP[topic]->join()}'
   # E480: No match: ...
   catch /^Vim\%((\a\+)\)\=:E480:/
     echohl ErrorMsg
@@ -513,7 +500,7 @@ def VerifyExists(sect: string, name: string): string #{{{3
     endif
 
     # finally, if that didn't work, there is no hope
-    throw 'No manual entry for ' .. name
+    throw $'No manual entry for {name}'
     return ''
 enddef
 
@@ -536,7 +523,7 @@ def GetPath(sect: string, name: string): string #{{{3
 # Finally,  we  can  avoid  relying  on  -S or  -s  here  since  they  are  very
 # inconsistently supported.  Instead, call -w with a section and a name.
 
-    var results: list<string> = ['man', '-w', sect, name]
+    var results: list<string> = (sect == '' ? ['man', '-w', name] : ['man', '-w', sect, name])
         ->Job_start()
         ->split()
     if results->empty()
@@ -753,7 +740,6 @@ def JobHandler( #{{{3
 enddef
 
 def SetOptions(pager: bool) #{{{3
-  &l:filetype = 'man'
   &l:swapfile = false
   &l:buftype = 'nofile'
   &l:bufhidden = 'hide'
@@ -763,6 +749,7 @@ def SetOptions(pager: bool) #{{{3
   if pager
     nnoremap <buffer><nowait> q <ScriptCmd>lclose<Bar>q<CR>
   endif
+  &l:filetype = 'man'
 enddef
 #}}}2
 # Highlighting {{{2
@@ -1074,7 +1061,7 @@ def GetPaths( #{{{3
             ->split(':\|\n')
             ->join(',')
         var paths: list<string> = globpath(mandirs,
-            'man?/' .. name .. '*.' .. sect .. '*', false, true)
+            $'man?/{name}*.{sect}*', false, true)
         try
             # Prioritize the result from verify_exists as it obeys b:man_default_sects.
             var first: string = VerifyExists(sect, name)
@@ -1106,10 +1093,10 @@ def FormatCandidate(path: string, psect: string): string #{{{3
     [sect, name] = ExtractSectAndNamePath(path)
     if sect == psect
         return name
-    elseif sect =~ psect .. '.\+$'
+    elseif sect =~ $'{psect}.\+$'
         # We include the section if the user provided section is a prefix
         # of the actual section.
-        return name .. '(' .. sect .. ')'
+        return $'{name}({sect})'
     endif
     return ''
 enddef
@@ -1119,7 +1106,7 @@ enddef
 def Error(msg: string) #{{{2
     redraw
     echohl ErrorMsg
-    echomsg 'man.vim: ' .. msg
+    echomsg $'man.vim: {msg}'
     echohl None
 enddef
 
