@@ -10,15 +10,15 @@ import autoload '../autoload/man.vim'
 #     :Man foo
 #     man.vim: Vim(stag):E987: invalid return value from tagfunc˜
 #
-# Check whether `$ man -w` can find the manpage:
+# Check whether `$ man -w` can find the man page:
 #
 #     $ man -w foo
 #
-# If the output is empty, try to reinstall the program `foo`; or at least its manpage.
+# If the output is empty, try to reinstall the program `foo`; or at least its man page.
 #
 # ---
 #
-# We had  this issue once with  `tig(1)`, because the manpage  was not correctly
+# We had this issue  once with `tig(1)`, because the man  page was not correctly
 # installed in `~/share/man`:
 #
 #     $ cd ~/share/man

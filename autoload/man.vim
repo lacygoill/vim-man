@@ -4,8 +4,8 @@ var MANPAGES_TO_GREP: dict<list<string>>
 
 var localfile_arg: bool = true  # Always use -l if possible. #6683
 
-# TODO: `p` could be used to preview a reference to another manpage in a popup window.
-# `]r` and `]o` could be used to jump to the next reference or option.
+# TODO: `p` could be used to preview a  reference to another man page in a popup
+# window. `]r` and `]o` could be used to jump to the next reference or option.
 
 # TODO: Implement an ad-hoc annotations feature?
 # They could be saved persistently in files, and displayed via popup windows.
@@ -50,7 +50,7 @@ export def ExCmd( #{{{2
     elseif len(fargs) == 1
         ref = fargs[0]
     else
-        # Combine the name and sect into a manpage reference so that all
+        # Combine  the name  and sect  into  a man  page reference  so that  all
         # verification/extraction can be kept in a single function.
         # If `farg[1]` is  a reference as well,  that is fine because  it is the
         # only reference that will match.
@@ -194,8 +194,8 @@ export def FoldTitle(): string #{{{2
   var indent: string = title->matchstr('^\s*')
   if get(b:, 'foldtitle_full', false)
       var foldsize: number = v:foldend - v:foldstart
-      var linecount: string = $'[{foldsize}]{repeat(" ", 4 - len(foldsize))}'
-      return $'{indent}{foldsize > 1 ? linecount : ""}{title}'
+      var linecount: string = $'[{foldsize}]{repeat(' ', 4 - len(foldsize))}'
+      return $'{indent}{foldsize > 1 ? linecount : ''}{title}'
   else
       return $'{indent}{title}'
   endif
@@ -281,9 +281,9 @@ enddef
 export def Grep(args: string) #{{{2
   if args == '' || args =~ '^\%(--help\|-h\)\>'
      var help: list<string> =<< trim END
-       # look for pattern "foo" in all manpages using current filetype as topic
+       # look for pattern "foo" in all man pages using current filetype as topic
        :ManGrep foo
-       # look for pattern "foo" in all manpages using "bar" as topic
+       # look for pattern "foo" in all man pages using "bar" as topic
        :ManGrep --apropos=bar foo
      END
      for line: string in help
@@ -315,12 +315,12 @@ export def Grep(args: string) #{{{2
         ->filter((_, v: string): bool => v !~ '\<fish-\%(doc\|releasenotes\)\>')
 
     # For  every config  file at  the root  of `/etc/systemd/`,  there exists  a
-    # dedicated manpage.   We don't  need to grep  *all* systemd  manpages; just
+    # dedicated man page.   We don't need to grep *all*  systemd man pages; just
     # this one.
     elseif topic == 'systemd' && expand('%:p') =~ '^/etc/systemd/.*\.conf$'
-      topic = $'systemd-{expand("%:p:t")}'
+      topic = $'systemd-{expand('%:p:t')}'
       silent system($'man --where {topic}')
-      # These manpages follow an inconsistent naming scheme:{{{
+      # These man pages follow an inconsistent naming scheme:{{{
       #
       #     # sometimes, they're prefixed with `systemd-`
       #     /etc/systemd/system.conf   → systemd-system.conf
@@ -331,7 +331,7 @@ export def Grep(args: string) #{{{2
       #     /etc/systemd/logind.conf   → logind.conf
       #
       # I guess  the `systemd-` prefix  is only used  when necessary to  avoid a
-      # clash with another manpage.
+      # clash with another man page.
       #}}}
        if v:shell_error != 0
            topic = topic->substitute('systemd-', '', '')
@@ -354,7 +354,7 @@ export def Grep(args: string) #{{{2
       # Let's round that number to the nearest multiple of a hundred.
       #}}}
       if lines->len() > 300
-        echo $'too many manpages match the topic: {topic}'
+        echo $'too many man pages match the topic: {topic}'
         return
       endif
       MANPAGES_TO_GREP[topic] = lines
@@ -389,13 +389,13 @@ def ExtractSectAndNameRef(arg_ref: string): list<string> #{{{3
 # otherwise just return the largest string of valid characters in ref
 
     if arg_ref[0] == '-' # try `:Man -pandoc` with this disabled
-        throw 'manpage name cannot start with ''-'''
+        throw 'man page name cannot start with ''-'''
     endif
     var ref: string = arg_ref->matchstr('[^()]\+([^()]\+)')
     if empty(ref)
         var name: string = arg_ref->matchstr('[^()]\+')
         if empty(name)
-            throw 'manpage reference cannot contain only parentheses'
+            throw 'man page reference cannot contain only parentheses'
         endif
         return ['', SpacesToUnderscores(name)]
     endif
@@ -422,11 +422,11 @@ def ExtractSectAndNamePath(path: string): list<string> #{{{3
 enddef
 
 def VerifyExists(sect: string, name: string): string #{{{3
-# VerifyExists attempts to find the path to a manpage
+# VerifyExists attempts to find the path to a man page
 # based on the passed section and name.
 #
 # 1. If the passed section is empty, b:man_default_sects is used.
-# 2. If manpage could not be found with the given sect and name,
+# 2. If the man page could not be found with the given sect and name,
 #    then another attempt is made with b:man_default_sects.
 # 3. If it still could not be found, then we try again without a section.
 # 4. If still not found but $MANSECT is set, then we try again with $MANSECT
@@ -1041,11 +1041,16 @@ def Complete( #{{{3
 ): list<string>
 
     var pages: list<string> = GetPaths(sect, name, false)
-    # We remove duplicates in case the same manpage in different languages was found.
-    return pages
+    # We remove duplicates in case the same man page in different languages was found.
+    pages = pages
         ->map((_, v: string) => FormatCandidate(v, psect))
         ->sort('i')
         ->uniq()
+    # happens when pressing Tab after `:Man 2 `
+    if !pages->empty() && pages[0] == ''
+      pages->remove(0)
+    endif
+    return pages
 enddef
 
 def GetPaths( #{{{3

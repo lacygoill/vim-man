@@ -29,7 +29,7 @@ import autoload 'man.vim'
 &l:tagfunc = 'man.GoToTag'
 
 # TODO: Install  a  mapping which  would  manually  or automatically  display  a
-# preview of the manpage reference under the cursor (use `p` for the lhs).
+# preview of the man page reference under the cursor (use `p` for the lhs).
 nnoremap <buffer><expr><nowait> q reg_recording() != '' ? 'q' : '<ScriptCmd>quit<CR>'
 nnoremap <buffer><nowait> <CR> <C-]>
 nnoremap <buffer><nowait> ) <ScriptCmd>man.JumpToRef()<CR>
