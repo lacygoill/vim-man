@@ -80,7 +80,7 @@ export def ExCmd( #{{{2
         else
             execute $'silent keepalt {mods} stag {target}'
         endif
-        SetOptions(false)
+        SetOptions()
     # E987: invalid return value from tagfunc
     # *given when you ask for an unknown man page*
     catch /E987:/
@@ -268,7 +268,7 @@ export def InitPager() #{{{2
         execute $'silent file man://{fnameescape(ref)->tolower()}'
     endif
 
-    SetOptions(true)
+    SetOptions()
 enddef
 
 export def JumpToRef(is_fwd = true) #{{{2
@@ -583,7 +583,7 @@ def PutPage(page: string) #{{{3
     :1
     HighlightOnCursormoved()
     OpenFolds()
-    SetOptions(false)
+    SetOptions()
 enddef
 
 def Job_start(cmd: list<string>): string #{{{3
@@ -739,16 +739,13 @@ def JobHandler( #{{{3
     endif
 enddef
 
-def SetOptions(pager: bool) #{{{3
+def SetOptions() #{{{3
   &l:swapfile = false
   &l:buftype = 'nofile'
   &l:bufhidden = 'hide'
   &l:modified = false
   &l:readonly = true
   &l:modifiable = false
-  if pager
-    nnoremap <buffer><nowait> q <ScriptCmd>lclose<Bar>q<CR>
-  endif
   &l:filetype = 'man'
 enddef
 #}}}2
