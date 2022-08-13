@@ -45,7 +45,7 @@ highlight default manItalic    cterm=italic    gui=italic
 # for the bold/underline/italic styles.
 #}}}
 var buf: number = bufnr('%')
-if prop_type_list({bufnr: buf})->index('manBold') == -1
+if prop_type_get('manBold', {bufnr: buf}) == {}
     prop_type_add('manBold', {bufnr: buf, highlight: 'manBold'})
     prop_type_add('manUnderline', {bufnr: buf, highlight: 'manUnderline'})
     prop_type_add('manItalic', {bufnr: buf, highlight: 'manItalic'})
