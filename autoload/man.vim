@@ -162,10 +162,10 @@ export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
 
     for path: string in paths
         [sect, name] = ExtractSectAndNamePath(path)
-        structured += [{
+        structured->add({
             name: name,
             title: $'{name}({sect})'
-        }]
+        })
     endfor
 
     if &cscopetag
@@ -848,7 +848,7 @@ def HighlightLine(line: string, linenr: number) #{{{
         endif
 
         if continue_hl
-            highlights += [{attr: attr, start: byte, end: -1}]
+            highlights->add({attr: attr, start: byte, end: -1})
         else
             if attr == NONE
                 for a_: list<any> in items(hl_groups)
@@ -924,13 +924,13 @@ def HighlightLine(line: string, linenr: number) #{{{
                 && last_hl.end == byte
                 last_hl.end = byte + strlen(c)
             else
-                highlights += [{attr: attr, start: byte, end: byte + strlen(c)}]
+                highlights->add({attr: attr, start: byte, end: byte + strlen(c)})
             endif
 
             overstrike = false
             prev_char = ''
             byte += strlen(c)
-            chars += [c]
+            chars->add(c)
         elseif escape
             # Use prev_char to store the escape sequence
             prev_char ..= c
@@ -964,18 +964,18 @@ def HighlightLine(line: string, linenr: number) #{{{
             chars[-1] = ''
         else
             byte += strlen(c)
-            chars += [c]
+            chars->add(c)
         endif
     endfor
 
     for highlight: dict<number> in highlights
         if highlight.attr != NONE
-            b:_hls += [[
+            b:_hls->add([
                 get(hl_groups, string(highlight.attr), ''),
                 linenr,
                 highlight.start,
                 highlight.end,
-            ]]
+            ])
         endif
     endfor
 enddef
