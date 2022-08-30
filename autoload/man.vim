@@ -190,15 +190,15 @@ export def FoldExpr(): string #{{{2
 enddef
 
 export def FoldTitle(): string #{{{2
-  var title: string = getline(v:foldstart)
-  var indent: string = title->matchstr('^\s*')
-  if get(b:, 'foldtitle_full', false)
-      var foldsize: number = v:foldend - v:foldstart
-      var linecount: string = $'[{foldsize}]{repeat(' ', 4 - len(foldsize))}'
-      return $'{indent}{foldsize > 1 ? linecount : ''}{title}'
-  else
-      return $'{indent}{title}'
-  endif
+    var title: string = getline(v:foldstart)
+    var indent: string = title->matchstr('^\s*')
+    if get(b:, 'foldtitle_full', false)
+        var foldsize: number = v:foldend - v:foldstart
+        var linecount: string = $'[{foldsize}]{repeat(' ', 4 - len(foldsize))}'
+        return $'{indent}{foldsize > 1 ? linecount : ''}{title}'
+    else
+        return $'{indent}{title}'
+    endif
 enddef
 
 export def InitPager() #{{{2
@@ -279,107 +279,107 @@ export def JumpToRef(is_fwd = true) #{{{2
 enddef
 
 export def Grep(args: string) #{{{2
-  if args == '' || args =~ '^\%(--help\|-h\)\>'
-     var help: list<string> =<< trim END
-       # look for pattern "foo" in all man pages using current filetype as topic
-       :ManGrep foo
-       # look for pattern "foo" in all man pages using "bar" as topic
-       :ManGrep --apropos=bar foo
-     END
-     for line: string in help
-       var hg: string = line =~ '^:' ? 'Statement' : 'Comment'
-       execute $'echohl {hg}'
-       echo line
-       echohl NONE
-     endfor
-     return
-  endif
-
-  var topic: string = args->matchstr('^--apropos=\zs\S*') ?? &filetype
-  var pattern: string = args->substitute('^--apropos=\S*\s*', '', '')
-  if topic == ''
-    echo 'missing topic'
-    return
-  elseif pattern == ''
-    echo 'missing pattern'
-    return
-  endif
-
-  if !MANPAGES_TO_GREP->has_key(topic)
-    if topic == 'fish'
-      silent var fish_mandir: string = system("fish -c 'echo $__fish_data_dir'")
-        ->trim() .. '/man/man1'
-      MANPAGES_TO_GREP.fish = fish_mandir
-        ->readdir()
-        ->map((_, v: string) => $'man://{v}(1)')
-        ->filter((_, v: string): bool => v !~ '\<fish-\%(doc\|releasenotes\)\>')
-
-    # For  every config  file at  the root  of `/etc/systemd/`,  there exists  a
-    # dedicated man page.   We don't need to grep *all*  systemd man pages; just
-    # this one.
-    elseif topic == 'systemd' && expand('%:p') =~ '^/etc/systemd/.*\.conf$'
-      topic = $'systemd-{expand('%:p:t')}'
-      silent system($'man --where {topic}')
-      # These man pages follow an inconsistent naming scheme:{{{
-      #
-      #     # sometimes, they're prefixed with `systemd-`
-      #     /etc/systemd/system.conf   → systemd-system.conf
-      #     /etc/systemd/sleep.conf    → systemd-sleep.conf
-      #
-      #     # sometimes not
-      #     /etc/systemd/journald.conf → journald.conf
-      #     /etc/systemd/logind.conf   → logind.conf
-      #
-      # I guess  the `systemd-` prefix  is only used  when necessary to  avoid a
-      # clash with another man page.
-      #}}}
-       if v:shell_error != 0
-           topic = topic->substitute('systemd-', '', '')
-       endif
-       MANPAGES_TO_GREP[topic] = [$'man://{topic}']
-
-    else
-      silent var lines: list<string> = systemlist($'man --apropos {topic}')
-      if v:shell_error != 0
-        echo lines->join("\n")
-        return
-      endif
-      # Why `300`?{{{
-      #
-      #     # for the "systemd" topic
-      #     $ man --apropos systemd | wc --lines
-      #     203
-      #     ^^^
-      #
-      # Let's round that number to the nearest multiple of a hundred.
-      #}}}
-      if lines->len() > 300
-        echo $'too many man pages match the topic: {topic}'
-        return
-      endif
-      MANPAGES_TO_GREP[topic] = lines
-        ->map((_, line: string) => line
-                ->matchstr('[^(]*([^)]*)')
-                ->substitute(' ', '', '')
-                ->substitute('^', 'man://', ''))
+    if args == '' || args =~ '^\%(--help\|-h\)\>'
+       var help: list<string> =<< trim END
+           # look for pattern "foo" in all man pages using current filetype as topic
+           :ManGrep foo
+           # look for pattern "foo" in all man pages using "bar" as topic
+           :ManGrep --apropos=bar foo
+       END
+       for line: string in help
+           var hg: string = line =~ '^:' ? 'Statement' : 'Comment'
+           execute $'echohl {hg}'
+           echo line
+           echohl NONE
+       endfor
+       return
     endif
-  endif
-  if MANPAGES_TO_GREP[topic]->empty()
-    return
-  endif
 
-  try
-    execute $'vimgrep /{pattern}/gj {MANPAGES_TO_GREP[topic]->join()}'
-  # E480: No match: ...
-  catch /^Vim\%((\a\+)\)\=:E480:/
-    echohl ErrorMsg
-    echomsg v:exception
-    echohl NONE
-  endtry
+    var topic: string = args->matchstr('^--apropos=\zs\S*') ?? &filetype
+    var pattern: string = args->substitute('^--apropos=\S*\s*', '', '')
+    if topic == ''
+        echo 'missing topic'
+        return
+    elseif pattern == ''
+        echo 'missing pattern'
+        return
+    endif
+
+    if !MANPAGES_TO_GREP->has_key(topic)
+        if topic == 'fish'
+            silent var fish_mandir: string = system("fish -c 'echo $__fish_data_dir'")
+                ->trim() .. '/man/man1'
+            MANPAGES_TO_GREP.fish = fish_mandir
+                ->readdir()
+                ->map((_, v: string) => $'man://{v}(1)')
+                ->filter((_, v: string): bool => v !~ '\<fish-\%(doc\|releasenotes\)\>')
+
+        # For  every config  file at  the root  of `/etc/systemd/`,  there exists  a
+        # dedicated man page.   We don't need to grep *all*  systemd man pages; just
+        # this one.
+        elseif topic == 'systemd' && expand('%:p') =~ '^/etc/systemd/.*\.conf$'
+            topic = $'systemd-{expand('%:p:t')}'
+            silent system($'man --where {topic}')
+            # These man pages follow an inconsistent naming scheme:{{{
+            #
+            #     # sometimes, they're prefixed with `systemd-`
+            #     /etc/systemd/system.conf   → systemd-system.conf
+            #     /etc/systemd/sleep.conf    → systemd-sleep.conf
+            #
+            #     # sometimes not
+            #     /etc/systemd/journald.conf → journald.conf
+            #     /etc/systemd/logind.conf   → logind.conf
+            #
+            # I guess  the `systemd-` prefix  is only used  when necessary to  avoid a
+            # clash with another man page.
+            #}}}
+             if v:shell_error != 0
+                 topic = topic->substitute('systemd-', '', '')
+             endif
+             MANPAGES_TO_GREP[topic] = [$'man://{topic}']
+
+        else
+            silent var lines: list<string> = systemlist($'man --apropos {topic}')
+            if v:shell_error != 0
+                echo lines->join("\n")
+                return
+            endif
+            # Why `300`?{{{
+            #
+            #     # for the "systemd" topic
+            #     $ man --apropos systemd | wc --lines
+            #     203
+            #     ^^^
+            #
+            # Let's round that number to the nearest multiple of a hundred.
+            #}}}
+            if lines->len() > 300
+                echo $'too many man pages match the topic: {topic}'
+                return
+            endif
+            MANPAGES_TO_GREP[topic] = lines
+              ->map((_, line: string) => line
+                      ->matchstr('[^(]*([^)]*)')
+                      ->substitute(' ', '', '')
+                      ->substitute('^', 'man://', ''))
+        endif
+    endif
+    if MANPAGES_TO_GREP[topic]->empty()
+        return
+    endif
+
+    try
+        execute $'vimgrep /{pattern}/gj {MANPAGES_TO_GREP[topic]->join()}'
+    # E480: No match: ...
+    catch /^Vim\%((\a\+)\)\=:E480:/
+        echohl ErrorMsg
+        echomsg v:exception
+        echohl NONE
+    endtry
 enddef
 
 export def GrepComplete(..._): string #{{{2
-  return ['-h', '--help', '--apropos=']->join("\n")
+    return ['-h', '--help', '--apropos=']->join("\n")
 enddef
 #}}}1
 # Core {{{1
@@ -740,13 +740,13 @@ def JobHandler( #{{{3
 enddef
 
 def SetOptions() #{{{3
-  &l:swapfile = false
-  &l:buftype = 'nofile'
-  &l:bufhidden = 'hide'
-  &l:modified = false
-  &l:readonly = true
-  &l:modifiable = false
-  &l:filetype = 'man'
+    &l:swapfile = false
+    &l:buftype = 'nofile'
+    &l:bufhidden = 'hide'
+    &l:modified = false
+    &l:readonly = true
+    &l:modifiable = false
+    &l:filetype = 'man'
 enddef
 #}}}2
 # Highlighting {{{2
@@ -770,11 +770,9 @@ def HighlightWindow() #{{{3
     endif
 
     var lines: list<string> = b:_lines[lnum1 - 1 : lnum2 - 1]
-    var i: number = 0
     var lnum: number
-    for line: string in lines
+    for [i: number, line: string] in lines->items()
         lnum = i + lnum1 - 1
-        ++i
         if b:_seen[lnum]
             continue
         endif
@@ -812,13 +810,11 @@ def HighlightLine(line: string, linenr: number) #{{{
     var byte: number = 0 # byte offset
 
     def EndAttrHl(attr_: number)
-        var i: number = 0
-        for highlight: dict<number> in highlights
+        for [i: number, highlight: dict<number>] in highlights->items()
             if highlight.attr == attr_ && highlight.end == -1
                 highlight.end = byte
                 highlights[i] = highlight
             endif
-            ++i
         endfor
     enddef
 
@@ -1113,15 +1109,13 @@ def Error(msg: string) #{{{2
 enddef
 
 def FindMan(): bool #{{{2
-    var win: number = 1
-    while win <= winnr('$')
+    for win: number in range(1, winnr('$'))
         var buf: number = winbufnr(win)
         if getbufvar(buf, '&filetype', '') == 'man'
             win_getid(win)->win_gotoid()
             return true
         endif
-        ++win
-    endwhile
+    endfor
     return false
 enddef
 
@@ -1147,7 +1141,7 @@ def SpacesToUnderscores(str: string): string #{{{2
 # intended for PostgreSQL, which has man pages like 'CREATE_TABLE(7)';
 # while editing SQL source code, it's nice to visually select 'CREATE TABLE'
 # and hit 'K', which requires this transformation
-  return substitute(str, ' ', '_', 'g')
+    return substitute(str, ' ', '_', 'g')
 enddef
 #}}}1
 # Init {{{1
