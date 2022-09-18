@@ -41,10 +41,10 @@ command -bang -bar -range=-1 -complete=customlist,man.CmdComplete -nargs=* Man {
         man.ExCmd(<count>, <q-mods>, <f-args>)
     endif
 }
-cnoreabbrev <expr> man getcmdtype() == ':' && getcmdpos() == 4 ? 'Man' : 'man'
+cnoreabbrev <expr> man getcmdtype() =~ '[:>]' && getcmdpos() == 4 ? 'Man' : 'man'
 
 command -nargs=? -complete=custom,man.GrepComplete ManGrep man.Grep(<q-args>)
-cnoreabbrev <expr> mg getcmdtype() == ':' && getcmdpos() == 3 ? 'ManGrep' : 'mg'
+cnoreabbrev <expr> mg getcmdtype() =~ '[:>]' && getcmdpos() == 3 ? 'ManGrep' : 'mg'
 
 augroup man
     autocmd!
