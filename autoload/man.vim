@@ -14,213 +14,31 @@ var localfile_arg: bool = true  # Always use -l if possible. #6683
 # https://github.com/vim-utils/vim-man#about-mangrep
 
 # Interface {{{1
-export def ShellCmd(ref: string) #{{{2
-# Called when a man:// buffer is opened.
-    var sect: string
-    var name: string
-    var page: string
-    try
-        [sect, name] = ExtractSectAndNameRef(ref)
-        var path: string = VerifyExists(sect, name)
-        [sect, name] = ExtractSectAndNamePath(path)
-        page = GetPage(path)
-    catch
-        Error(v:exception)
-        return
-    endtry
-    b:man_sect = sect
-    PutPage(page)
-enddef
-
-export def ExCmd( #{{{2
-    count: number,
-    mods: string,
-    ...fargs: list<string>
-)
-    var ref: string
-    if len(fargs) > 2
-        Error('too many arguments')
-        return
-    elseif len(fargs) == 0
-        ref = &filetype == 'man' ? expand('<cWORD>') : expand('<cword>')
-        if empty(ref)
-            Error('no identifier under cursor')
-            return
-        endif
-    elseif len(fargs) == 1
-        ref = fargs[0]
-    else
-        # Combine  the name  and sect  into  a man  page reference  so that  all
-        # verification/extraction can be kept in a single function.
-        # If `farg[1]` is  a reference as well,  that is fine because  it is the
-        # only reference that will match.
-        ref = $'{fargs[1]}({fargs[0]})'
-    endif
-    var sect: string
-    var name: string
-    try
-        [sect, name] = ExtractSectAndNameRef(ref)
-        if count > 0
-            sect = string(count)
-        endif
-        var path: string = VerifyExists(sect, name)
-        [sect, name] = ExtractSectAndNamePath(path)
-    catch
-        Error(v:exception)
-        return
-    endtry
-
-    var buf: number = bufnr('%')
-    var tagfunc_save: string = &l:tagfunc
-    try
-        &l:tagfunc = 'GoToTag'
-        var target: string = $'{name}({sect})'
-        if mods !~ 'tab' && FindMan()
-            execute $'silent keepalt tag {target}'
-        else
-            execute $'silent keepalt {mods} stag {target}'
-        endif
-        SetOptions()
-    # E987: invalid return value from tagfunc
-    # *given when you ask for an unknown man page*
-    catch /E987:/
-        Error(v:exception)
-        return
-    finally
-        setbufvar(buf, '&tagfunc', tagfunc_save)
-    endtry
-
-    b:man_sect = sect
-enddef
-
-export def CmdComplete( #{{{2
-    arg_lead: string,
-    cmdline: string,
-    _
-): list<string>
-
-    var args: list<string> = split(cmdline)
-    var cmd_offset: number = args->index('Man')
-    if cmd_offset > 0
-        # Prune all arguments up to :Man itself. Otherwise modifier commands like
-        # :tab, :vertical, etc. would lead to a wrong length.
-        args = args[cmd_offset :]
-    endif
-    var l: number = len(args)
-    var name: string
-    var sect: string
-    if l > 3
-        return []
-    elseif l == 1
-        name = ''
-        sect = ''
-    elseif arg_lead =~ '^[^()]\+([^()]*$'
-        # cursor (|) is at `:Man printf(|` or `:Man 1 printf(|`
-        # The later is is allowed because of `:Man pri<TAB>`.
-        # It will offer `priclass.d(1m)` even though section is specified as 1.
-        var tmp: list<string> = split(arg_lead, '(')
-        name = tmp[0]
-        sect = get(tmp, 1, '')->tolower()
-        return Complete(sect, '', name)
-    elseif args[1] !~ '^[^()]\+$'
-        # cursor (|) is at `:Man 3() |` or `:Man (3|` or `:Man 3() pri|`
-        # or `:Man 3() pri |`
-        return []
-    elseif l == 2
-        if empty(arg_lead)
-            # cursor (|) is at `:Man 1 |`
-            name = ''
-            sect = tolower(args[1])
-        else
-            # cursor (|) is at `:Man pri|`
-            if arg_lead =~ '\/'
-                # if the name is a path, complete files
-                # TODO(nhooyr) why does this complete the last one automatically
-                return glob($'{arg_lead}*', false, true)
-            endif
-            name = arg_lead
-            sect = ''
-        endif
-    elseif arg_lead !~ '^[^()]\+$'
-        # cursor (|) is at `:Man 3 printf |` or `:Man 3 (pr)i|`
-        return []
-    else
-        # cursor (|) is at `:Man 3 pri|`
-        name = arg_lead
-        sect = tolower(args[1])
-    endif
-    return Complete(sect, sect, name)
-enddef
-
-export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
-    var sect: string
-    var name: string
-    [sect, name] = ExtractSectAndNameRef(pattern)
-
-    var paths: list<string> = GetPaths(sect, name, true)
-    var structured: list<dict<string>>
-
-    for path: string in paths
-        [sect, name] = ExtractSectAndNamePath(path)
-        structured->add({
-            name: name,
-            title: $'{name}({sect})'
-        })
-    endfor
-
-    if &cscopetag
-        # return only a single entry so we work well with :cstag (#11675)
-        structured = structured[: 0]
-    endif
-
-    return structured
-        ->map((_, entry: dict<string>) => ({
-                  name: entry.name,
-                  filename: $'man://{entry.title}',
-                  cmd: 'keepjumps normal! 1G'
-        }))
-enddef
-
-export def FoldExpr(): string #{{{2
-    if indent(v:lnum) == 0 && getline(v:lnum) =~ '\S'
-    || indent(v:lnum) == 3
-        return '>1'
-    endif
-    return '1'
-enddef
-
-export def FoldTitle(): string #{{{2
-    var title: string = getline(v:foldstart)
-    var indent: string = title->matchstr('^\s*')
-    if get(b:, 'foldtitle_full', false)
-        var foldsize: number = v:foldend - v:foldstart
-        var linecount: string = $'[{foldsize}]{repeat(' ', 4 - len(foldsize))}'
-        return $'{indent}{foldsize > 1 ? linecount : ''}{title}'
-    else
-        return $'{indent}{title}'
-    endif
-enddef
-
 export def InitPager() #{{{2
-# Called when Vim is invoked as $MANPAGER.
+    # Called when Vim is invoked as $MANPAGER.
 
     # clear message:  "-stdin-" 123L, 456B
     echo ''
-    autocmd VimEnter * keepjumps normal! 1GzR
+
+    autocmd VimEnter * {
+        cursor(1, 1)
+        &l:foldlevel = 20
+    }
 
     if getline(1) !~ '\S'
-        silent keepjumps :1 delete _
+        bufnr('%')->deletebufline(1, 1)
     endif
     HighlightOnCursormoved()
     OpenFolds()
 
-    # Guess the ref from the heading (which is usually uppercase, so we cannot
-    # know the correct casing, cf. `man glDrawArraysInstanced`).
+    # Copy the reference from the heading.
+    #     BASH(1)                     General Commands Manual                    BASH(1)
+    #     ^-----^
     var ref: string = getline(1)
         ->matchstr('^[^)]\+)')
         ->substitute(' ', '_', 'g')
     try
-        b:man_sect = ExtractSectAndNameRef(ref)[0]
+        b:man_sect = ref->ExtractSectAndNameFromRef()[0]
     catch
         b:man_sect = ''
     endtry
@@ -264,11 +82,200 @@ export def InitPager() #{{{2
     if ref->empty()
         return
     endif
-    if -1 == bufname('%')->match('man:\/\/')  # Avoid duplicate buffers, E95.
-        execute $'silent file man://{fnameescape(ref)->tolower()}'
+    if bufname('%') !~ 'man:\/\/'  # Avoid duplicate buffers, E95.
+        $'silent file man://{ref->fnameescape()->tolower()}'->execute()
     endif
 
     SetOptions()
+enddef
+
+export def ShellCmd(ref: string) #{{{2
+    # Called when a man:// buffer is opened.
+    var sect: string
+    var name: string
+    var page: string
+    try
+        [sect, name] = ExtractSectAndNameFromRef(ref)
+        var path: string = VerifyExists(sect, name)
+        [sect, name] = ExtractSectAndNameFromPath(path)
+        page = GetPage(path)
+    catch
+        Error(v:exception)
+        return
+    endtry
+    b:man_sect = sect
+    PutPage(page)
+enddef
+
+export def ExCmd( #{{{2
+        count: number,
+        mods: string,
+        ...fargs: list<string>
+        )
+    var ref: string
+    if len(fargs) > 2
+        Error('too many arguments')
+        return
+    elseif len(fargs) == 0
+        ref = &filetype == 'man' ? expand('<cWORD>') : expand('<cword>')
+        if ref->empty()
+            Error('no identifier under cursor')
+            return
+        endif
+    elseif len(fargs) == 1
+        ref = fargs[0]
+    else
+        # Combine  the name  and sect  into  a man  page reference  so that  all
+        # verification/extraction can be kept in a single function.
+        # If `farg[1]` is  a reference as well,  that is fine because  it is the
+        # only reference that will match.
+        ref = $'{fargs[1]}({fargs[0]})'
+    endif
+    var sect: string
+    var name: string
+    try
+        [sect, name] = ExtractSectAndNameFromRef(ref)
+        if count > 0
+            sect = string(count)
+        endif
+        var path: string = VerifyExists(sect, name)
+        [sect, name] = ExtractSectAndNameFromPath(path)
+    catch
+        Error(v:exception)
+        return
+    endtry
+
+    var buf: number = bufnr('%')
+    var tagfunc_save: string = &l:tagfunc
+    try
+        &l:tagfunc = 'GoToTag'
+        var target: string = $'{name}({sect})'
+        if mods !~ 'tab' && FindMan()
+            $'silent keepalt tag {target}'->execute()
+        else
+            $'silent keepalt {mods} stag {target}'->execute()
+        endif
+        SetOptions()
+    # E987: invalid return value from tagfunc
+    # *given when you ask for an unknown man page*
+    catch /E987:/
+        Error(v:exception)
+        return
+    finally
+        setbufvar(buf, '&tagfunc', tagfunc_save)
+    endtry
+
+    b:man_sect = sect
+enddef
+
+export def CmdComplete( #{{{2
+        arg_lead: string,
+        cmdline: string,
+        _
+        ): list<string>
+
+    var args: list<string> = cmdline->split()
+    var cmd_offset: number = args->index('Man')
+    if cmd_offset > 0
+        # Prune all arguments up to :Man itself. Otherwise modifier commands like
+        # :tab, :vertical, etc. would lead to a wrong length.
+        args = args[cmd_offset :]
+    endif
+    var l: number = len(args)
+    var name: string
+    var sect: string
+    if l > 3
+        return []
+    elseif l == 1
+        name = ''
+        sect = ''
+    elseif arg_lead =~ '^[^()]\+([^()]*$'
+        # cursor (|) is at `:Man printf(|` or `:Man 1 printf(|`
+        # The later is is allowed because of `:Man pri<TAB>`.
+        # It will offer `priclass.d(1m)` even though section is specified as 1.
+        var tmp: list<string> = arg_lead->split('(')
+        name = tmp[0]
+        return tmp
+            ->get(1, '')
+            ->tolower()
+            ->Complete('', name)
+    elseif args[1] !~ '^[^()]\+$'
+        # cursor (|) is at `:Man 3() |` or `:Man (3|` or `:Man 3() pri|`
+        # or `:Man 3() pri |`
+        return []
+    elseif l == 2
+        if arg_lead->empty()
+            # cursor (|) is at `:Man 1 |`
+            name = ''
+            sect = tolower(args[1])
+        else
+            # cursor (|) is at `:Man pri|`
+            if arg_lead =~ '\/'
+                # if the name is a path, complete files
+                # TODO(nhooyr) why does this complete the last one automatically
+                return glob($'{arg_lead}*', false, true)
+            endif
+            name = arg_lead
+            sect = ''
+        endif
+    elseif arg_lead !~ '^[^()]\+$'
+        # cursor (|) is at `:Man 3 printf |` or `:Man 3 (pr)i|`
+        return []
+    else
+        # cursor (|) is at `:Man 3 pri|`
+        name = arg_lead
+        sect = tolower(args[1])
+    endif
+    return Complete(sect, sect, name)
+enddef
+
+export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
+    var sect: string
+    var name: string
+    [sect, name] = ExtractSectAndNameFromRef(pattern)
+
+    var paths: list<string> = GetPaths(sect, name, true)
+    var structured: list<dict<string>>
+
+    for path: string in paths
+        [sect, name] = ExtractSectAndNameFromPath(path)
+        structured->add({
+            name: name,
+            title: $'{name}({sect})'
+        })
+    endfor
+
+    if &cscopetag
+        # return only a single entry so we work well with :cstag (#11675)
+        structured = structured[: 0]
+    endif
+
+    return structured
+        ->map((_, entry: dict<string>) => ({
+            name: entry.name,
+            filename: $'man://{entry.title}',
+            cmd: 'keepjumps normal! 1G'
+        }))
+enddef
+
+export def FoldExpr(): string #{{{2
+    if indent(v:lnum) == 0 && getline(v:lnum) =~ '\S'
+            || indent(v:lnum) == 3
+        return '>1'
+    endif
+    return '1'
+enddef
+
+export def FoldTitle(): string #{{{2
+    var title: string = getline(v:foldstart)
+    var indent: string = title->matchstr('^\s*')
+    if get(b:, 'foldtitle_full', false)
+        var foldsize: number = v:foldend - v:foldstart
+        var linecount: string = $'[{foldsize}]{repeat(' ', 4 - len(foldsize))}'
+        return $'{indent}{foldsize > 1 ? linecount : ''}{title}'
+    else
+        return $'{indent}{title}'
+    endif
 enddef
 
 export def JumpToRef(is_fwd = true) #{{{2
@@ -280,19 +287,19 @@ enddef
 
 export def Grep(args: string) #{{{2
     if args == '' || args =~ '^\%(--help\|-h\)\>'
-       var help: list<string> =<< trim END
-           # look for pattern "foo" in all man pages using current filetype as topic
-           :ManGrep foo
-           # look for pattern "foo" in all man pages using "bar" as topic
-           :ManGrep --apropos=bar foo
-       END
-       for line: string in help
-           var hg: string = line =~ '^:' ? 'Statement' : 'Comment'
-           execute $'echohl {hg}'
-           echo line
-           echohl NONE
-       endfor
-       return
+        var help: list<string> =<< trim END
+            # look for pattern "foo" in all man pages using current filetype as topic
+            :ManGrep foo
+            # look for pattern "foo" in all man pages using "bar" as topic
+            :ManGrep --apropos=bar foo
+        END
+        for line: string in help
+            var hg: string = line =~ '^:' ? 'Statement' : 'Comment'
+            $'echohl {hg}'->execute()
+            echo line
+            echohl NONE
+        endfor
+        return
     endif
 
     var topic: string = args->matchstr('^--apropos=\zs\S*') ?? &filetype
@@ -333,10 +340,10 @@ export def Grep(args: string) #{{{2
             # I guess  the `systemd-` prefix  is only used  when necessary to  avoid a
             # clash with another man page.
             #}}}
-             if v:shell_error != 0
-                 topic = topic->substitute('systemd-', '', '')
-             endif
-             MANPAGES_TO_GREP[topic] = [$'man://{topic}']
+            if v:shell_error != 0
+                topic = topic->substitute('systemd-', '', '')
+            endif
+            MANPAGES_TO_GREP[topic] = [$'man://{topic}']
 
         else
             silent var lines: list<string> = systemlist($'man --apropos {topic}')
@@ -358,10 +365,10 @@ export def Grep(args: string) #{{{2
                 return
             endif
             MANPAGES_TO_GREP[topic] = lines
-              ->map((_, line: string) => line
-                      ->matchstr('[^(]*([^)]*)')
-                      ->substitute(' ', '', '')
-                      ->substitute('^', 'man://', ''))
+                ->map((_, line: string) => line
+                ->matchstr('[^(]*([^)]*)')
+                ->substitute(' ', '', '')
+                ->substitute('^', 'man://', ''))
         endif
     endif
     if MANPAGES_TO_GREP[topic]->empty()
@@ -369,7 +376,7 @@ export def Grep(args: string) #{{{2
     endif
 
     try
-        execute $'vimgrep /{pattern}/gj {MANPAGES_TO_GREP[topic]->join()}'
+        $'vimgrep /{pattern}/gj {MANPAGES_TO_GREP[topic]->join()}'->execute()
     # E480: No match: ...
     catch /^Vim\%((\a\+)\)\=:E480:/
         echohl ErrorMsg
@@ -384,36 +391,36 @@ enddef
 #}}}1
 # Core {{{1
 # Main {{{2
-def ExtractSectAndNameRef(arg_ref: string): list<string> #{{{3
-# attempt to extract the name and sect out of `name(sect)`
-# otherwise just return the largest string of valid characters in ref
+def ExtractSectAndNameFromRef(arg_ref: string): list<string> #{{{3
+    # attempt to extract the name and sect out of `name(sect)`
+    # otherwise just return the largest string of valid characters in ref
 
-    if arg_ref[0] == '-' # try `:Man -pandoc` with this disabled
+    if arg_ref[0] == '-'  # try `:Man -pandoc` with this disabled
         throw 'man page name cannot start with ''-'''
     endif
     var ref: string = arg_ref->matchstr('[^()]\+([^()]\+)')
-    if empty(ref)
+    if ref->empty()
         var name: string = arg_ref->matchstr('[^()]\+')
-        if empty(name)
+        if name->empty()
             throw 'man page reference cannot contain only parentheses'
         endif
         return ['', SpacesToUnderscores(name)]
     endif
-    var left: list<string> = split(ref, '(')
+    var left: list<string> = ref->split('(')
     # see `:Man 3X curses` on why `tolower()`.
     # TODO(nhooyr) Not sure if this is portable across OSs
     # but I have not seen a single uppercase section.
     return [left[1]->split(')')[0]->tolower(), left[0]->SpacesToUnderscores()]
 enddef
 
-def ExtractSectAndNamePath(path: string): list<string> #{{{3
-# Extracts the name/section from the `path/name.sect`, because sometimes the actual section is
-# more specific than what we provided to `man` (try `:Man 3 App::CLI`).
-# Also on linux, name seems to be case-insensitive. So for `:Man PRIntf`, we
-# still want the name of the buffer to be `printf`.
+def ExtractSectAndNameFromPath(path: string): list<string> #{{{3
+    # Extracts the name/section from the `path/name.sect`, because sometimes the actual section is
+    # more specific than what we provided to `man` (try `:Man 3 App::CLI`).
+    # Also on linux, name seems to be case-insensitive. So for `:Man PRIntf`, we
+    # still want the name of the buffer to be `printf`.
 
     var tail: string = path->fnamemodify(':t')
-    if path =~ '\.\%([glx]z\|bz2\|lzma\|Z\)$' # valid extensions
+    if path =~ '\.\%([glx]z\|bz2\|lzma\|Z\)$'  # valid extensions
         tail = tail->fnamemodify(':r')
     endif
     var sect: string = tail->matchstr('\.\zs[^.]\+$')
@@ -422,19 +429,19 @@ def ExtractSectAndNamePath(path: string): list<string> #{{{3
 enddef
 
 def VerifyExists(sect: string, name: string): string #{{{3
-# VerifyExists attempts to find the path to a man page
-# based on the passed section and name.
-#
-# 1. If the passed section is empty, b:man_default_sects is used.
-# 2. If the man page could not be found with the given sect and name,
-#    then another attempt is made with b:man_default_sects.
-# 3. If it still could not be found, then we try again without a section.
-# 4. If still not found but $MANSECT is set, then we try again with $MANSECT
-#    unset.
-#
-# This function is careful to avoid duplicating a search if a previous
-# step has already done it. i.e if we use b:man_default_sects in step 1,
-# then we don't do it again in step 2.
+    # VerifyExists attempts to find the path to a man page
+    # based on the passed section and name.
+    #
+    # 1. If the passed section is empty, b:man_default_sects is used.
+    # 2. If the man page could not be found with the given sect and name,
+    #    then another attempt is made with b:man_default_sects.
+    # 3. If it still could not be found, then we try again without a section.
+    # 4. If still not found but $MANSECT is set, then we try again with $MANSECT
+    #    unset.
+    #
+    # This function is careful to avoid duplicating a search if a previous
+    # step has already done it. i.e if we use b:man_default_sects in step 1,
+    # then we don't do it again in step 2.
     if sect->empty()
         # no section specified, so search with b:man_default_sects
         if exists('b:man_default_sects')
@@ -484,7 +491,7 @@ def VerifyExists(sect: string, name: string): string #{{{3
 
     # if that still didn't work, we will check for $MANSECT and try again with it
     # unset
-    if !empty($MANSECT)
+    if $MANSECT != ''
         var MANSECT: string
         try
             MANSECT = $MANSECT
@@ -505,23 +512,23 @@ def VerifyExists(sect: string, name: string): string #{{{3
 enddef
 
 def GetPath(sect: string, name: string): string #{{{3
-# Some man  implementations (OpenBSD)  return all  available paths  from the
-# search command. Previously, this function would simply select the first one.
-#
-# However, some searches  will report matches that are incorrect:  man -w strlen
-# may return  string.3 followed by  strlen.3, and therefore selecting  the first
-# would get us the wrong page.  Thus, we must find the first matching one.
-#
-# There's yet  another special case here.   Consider the following:  If  you run
-# man -w  strlen and  string.3 comes  up first,  this is  a problem.   We should
-# search for a matching  named one in the results list.   However, if you search
-# for man  -w clock_gettime, you  will *only*  get clock_getres.2, which  is the
-# right page.  Searching  the resuls for clock_gettime will no  longer work.  In
-# this case,  we should just  use the  first one that  was found in  the correct
-# section.
-#
-# Finally,  we  can  avoid  relying  on  -S or  -s  here  since  they  are  very
-# inconsistently supported.  Instead, call -w with a section and a name.
+    # Some man  implementations (OpenBSD)  return all  available paths  from the
+    # search command. Previously, this function would simply select the first one.
+    #
+    # However, some searches  will report matches that are incorrect:  man -w strlen
+    # may return  string.3 followed by  strlen.3, and therefore selecting  the first
+    # would get us the wrong page.  Thus, we must find the first matching one.
+    #
+    # There's yet  another special case here.   Consider the following:  If  you run
+    # man -w  strlen and  string.3 comes  up first,  this is  a problem.   We should
+    # search for a matching  named one in the results list.   However, if you search
+    # for man  -w clock_gettime, you  will *only*  get clock_getres.2, which  is the
+    # right page.  Searching  the resuls for clock_gettime will no  longer work.  In
+    # this case,  we should just  use the  first one that  was found in  the correct
+    # section.
+    #
+    # Finally,  we  can  avoid  relying  on  -S or  -s  here  since  they  are  very
+    # inconsistently supported.  Instead, call -w with a section and a name.
 
     var results: list<string> = (sect == '' ? ['man', '-w', name] : ['man', '-w', sect, name])
         ->Job_start()
@@ -532,19 +539,19 @@ def GetPath(sect: string, name: string): string #{{{3
 
     # find any that match the specified name
     var namematches: list<string> = results
-      ->copy()
-      ->filter((_, v: string): bool => v->fnamemodify(':t') =~ name)
+        ->copy()
+        ->filter((_, v: string): bool => v->fnamemodify(':t') =~ name)
     var sectmatches: list<string>
 
     if !namematches->empty() && !sect->empty()
-      sectmatches = namematches
-        ->copy()
-        ->filter((_, v: string): bool => fnamemodify(v, ':e') == sect)
+        sectmatches = namematches
+            ->copy()
+            ->filter((_, v: string): bool => fnamemodify(v, ':e') == sect)
     endif
 
     return sectmatches
-      ->get(0, namematches->get(0, results[0]))
-      ->substitute('\n\+$', '', '')
+        ->get(0, namematches->get(0, results[0]))
+        ->substitute('\n\+$', '', '')
 enddef
 
 def GetPage(path: string): string #{{{3
@@ -553,7 +560,7 @@ def GetPage(path: string): string #{{{3
     # Hard-wrap: driven by `man`.
     var manwidth: number = !get(g:, 'man_hardwrap', true)
         ? 999
-        : (empty($MANWIDTH) ? winwidth(0) : $MANWIDTH->str2nr())
+        : ($MANWIDTH == '' ? winwidth(0) : $MANWIDTH->str2nr())
     # Force `MANPAGER=cat` to ensure Vim is not recursively invoked (by `man-db`).
     # http://comments.gmane.org/gmane.editors.vim.devel/29085
     # Set `MAN_KEEP_FORMATTING` so that Debian's `man(1)` doesn't discard backspaces.
@@ -587,7 +594,7 @@ def PutPage(page: string) #{{{3
 enddef
 
 def Job_start(cmd: list<string>): string #{{{3
-# Run a shell command asynchronously; timeout after 30 seconds.
+    # Run a shell command asynchronously; timeout after 30 seconds.
     var cb_opts: dict<any> = {
         stdout: '',
         stderr: '',
@@ -605,7 +612,7 @@ def Job_start(cmd: list<string>): string #{{{3
             in_io: 'null',
             mode: 'raw',
             noblock: true,
-    })
+        })
 
     if job_status(job) !=? 'run'
         printf('job error (PID %d): %s', job_info(job).process, join(cmd))
@@ -671,9 +678,9 @@ def Job_start(cmd: list<string>): string #{{{3
         # IOW, the function's logic is affected.
         #}}}
         throw printf('command error (PID %d) %s: %s',
-                job_info(job).process,
-                join(cmd),
-                cb_opts.stderr->substitute('\_s\+$', '', ''))
+            job_info(job).process,
+            join(cmd),
+            cb_opts.stderr->substitute('\_s\+$', '', ''))
     endif
 
     # FIXME: Sometimes, a man page is truncated when we use `:Man`.{{{
@@ -723,15 +730,15 @@ def Job_start(cmd: list<string>): string #{{{3
 enddef
 
 def JobHandler( #{{{3
-    opts: dict<any>,
-    event: string,
-    _,
-    data: any
-)
-# When the callback  is invoked to write  on the stdout or stderr,  `_` is a
-# channel and `data` a string.
-# When the  callback is  invoked because  the job  exits, `_`  is a  job and
-# `data` a number (exit status).
+        opts: dict<any>,
+        event: string,
+        _,
+        data: any
+        )
+    # When the callback  is invoked to write  on the stdout or stderr,  `_` is a
+    # channel and `data` a string.
+    # When the  callback is  invoked because  the job  exits, `_`  is a  job and
+    # `data` a number (exit status).
     if event == 'stdout' || event == 'stderr'
         opts[event] ..= data
     else
@@ -740,63 +747,65 @@ def JobHandler( #{{{3
 enddef
 
 def SetOptions() #{{{3
-    &l:swapfile = false
-    &l:buftype = 'nofile'
     &l:bufhidden = 'hide'
+    &l:buftype = 'nofile'
+    &l:filetype = 'man'
+    &l:modifiable = false
     &l:modified = false
     &l:readonly = true
-    &l:modifiable = false
-    &l:filetype = 'man'
+    &l:swapfile = false
 enddef
 #}}}2
 # Highlighting {{{2
 def HighlightWindow() #{{{3
-    if !exists('b:_seen')
+    if !exists('b:man_highlight')
+            || !b:man_highlight->has_key('seen')
         return
     endif
     var lnum1: number = [1, line('.') - winheight(0)]->max()
     var lnum2: number = [line('.') + winheight(0), line('$')]->min()
     # if the *visible* lines are already highlighted, nothing needs to be done
-    # TODO: Now  that Vim9  supports  `dict.key`, try  to  consolidate all  `b:`
-    # variables into a single dictionary.  And use the prefix `man`.
-    if b:_seen[lnum1 - 1 : lnum2 - 1]->index(false) == -1
+    if b:man_highlight.seen[lnum1 - 1 : lnum2 - 1]->index(false) == -1
         # if *all* the lines are already highlighted, nothing will *ever* need to be done
-        if b:_seen->index(false) == -1
+        if b:man_highlight.seen->index(false) == -1
             autocmd! HighlightManpage
             augroup! HighlightManpage
-            unlet! b:_hls b:_lines b:_seen
+            unlet! b:man_highlight
         endif
         return
     endif
 
-    var lines: list<string> = b:_lines[lnum1 - 1 : lnum2 - 1]
+    var lines: list<string> = b:man_highlight.lines[lnum1 - 1 : lnum2 - 1]
     var lnum: number
     for [i: number, line: string] in lines->items()
         lnum = i + lnum1 - 1
-        if b:_seen[lnum]
+        if b:man_highlight.seen[lnum]
             continue
         endif
         HighlightLine(line, lnum)
-        b:_seen[lnum] = true
+        b:man_highlight.seen[lnum] = true
     endfor
 
-    for args: list<any> in b:_hls
+    # TODO: Investigate  whether  `prop_add_list()`  could let  us  install  all
+    # the  properties in  a  single  step (instead  of  splitting  them on  each
+    # `CursorMoved`), without getting worse performance.
+    for textprop: list<any> in b:man_highlight.textprops
         # `silent!` to suppress `E971` if syntax highlighting is not enabled:
         #     E971: Property type manBold does not exist
-        silent! prop_add(args[1] + 1, args[2] + 1, {
-            length: args[3] - args[2],
-            type: args[0]
+        silent! prop_add(textprop[1] + 1, textprop[2] + 1, {
+            length: textprop[3] - textprop[2],
+            type: textprop[0]
         })
     endfor
-    b:_hls = []
+    b:man_highlight.textprops = []
 enddef
 
-def HighlightLine(line: string, linenr: number) #{{{
+def HighlightLine(line: string, linenr: number) #{{{3
     var chars: list<string>
     var prev_char: string = ''
     var overstrike: bool = false
     var escape: bool = false
-    var highlights: list<dict<number>> # Store highlight groups as { attr, start, end }
+    var highlights: list<dict<number>>  # Store highlight groups as { attr, start, end }
     var NONE: number = 0
     var BOLD: number = 1
     var UNDERLINE: number = 2
@@ -807,7 +816,7 @@ def HighlightLine(line: string, linenr: number) #{{{
         [ITALIC]: 'manItalic',
     }
     var attr: number = NONE
-    var byte: number = 0 # byte offset
+    var byte: number = 0  # byte offset
 
     def EndAttrHl(attr_: number)
         for [i: number, highlight: dict<number>] in highlights->items()
@@ -864,8 +873,8 @@ def HighlightLine(line: string, linenr: number) #{{{
             var last_hl: dict<number> = get(highlights, -1, {})
             if c == prev_char
                 if c == '_' && attr == UNDERLINE
-                    && !empty(last_hl)
-                    && last_hl.end == byte
+                        && !last_hl->empty()
+                        && last_hl.end == byte
                     # This underscore is in the middle of an underlined word
                     attr = UNDERLINE
                 else
@@ -915,9 +924,9 @@ def HighlightLine(line: string, linenr: number) #{{{
             endif
 
             # Grow the previous highlight group if possible
-            if !empty(last_hl)
-                && last_hl.attr == attr
-                && last_hl.end == byte
+            if !last_hl->empty()
+                    && last_hl.attr == attr
+                    && last_hl.end == byte
                 last_hl.end = byte + strlen(c)
             else
                 highlights->add({attr: attr, start: byte, end: byte + strlen(c)})
@@ -936,9 +945,9 @@ def HighlightLine(line: string, linenr: number) #{{{
             var sgr: string = prev_char->matchstr('^\[\zs[\d032-\d063]*\zem$')
             # Ignore escape sequences with : characters, as specified by ITU's T.416
             # Open Document Architecture and interchange format.
-            if !empty(sgr) && stridx(sgr, ':') == -1
+            if !sgr->empty() && sgr->stridx(':') == -1
                 var match: string
-                while !empty(sgr) && strlen(sgr) > 0
+                while !sgr->empty() && sgr->strlen() > 0
                     # Match against SGR parameters, which may be separated by `;`
                     var matchlist: list<string> = matchlist(sgr, '^\(\d*\);\=\(.*\)')
                     match = matchlist[1]
@@ -966,7 +975,7 @@ def HighlightLine(line: string, linenr: number) #{{{
 
     for highlight: dict<number> in highlights
         if highlight.attr != NONE
-            b:_hls->add([
+            b:man_highlight.textprops->add([
                 get(hl_groups, string(highlight.attr), ''),
                 linenr,
                 highlight.start,
@@ -977,11 +986,9 @@ def HighlightLine(line: string, linenr: number) #{{{
 enddef
 
 def HighlightOnCursormoved() #{{{3
-# TODO: Investigate  whether  `prop_add_list()` could  let  us  install all  the
-# properties in a single step (instead of splitting them on each `CursorMoved`),
-# without getting worse performance.
-    b:_hls = []
-    b:_lines = getline(1, '$')
+    b:man_highlight = {}
+    b:man_highlight.textprops = []
+    b:man_highlight.lines = getline(1, '$')
     # Remove backspaces used to display bold or underlined text.{{{
     #
     # In  the past,  old  printers would  use  `_`  and `^H`  to  print bold  or
@@ -1008,7 +1015,7 @@ def HighlightOnCursormoved() #{{{3
     # properties.
     #}}}
     silent keepjumps keeppatterns :% substitute/.\b//ge
-    b:_seen = repeat([false], line('$'))
+    b:man_highlight.seen = repeat([false], line('$'))
     augroup HighlightManpage
         autocmd! * <buffer>
         autocmd CursorMoved <buffer> HighlightWindow()
@@ -1028,10 +1035,10 @@ enddef
 #}}}2
 # :Man completion {{{2
 def Complete( #{{{3
-    sect: string,
-    psect: string,
-    name: string
-): list<string>
+        sect: string,
+        psect: string,
+        name: string
+        ): list<string>
 
     var pages: list<string> = GetPaths(sect, name, false)
     # We remove duplicates in case the same man page in different languages was found.
@@ -1041,17 +1048,17 @@ def Complete( #{{{3
         ->uniq()
     # happens when pressing Tab after `:Man 2 `
     if !pages->empty() && pages[0] == ''
-      pages->remove(0)
+        pages->remove(0)
     endif
     return pages
 enddef
 
 def GetPaths( #{{{3
-    sect: string,
-    name: string,
-    do_fallback: bool
-): list<string>
-# see `ExtractSectAndNameRef()` on why `tolower(sect)`
+        sect: string,
+        name: string,
+        do_fallback: bool
+        ): list<string>
+    # see `ExtractSectAndNameFromRef()` on why `tolower(sect)`
 
     # callers must try-catch this, as some `man(1)` implementations don't support `-w`
     try
@@ -1083,12 +1090,12 @@ def GetPaths( #{{{3
 enddef
 
 def FormatCandidate(path: string, psect: string): string #{{{3
-    if path =~ '\.\%(pdf\|in\)$' # invalid extensions
+    if path =~ '\.\%(pdf\|in\)$'  # invalid extensions
         return ''
     endif
     var sect: string
     var name: string
-    [sect, name] = ExtractSectAndNamePath(path)
+    [sect, name] = ExtractSectAndNameFromPath(path)
     if sect == psect
         return name
     elseif sect =~ $'{psect}.\+$'
@@ -1120,8 +1127,8 @@ def FindMan(): bool #{{{2
 enddef
 
 def Gmatch(text: string, pat: string): list<string> #{{{2
-# TODO: Is there something simpler?
-# If not, consider asking for a builtin `gmatch()` as a feature request.
+    # TODO: Is there something simpler?
+    # If not, consider asking for a builtin `gmatch()` as a feature request.
     var res: list<string>
     text->substitute(pat, (m: list<string>) => res->add(m[0])[-1], 'g')
     return res
@@ -1137,10 +1144,10 @@ def OpenFolds() #{{{2
 enddef
 
 def SpacesToUnderscores(str: string): string #{{{2
-# replace spaces in a man page name with underscores
-# intended for PostgreSQL, which has man pages like 'CREATE_TABLE(7)';
-# while editing SQL source code, it's nice to visually select 'CREATE TABLE'
-# and hit 'K', which requires this transformation
+    # replace spaces in a man page name with underscores
+    # intended for PostgreSQL, which has man pages like 'CREATE_TABLE(7)';
+    # while editing SQL source code, it's nice to visually select 'CREATE TABLE'
+    # and hit 'K', which requires this transformation
     return substitute(str, ' ', '_', 'g')
 enddef
 #}}}1

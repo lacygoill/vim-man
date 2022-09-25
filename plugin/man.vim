@@ -32,8 +32,17 @@ import autoload '../autoload/man.vim'
 #         └── youtube-dl.1˜
 #}}}
 
-# For `-range=-1`, see:
-# https://github.com/tpope/vim-scriptease/commit/d15112a77d0aa278f8ca88f07d53b018be79b585
+augroup man
+    autocmd!
+    autocmd BufReadCmd man://* {
+        expand('<amatch>')
+            ->substitute('^man://', '', '')
+            ->man.ShellCmd()
+    }
+augroup END
+
+# `-range=-1` will let us detect wheter `:Man` was given a count.
+# If we don't give a count, `<count>` will be replaced with `-1`.
 command -bang -bar -range=-1 -complete=customlist,man.CmdComplete -nargs=* Man {
     if <bang>0
         man.InitPager()
@@ -45,8 +54,3 @@ cnoreabbrev <expr> man getcmdtype() =~ '[:>]' && getcmdpos() == 4 ? 'Man' : 'man
 
 command -nargs=? -complete=custom,man.GrepComplete ManGrep man.Grep(<q-args>)
 cnoreabbrev <expr> mg getcmdtype() =~ '[:>]' && getcmdpos() == 3 ? 'ManGrep' : 'mg'
-
-augroup man
-    autocmd!
-    autocmd BufReadCmd man://* expand('<amatch>')->substitute('^man://', '', '')->man.ShellCmd()
-augroup END
