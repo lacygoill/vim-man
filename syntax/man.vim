@@ -50,7 +50,6 @@ if prop_type_get('manBold', {bufnr: buf}) == {}
     prop_type_add('manUnderline', {bufnr: buf, highlight: 'manUnderline'})
     prop_type_add('manItalic', {bufnr: buf, highlight: 'manItalic'})
 endif
-buf = 0
 
 if &filetype != 'man'
     # May have been included by some other filetype.
@@ -76,8 +75,8 @@ if get(b:, 'man_sect', '') =~ '^[023]'
 
   # XXX: groupthere doesn't seem to work
   syntax sync minlines=500
-  #syntax sync match manSyncExample groupthere manExample '^EXAMPLES\=$'
-  #syntax sync match manSyncExample groupthere NONE '^\%(EXAMPLES\=\)\@!\%(\S.*\)\=\S$'
+  #     syntax sync match manSyncExample groupthere manExample '^EXAMPLES\=$'
+  #     syntax sync match manSyncExample groupthere NONE '^\%(EXAMPLES\=\)\@!\%(\S.*\)\=\S$'
 endif
 
 # Prevent everything else from matching the last line

@@ -13,8 +13,20 @@ var localfile_arg: bool = true  # Always use -l if possible. #6683
 # TODO: Implement `:Mangrep`:
 # https://github.com/vim-utils/vim-man#about-mangrep
 
+# Init {{{1
+
+const NONE: number = 0
+const BOLD: number = 1
+const UNDERLINE: number = 2
+const ITALIC: number = 3
+const HL_GROUPS: dict<string> = {
+    [BOLD]: 'manBold',
+    [UNDERLINE]: 'manUnderline',
+    [ITALIC]: 'manItalic',
+}
+
 # Interface {{{1
-export def InitPager() #{{{2
+export def InitPager() # {{{2
     # Called when Vim is invoked as $MANPAGER.
 
     # clear message:  "-stdin-" 123L, 456B
@@ -89,7 +101,7 @@ export def InitPager() #{{{2
     SetOptions()
 enddef
 
-export def ShellCmd(ref: string) #{{{2
+export def ShellCmd(ref: string) # {{{2
     # Called when a man:// buffer is opened.
     var sect: string
     var name: string
@@ -107,7 +119,7 @@ export def ShellCmd(ref: string) #{{{2
     PutPage(page)
 enddef
 
-export def ExCmd( #{{{2
+export def ExCmd( # {{{2
         count: number,
         mods: string,
         ...fargs: list<string>
@@ -168,7 +180,7 @@ export def ExCmd( #{{{2
     b:man_sect = sect
 enddef
 
-export def CmdComplete( #{{{2
+export def CmdComplete( # {{{2
         arg_lead: string,
         cmdline: string,
         _
@@ -229,7 +241,7 @@ export def CmdComplete( #{{{2
     return Complete(sect, sect, name)
 enddef
 
-export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
+export def GoToTag(pattern: string, _, _): list<dict<string>> # {{{2
     var sect: string
     var name: string
     [sect, name] = ExtractSectAndNameFromRef(pattern)
@@ -258,7 +270,7 @@ export def GoToTag(pattern: string, _, _): list<dict<string>> #{{{2
         }))
 enddef
 
-export def FoldExpr(): string #{{{2
+export def FoldExpr(): string # {{{2
     if indent(v:lnum) == 0 && getline(v:lnum) =~ '\S'
             || indent(v:lnum) == 3
         return '>1'
@@ -266,7 +278,7 @@ export def FoldExpr(): string #{{{2
     return '1'
 enddef
 
-export def FoldTitle(): string #{{{2
+export def FoldTitle(): string # {{{2
     var title: string = getline(v:foldstart)
     var indent: string = title->matchstr('^\s*')
     if get(b:, 'foldtitle_full', false)
@@ -278,14 +290,14 @@ export def FoldTitle(): string #{{{2
     endif
 enddef
 
-export def JumpToRef(is_fwd = true) #{{{2
+export def JumpToRef(is_fwd = true) # {{{2
     # regex used by the `manReference` syntax group
     var pat: string = '[^()[:space:]]\+([0-9nx][a-z]*)'
     var flags: string = is_fwd ? 'W' : 'bW'
     search(pat, flags)
 enddef
 
-export def Grep(args: string) #{{{2
+export def Grep(args: string) # {{{2
     if args == '' || args =~ '^\%(--help\|-h\)\>'
         var help: list<string> =<< trim END
             # look for pattern "foo" in all man pages using current filetype as topic
@@ -385,13 +397,13 @@ export def Grep(args: string) #{{{2
     endtry
 enddef
 
-export def GrepComplete(..._): string #{{{2
+export def GrepComplete(..._): string # {{{2
     return ['-h', '--help', '--apropos=']->join("\n")
 enddef
 #}}}1
 # Core {{{1
 # Main {{{2
-def ExtractSectAndNameFromRef(arg_ref: string): list<string> #{{{3
+def ExtractSectAndNameFromRef(arg_ref: string): list<string> # {{{3
     # attempt to extract the name and sect out of `name(sect)`
     # otherwise just return the largest string of valid characters in ref
 
@@ -413,7 +425,7 @@ def ExtractSectAndNameFromRef(arg_ref: string): list<string> #{{{3
     return [left[1]->split(')')[0]->tolower(), left[0]->SpacesToUnderscores()]
 enddef
 
-def ExtractSectAndNameFromPath(path: string): list<string> #{{{3
+def ExtractSectAndNameFromPath(path: string): list<string> # {{{3
     # Extracts the name/section from the `path/name.sect`, because sometimes the actual section is
     # more specific than what we provided to `man` (try `:Man 3 App::CLI`).
     # Also on linux, name seems to be case-insensitive. So for `:Man PRIntf`, we
@@ -428,7 +440,7 @@ def ExtractSectAndNameFromPath(path: string): list<string> #{{{3
     return [sect, name]
 enddef
 
-def VerifyExists(sect: string, name: string): string #{{{3
+def VerifyExists(sect: string, name: string): string # {{{3
     # VerifyExists attempts to find the path to a man page
     # based on the passed section and name.
     #
@@ -511,7 +523,7 @@ def VerifyExists(sect: string, name: string): string #{{{3
     return ''
 enddef
 
-def GetPath(sect: string, name: string): string #{{{3
+def GetPath(sect: string, name: string): string # {{{3
     # Some man  implementations (OpenBSD)  return all  available paths  from the
     # search command. Previously, this function would simply select the first one.
     #
@@ -554,7 +566,7 @@ def GetPath(sect: string, name: string): string #{{{3
         ->substitute('\n\+$', '', '')
 enddef
 
-def GetPage(path: string): string #{{{3
+def GetPage(path: string): string # {{{3
     # Disable hard-wrap by using a big $MANWIDTH (max 1000 on some systems #9065).
     # Soft-wrap: ftplugin/man.vim sets wrap/breakindent/….
     # Hard-wrap: driven by `man`.
@@ -574,7 +586,7 @@ def GetPage(path: string): string #{{{3
     return Job_start(cmd + (localfile_arg ? ['-l', path] : [path]))
 enddef
 
-def PutPage(page: string) #{{{3
+def PutPage(page: string) # {{{3
     &l:modifiable = true
     &l:readonly = false
     &l:swapfile = false
@@ -586,14 +598,14 @@ def PutPage(page: string) #{{{3
     # XXX: nroff justifies text by filling it with whitespace.  That interacts
     # badly with our use of `$MANWIDTH=999`.  Hack around this by using a fixed
     # size for those whitespace regions.
-    silent! keeppatterns keepjumps :% substitute/\s\{199,}/\=repeat(' ', 10)/g
+    silent keeppatterns keepjumps lockmarks :% substitute/\s\{199,}/\=repeat(' ', 10)/ge
     :1
     HighlightOnCursormoved()
     OpenFolds()
     SetOptions()
 enddef
 
-def Job_start(cmd: list<string>): string #{{{3
+def Job_start(cmd: list<string>): string # {{{3
     # Run a shell command asynchronously; timeout after 30 seconds.
     var cb_opts: dict<any> = {
         stdout: '',
@@ -729,7 +741,7 @@ def Job_start(cmd: list<string>): string #{{{3
     return cb_opts.stdout
 enddef
 
-def JobHandler( #{{{3
+def JobHandler( # {{{3
         opts: dict<any>,
         event: string,
         _,
@@ -746,7 +758,7 @@ def JobHandler( #{{{3
     endif
 enddef
 
-def SetOptions() #{{{3
+def SetOptions() # {{{3
     &l:bufhidden = 'hide'
     &l:buftype = 'nofile'
     &l:filetype = 'man'
@@ -757,11 +769,15 @@ def SetOptions() #{{{3
 enddef
 #}}}2
 # Highlighting {{{2
-def HighlightWindow() #{{{3
+def HighlightWindow() # {{{3
     if !exists('b:man_highlight')
             || !b:man_highlight->has_key('seen')
+            # To avoid `E971` if syntax highlighting is not enabled:
+            #     E971: Property type manBold does not exist
+            || !has('syntax_items')
         return
     endif
+
     var lnum1: number = [1, line('.') - winheight(0)]->max()
     var lnum2: number = [line('.') + winheight(0), line('$')]->min()
     # if the *visible* lines are already highlighted, nothing needs to be done
@@ -790,9 +806,7 @@ def HighlightWindow() #{{{3
     # the  properties in  a  single  step (instead  of  splitting  them on  each
     # `CursorMoved`), without getting worse performance.
     for textprop: list<any> in b:man_highlight.textprops
-        # `silent!` to suppress `E971` if syntax highlighting is not enabled:
-        #     E971: Property type manBold does not exist
-        silent! prop_add(textprop[1] + 1, textprop[2] + 1, {
+        prop_add(textprop[1] + 1, textprop[2] + 1, {
             length: textprop[3] - textprop[2],
             type: textprop[0]
         })
@@ -800,21 +814,12 @@ def HighlightWindow() #{{{3
     b:man_highlight.textprops = []
 enddef
 
-def HighlightLine(line: string, linenr: number) #{{{3
+def HighlightLine(line: string, linenr: number) # {{{3
     var chars: list<string>
     var prev_char: string = ''
     var overstrike: bool = false
     var escape: bool = false
     var highlights: list<dict<number>>  # Store highlight groups as { attr, start, end }
-    var NONE: number = 0
-    var BOLD: number = 1
-    var UNDERLINE: number = 2
-    var ITALIC: number = 3
-    var hl_groups: dict<string> = {
-        [BOLD]: 'manBold',
-        [UNDERLINE]: 'manUnderline',
-        [ITALIC]: 'manItalic',
-    }
     var attr: number = NONE
     var byte: number = 0  # byte offset
 
@@ -856,7 +861,7 @@ def HighlightLine(line: string, linenr: number) #{{{3
             highlights->add({attr: attr, start: byte, end: -1})
         else
             if attr == NONE
-                for a_: list<any> in items(hl_groups)
+                for a_: list<any> in items(HL_GROUPS)
                     EndAttrHl(a_[0])
                 endfor
             else
@@ -976,7 +981,7 @@ def HighlightLine(line: string, linenr: number) #{{{3
     for highlight: dict<number> in highlights
         if highlight.attr != NONE
             b:man_highlight.textprops->add([
-                get(hl_groups, string(highlight.attr), ''),
+                get(HL_GROUPS, string(highlight.attr), ''),
                 linenr,
                 highlight.start,
                 highlight.end,
@@ -985,7 +990,7 @@ def HighlightLine(line: string, linenr: number) #{{{3
     endfor
 enddef
 
-def HighlightOnCursormoved() #{{{3
+def HighlightOnCursormoved() # {{{3
     b:man_highlight = {}
     b:man_highlight.textprops = []
     b:man_highlight.lines = getline(1, '$')
@@ -1014,27 +1019,33 @@ def HighlightOnCursormoved() #{{{3
     # escape  sequences, which  we  will  use to  determine  where  to put  text
     # properties.
     #}}}
-    silent keepjumps keeppatterns :% substitute/.\b//ge
+    silent keepjumps keeppatterns lockmarks :% substitute/.\b//ge
     b:man_highlight.seen = repeat([false], line('$'))
     augroup HighlightManpage
         autocmd! * <buffer>
         autocmd CursorMoved <buffer> HighlightWindow()
         # for  when  we   type  a  pattern  on  the   search  command-line,  and
         # `'incsearch'` is set (causing the view to change)
-        CHRef = function(ConditionalHighlight, [bufnr('%')])
-        autocmd CmdlineChanged /,\? CHRef()
+        autocmd! CmdlineChanged /,\? {
+            if &filetype == 'man'
+                HighlightWindow()
+            endif
+        }
+        autocmd BufWipeout <buffer> autocmd SafeState * ++once HighlightTearDown()
     augroup END
 enddef
 
-var CHRef: func
-def ConditionalHighlight(bufnr: number)
-    if bufnr == bufnr('%')
-        HighlightWindow()
+def HighlightTearDown() # {{{3
+    if range(1, bufnr('$'))
+            ->map((_, n: number): string => n->getbufvar('&filetype'))
+            ->index('man') == -1
+        autocmd! HighlightManpage
+        augroup! HighlightManpage
     endif
 enddef
 #}}}2
 # :Man completion {{{2
-def Complete( #{{{3
+def Complete( # {{{3
         sect: string,
         psect: string,
         name: string
@@ -1053,7 +1064,7 @@ def Complete( #{{{3
     return pages
 enddef
 
-def GetPaths( #{{{3
+def GetPaths( # {{{3
         sect: string,
         name: string,
         do_fallback: bool
@@ -1089,7 +1100,7 @@ def GetPaths( #{{{3
     endtry
 enddef
 
-def FormatCandidate(path: string, psect: string): string #{{{3
+def FormatCandidate(path: string, psect: string): string # {{{3
     if path =~ '\.\%(pdf\|in\)$'  # invalid extensions
         return ''
     endif
@@ -1108,14 +1119,14 @@ enddef
 #}}}2
 #}}}1
 # Utitilities {{{1
-def Error(msg: string) #{{{2
+def Error(msg: string) # {{{2
     redraw
     echohl ErrorMsg
     echomsg $'man.vim: {msg}'
     echohl None
 enddef
 
-def FindMan(): bool #{{{2
+def FindMan(): bool # {{{2
     for win: number in range(1, winnr('$'))
         var buf: number = winbufnr(win)
         if getbufvar(buf, '&filetype', '') == 'man'
@@ -1126,7 +1137,7 @@ def FindMan(): bool #{{{2
     return false
 enddef
 
-def Gmatch(text: string, pat: string): list<string> #{{{2
+def Gmatch(text: string, pat: string): list<string> # {{{2
     # TODO: Is there something simpler?
     # If not, consider asking for a builtin `gmatch()` as a feature request.
     var res: list<string>
@@ -1134,7 +1145,7 @@ def Gmatch(text: string, pat: string): list<string> #{{{2
     return res
 enddef
 
-def OpenFolds() #{{{2
+def OpenFolds() # {{{2
     # The autocmd is necessary in case we jump to another man page with `C-]`.
     # Also when we come back with `C-t`.
     augroup ManAllFoldsOpenByDefault
@@ -1143,7 +1154,7 @@ def OpenFolds() #{{{2
     augroup END
 enddef
 
-def SpacesToUnderscores(str: string): string #{{{2
+def SpacesToUnderscores(str: string): string # {{{2
     # replace spaces in a man page name with underscores
     # intended for PostgreSQL, which has man pages like 'CREATE_TABLE(7)';
     # while editing SQL source code, it's nice to visually select 'CREATE TABLE'
