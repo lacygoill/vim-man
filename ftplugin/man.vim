@@ -16,10 +16,9 @@ import autoload 'man.vim'
 &l:linebreak = true
 &l:wrap = true
 
-# Parentheses and '-' for references like `git-ls-files(1)`; '@' for systemd
-# pages; ':' for Perl and C++ pages.  Here, I intentionally omit the locale
-# specific characters matched by `@`.
-&l:iskeyword = '@-@,:,a-z,A-Z,48-57,_,.,-,(,)'
+# Allow hyphen, plus, colon, dot, and commercial at in manual page name.
+# Allow parentheses for references.
+&l:iskeyword = '48-57,_,a-z,A-Z,-,+,:,.,@-@,(,)'
 
 &l:colorcolumn = '0'
 &l:list = false
