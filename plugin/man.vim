@@ -54,3 +54,9 @@ cnoreabbrev <expr> man getcmdtype() =~ '[:>]' && getcmdpos() == 4 ? 'Man' : 'man
 
 command -nargs=? -complete=custom,man.GrepComplete ManGrep man.Grep(<q-args>)
 cnoreabbrev <expr> mg getcmdtype() =~ '[:>]' && getcmdpos() == 3 ? 'ManGrep' : 'mg'
+augroup ManGrep
+    autocmd!
+    autocmd FileType fish {
+        cnoreabbrev <expr> mg getcmdtype() =~ '[:>]' && getcmdpos() == 3 ? 'ManGrep --apropos=fish' : 'mg'
+    }
+augroup END

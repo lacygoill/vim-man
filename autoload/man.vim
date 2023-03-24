@@ -702,8 +702,6 @@ def Job_start(cmd: list<string>): string # {{{3
     # A few characters are missing from a  line, and the next few lines are also
     # missing.  No issue with `$ man`.
     #
-    # Does the issue also affect Neovim?
-    # Where does it come from?
     # It's non-deterministic.  It doesn't happen all the time.
     # It happens  more frequently with  `ffmpeg-all(1)`, but it can  also affect
     # shorter man pages such as `tmux(1)` (maybe less frequently though).
@@ -897,10 +895,6 @@ def HighlightLine(line: string, linenr: number) # {{{3
                 #
                 # ---
                 #
-                # Same issue in Neovim.
-                #
-                # ---
-                #
                 # Look at the source:
                 #
                 #     /usr/local/share/man/man1/zshcontrib.1
@@ -1036,6 +1030,9 @@ def HighlightOnCursormoved() # {{{3
 enddef
 
 def HighlightTearDown() # {{{3
+    if !exists('#HighlightManpage')
+        return
+    endif
     if range(1, bufnr('$'))
             ->map((_, n: number): string => n->getbufvar('&filetype'))
             ->index('man') == -1
