@@ -389,6 +389,7 @@ export def Grep(args: string) # {{{2
 
     try
         $'vimgrep /{pattern}/gj {MANPAGES_TO_GREP[topic]->join()}'->execute()
+
         # Problem: the qf list gets broken once we start jumping to its entries.{{{
         #
         # Initially, the man buffers are unloaded.
@@ -404,22 +405,19 @@ export def Grep(args: string) # {{{2
         #     lnum: <some big number beyond last lnum>
         #     end_lnum: 123
         #}}}
-        # Solution: Load all the man buffers now, and try to fix all the `lnum` attributes.{{{
-        #
-        # Not  sure the  fix  is  entirely correct  when  the  entries match  on
-        # multiple lines though (I still think it helps no matter what).
-        # But that's a  corner case, because we usually only  look for a pattern
-        # which matches on a single line.
-        #}}}
-        # load all man buffers
-        for manpage: string in MANPAGES_TO_GREP[topic]
-            manpage->bufload()
-        endfor
-        # fix the qf list
+        # Solution: Save the qf list.  Load all the man buffers.  Restore the original qf list.
+
+        # save qf list
         var title: string = getqflist({title: 0}).title
-        getqflist()
-            ->map((_, entry: dict<any>) => entry->extend({lnum: entry.end_lnum}))
-            ->setqflist('r')
+        var qflist: list<dict<any>> = getqflist()
+        # load man buffers
+        for manpage: string in MANPAGES_TO_GREP[topic]
+            if bufexists(manpage)
+                manpage->bufload()
+            endif
+        endfor
+        # restore qf list
+        setqflist(qflist, 'r')
         setqflist([], 'a', {title: title})
 
     # E480: No match: ...
