@@ -1,6 +1,6 @@
 vim9script noclear
 
-var MANPAGES_TO_GREP: dict<list<string>>
+var MAN_PAGES_TO_GREP: dict<list<string>>
 
 var localfile_arg: bool = true  # Always use -l if possible. #6683
 
@@ -324,11 +324,11 @@ export def Grep(args: string) # {{{2
         return
     endif
 
-    if !MANPAGES_TO_GREP->has_key(topic)
+    if !MAN_PAGES_TO_GREP->has_key(topic)
         if topic == 'fish'
             silent var fish_mandir: string = system("fish -c 'echo $__fish_data_dir'")
                 ->trim() .. '/man/man1'
-            MANPAGES_TO_GREP.fish = fish_mandir
+            MAN_PAGES_TO_GREP.fish = fish_mandir
                 ->readdir()
                 ->map((_, v: string) => $'man://{v}(1)')
                 ->filter((_, v: string): bool => v !~ '\<fish-\%(doc\|releasenotes\)\>')
@@ -355,7 +355,7 @@ export def Grep(args: string) # {{{2
             if v:shell_error != 0
                 topic = topic->substitute('systemd-', '', '')
             endif
-            MANPAGES_TO_GREP[topic] = [$'man://{topic}']
+            MAN_PAGES_TO_GREP[topic] = [$'man://{topic}']
 
         else
             silent var lines: list<string> = systemlist($'man --apropos {topic}')
@@ -376,19 +376,19 @@ export def Grep(args: string) # {{{2
                 echo $'too many man pages match the topic: {topic}'
                 return
             endif
-            MANPAGES_TO_GREP[topic] = lines
+            MAN_PAGES_TO_GREP[topic] = lines
                 ->map((_, line: string) => line
                 ->matchstr('[^(]*([^)]*)')
                 ->substitute(' ', '', '')
                 ->substitute('^', 'man://', ''))
         endif
     endif
-    if MANPAGES_TO_GREP[topic]->empty()
+    if MAN_PAGES_TO_GREP[topic]->empty()
         return
     endif
 
     try
-        $'vimgrep /{pattern}/gj {MANPAGES_TO_GREP[topic]->join()}'->execute()
+        $'vimgrep /{pattern}/gj {MAN_PAGES_TO_GREP[topic]->join()}'->execute()
 
         # Problem: the qf list gets broken once we start jumping to its entries.{{{
         #
@@ -411,9 +411,9 @@ export def Grep(args: string) # {{{2
         var title: string = getqflist({title: 0}).title
         var qflist: list<dict<any>> = getqflist()
         # load man buffers
-        for manpage: string in MANPAGES_TO_GREP[topic]
-            if bufexists(manpage)
-                manpage->bufload()
+        for man_page: string in MAN_PAGES_TO_GREP[topic]
+            if bufexists(man_page)
+                man_page->bufload()
             endif
         endfor
         # restore qf list
@@ -551,7 +551,6 @@ def VerifyExists(sect: string, name: string): string # {{{3
 
     # finally, if that didn't work, there is no hope
     throw $'No manual entry for {name}'
-    return ''
 enddef
 
 def GetPath(sect: string, name: string): string # {{{3
@@ -573,7 +572,7 @@ def GetPath(sect: string, name: string): string # {{{3
     # Finally,  we  can  avoid  relying  on  -S or  -s  here  since  they  are  very
     # inconsistently supported.  Instead, call -w with a section and a name.
 
-    var results: list<string> = (sect == '' ? ['man', '-w', name] : ['man', '-w', sect, name])
+    var results: list<string> = (sect == '' ? ['man', '--where', name] : ['man', '--where', sect, name])
         ->Job_start()
         ->split()
     if results->empty()
@@ -813,8 +812,8 @@ def HighlightWindow() # {{{3
     if b:man_highlight.seen[lnum1 - 1 : lnum2 - 1]->index(false) == -1
         # if *all* the lines are already highlighted, nothing will *ever* need to be done
         if b:man_highlight.seen->index(false) == -1
-            autocmd! HighlightManpage
-            augroup! HighlightManpage
+            autocmd! HighlightManPage
+            augroup! HighlightManPage
             unlet! b:man_highlight
         endif
         return
@@ -899,7 +898,26 @@ def HighlightLine(line: string, linenr: number) # {{{3
         endif
     enddef
 
-    for char: string in Gmatch(line, '[^\d128-\d191][\d128-\d191]*')
+    # TODO: Why did the plugin passed `line` to `Gmatch()`?{{{
+    #
+    #     line->Gmatch('[^\d128-\d191][\d128-\d191]*')
+    #         ^--------------------------------------^
+    #
+    # Before  restoring   this  function  call,   be  aware  that   it  breaks
+    # `man apt-listchanges` when you jump on line 249:
+    #
+    #     E964: Invalid column number: 49
+    #
+    # That's because the line 249 unexpectedly contains 2 no-break spaces:
+    #
+    #     Example 1. Example configuration file
+    #            ^  ^
+    #
+    # Which sometimes causes `char` to be  actually 2 characters, if `line` is
+    # passed to `Gmatch()`, because  `[\d128-\d191]*` matches a no-break space
+    # (but not a regular space).
+    #}}}
+    for char: string in line
         # Need to make a copy of `char`, because Vim automatically locks it, and
         # we might need to replace it during the loop (`c = '·'`).
         var c: string = char
@@ -1046,7 +1064,7 @@ def HighlightOnCursormoved() # {{{3
     #}}}
     silent keepjumps keeppatterns lockmarks :% substitute/.\b//ge
     b:man_highlight.seen = repeat([false], line('$'))
-    augroup HighlightManpage
+    augroup HighlightManPage
         autocmd! * <buffer>
         autocmd CursorMoved <buffer> HighlightWindow()
         # for  when  we   type  a  pattern  on  the   search  command-line,  and
@@ -1067,8 +1085,8 @@ def HighlightTearDown() # {{{3
     if range(1, bufnr('$'))
             ->map((_, n: number): string => n->getbufvar('&filetype'))
             ->index('man') == -1
-        autocmd! HighlightManpage
-        augroup! HighlightManpage
+        autocmd! HighlightManPage
+        augroup! HighlightManPage
     endif
 enddef
 #}}}2
@@ -1101,7 +1119,7 @@ def GetPaths( # {{{3
 
     # callers must try-catch this, as some `man(1)` implementations don't support `-w`
     try
-        var mandirs: string = Job_start(['man', '-w'])
+        var mandirs: string = Job_start(['man', '--where'])
             ->split(':\|\n')
             ->join(',')
         var paths: list<string> = globpath(mandirs,
